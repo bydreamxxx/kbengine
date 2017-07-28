@@ -192,7 +192,7 @@ Entity::~Entity()
 	KBE_ASSERT(pWitness_ == NULL);
 
 	SAFE_RELEASE(pControllers_);
-	SAFE_RELEASE(pEntityCoordinateNode_);
+	KBE_ASSERT(pEntityCoordinateNode_ == NULL);
 
 	Py_DECREF(pPyPosition_);
 	pPyPosition_ = NULL;
@@ -299,8 +299,9 @@ void Entity::onDestroy(bool callScript)
 		ERROR_MSG(fmt::format("{}::onDestroy(): id={}, witnesses_count({}/{}) != 0, isReal={}, spaceID={}, position=({},{},{})\n", 
 			scriptName(), id(), witnesses_count_, witnesses_.size(), isReal(), this->spaceID(), position().x, position().y, position().z));
 
-		std::list<ENTITY_ID>::iterator it = witnesses_.begin();
-		for (; it != witnesses_.end(); ++it)
+		std::list<ENTITY_ID> witnesses_copy = witnesses_;
+		std::list<ENTITY_ID>::iterator it = witnesses_copy.begin();
+		for (; it != witnesses_copy.end(); ++it)
 		{
 			Entity *ent = Cellapp::getSingleton().findEntity((*it));
 
@@ -343,6 +344,8 @@ void Entity::onDestroy(bool callScript)
 
 	pPyPosition_->onLoseRef();
 	pPyDirection_->onLoseRef();
+
+	SAFE_RELEASE(pEntityCoordinateNode_);
 }
 
 //-------------------------------------------------------------------------------------

@@ -805,9 +805,7 @@ void Entity::onControlled(bool p_controlled)
     isControlled_ = p_controlled;
 
     PyObject *pyval = p_controlled ? Py_True : Py_False;
-    Py_INCREF(pyval);
     SCRIPT_OBJECT_CALL_ARGS1(this, const_cast<char*>("onControlled"), const_cast<char*>("O"), pyval);
-    Py_DECREF(pyval);
 }
 
 //-------------------------------------------------------------------------------------
