@@ -2263,7 +2263,7 @@ void Entity::onUpdateDataFromClient(KBEngine::MemoryStream& s)
 
 			(*pSendBundle) << id();
 			(*pSendBundle) << currpos.x << currpos.y << currpos.z;
-			(*pSendBundle) << direction().roll() << direction().pitch() << direction().yaw();
+			(*pSendBundle) << localDirection().roll() << localDirection().pitch() << localDirection().yaw();
 
 			ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onSetEntityPosAndDir, setEntityPosAndDir);
 			pW->sendToClient(ClientInterface::onSetEntityPosAndDir, pSendBundle);
