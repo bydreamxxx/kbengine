@@ -127,25 +127,6 @@ void ScriptDefModule::onLoaded(void)
 	{
 		int aliasID = ENTITY_BASE_PROPERTY_ALIASID_MAX;
 		PROPERTYDESCRIPTION_MAP::iterator iter1 = cellPropertyDescr_.begin();
-		for(; iter1 != cellPropertyDescr_.end(); ++iter1)
-		{
-			if(iter1->second->hasClient())
-			{
-				propertyDescr_aliasmap_[aliasID] = iter1->second;
-				iter1->second->aliasID(aliasID++);
-			}
-		}
-
-		iter1 = basePropertyDescr_.begin();
-		for(; iter1 != basePropertyDescr_.end(); ++iter1)
-		{
-			if(iter1->second->hasClient())
-			{
-				propertyDescr_aliasmap_[aliasID] = iter1->second;
-				iter1->second->aliasID(aliasID++);
-			}
-		}
-
 		iter1 = clientPropertyDescr_.begin();
 		for(; iter1 != clientPropertyDescr_.end(); ++iter1)
 		{
@@ -158,24 +139,6 @@ void ScriptDefModule::onLoaded(void)
 		
 		if(aliasID > 255)
 		{
-			iter1 = cellPropertyDescr_.begin();
-			for(; iter1 != cellPropertyDescr_.end(); ++iter1)
-			{
-				if(iter1->second->hasClient())
-				{
-					iter1->second->aliasID(-1);
-				}
-			}
-
-			iter1 = basePropertyDescr_.begin();
-			for(; iter1 != basePropertyDescr_.end(); ++iter1)
-			{
-				if(iter1->second->hasClient())
-				{
-					iter1->second->aliasID(-1);
-				}
-			}
-
 			iter1 = clientPropertyDescr_.begin();
 			for(; iter1 != clientPropertyDescr_.end(); ++iter1)
 			{
