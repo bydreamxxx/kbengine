@@ -944,7 +944,7 @@ void Entity::onRemoteCallMethodFromClient(Network::Channel* pChannel, ENTITY_ID 
 	{
 		if(!pMethodDescription->isExposed())
 		{
-			ERROR_MSG(fmt::format("{2}::onRemoteMethodCall: {0} not is exposed, call is illegal! entityID:{1}.\n",
+			ERROR_MSG(fmt::format("{2}::onRemoteCallMethodFromClient: {0} not is exposed, call is illegal! entityID:{1}.\n",
 				pMethodDescription->getName(), this->id(), this->scriptName()));
 
 			s.done();
@@ -953,7 +953,7 @@ void Entity::onRemoteCallMethodFromClient(Network::Channel* pChannel, ENTITY_ID 
 	}
 	else
 	{
-		ERROR_MSG(fmt::format("{2}::onRemoteMethodCall: can't found method. utype={0}, methodName=unknown, callerID:{1}.\n",
+		ERROR_MSG(fmt::format("{2}::onRemoteCallMethodFromClient: can't found method. utype={0}, methodName=unknown, callerID:{1}.\n",
 			utype, id_, this->scriptName()));
 
 		return;
@@ -3793,7 +3793,7 @@ void Entity::onRemoteRealMethodCall(KBEngine::MemoryStream& s)
 	MethodDescription* pMethodDescription = pScriptModule()->findCellMethodDescription(utype);
 	if(pMethodDescription == NULL)
 	{
-		ERROR_MSG(fmt::format("{}::onRemoteRealMethodCall: not found propertyID({}), entityID({})\n", 
+		ERROR_MSG(fmt::format("{}::onRemoteRealMethodCall: not found method({}), entityID({})\n", 
 			scriptName(), utype, id()));
 
 		s.done();
