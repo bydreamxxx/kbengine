@@ -413,6 +413,10 @@ public:
 	*/
 	virtual void onParentChanged(Network::Channel* pChannel, ENTITY_ID entityID, ENTITY_ID parentID);
 	
+	/**
+		ÔÊÐí½Å±¾assertµ×²ã
+	*/
+	static PyObject* __py_assert(PyObject* self, PyObject* args);
 
 protected:				
 	int32													appID_;
