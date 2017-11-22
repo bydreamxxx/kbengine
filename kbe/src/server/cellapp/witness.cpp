@@ -157,9 +157,9 @@ void Witness::onAttach(Entity* pEntity)
 
 	// 通知客户端enterworld
 	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
-	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START(pEntity_->id(), (*pSendBundle));
+	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 	
-	ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onUpdatePropertys, updatePropertys);
+	ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onUpdatePropertys, updatePropertys);
 	MemoryStream* s1 = MemoryStream::createPoolObject();
 	(*pSendBundle) << pEntity_->id();
 	pEntity_->addPositionAndDirectionToStream(*s1, true);
@@ -167,7 +167,7 @@ void Witness::onAttach(Entity* pEntity)
 	MemoryStream::reclaimPoolObject(s1);
 	ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onUpdatePropertys, updatePropertys);
 	
-	ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onEntityEnterWorld, entityEnterWorld);
+	ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityEnterWorld, entityEnterWorld);
 
 	(*pSendBundle) << pEntity_->id();
 	pEntity_->pScriptModule()->addSmartUTypeToBundle(pSendBundle);
@@ -198,9 +198,9 @@ void Witness::detach(Entity* pEntity)
 
 			// 通知客户端leaveworld
 			Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
-			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START(pEntity_->id(), (*pSendBundle));
+			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onEntityLeaveWorld, entityLeaveWorld);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityLeaveWorld, entityLeaveWorld);
 			(*pSendBundle) << pEntity->id();
 			ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onEntityLeaveWorld, entityLeaveWorld);
 			pClientMB->postMail(pSendBundle);
@@ -488,19 +488,19 @@ void Witness::resetAOIEntities()
 void Witness::onEnterSpace(Space* pSpace)
 {
 	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
-	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START(pEntity_->id(), (*pSendBundle));
+	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 
 	// 通知位置强制改变
 	Position3D &pos = pEntity_->position();
 	Direction3D &dir = pEntity_->direction();
-	ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onSetEntityPosAndDir, setEntityPosAndDir);
+	ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onSetEntityPosAndDir, setEntityPosAndDir);
 	(*pSendBundle) << pEntity_->id();
 	(*pSendBundle) << pos.x << pos.y << pos.z;
 	(*pSendBundle) << dir.roll() << dir.pitch() << dir.yaw();
 	ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onSetEntityPosAndDir, setEntityPosAndDir);
 	
 	// 通知进入了新地图
-	ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onEntityEnterSpace, entityEnterSpace);
+	ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityEnterSpace, entityEnterSpace);
 
 	(*pSendBundle) << pEntity_->id();
 	(*pSendBundle) << pSpace->id();
@@ -521,9 +521,9 @@ void Witness::onLeaveSpace(Space* pSpace)
 	uninstallAOITrigger();
 
 	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
-	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START(pEntity_->id(), (*pSendBundle));
+	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 
-	ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onEntityLeaveSpace, entityLeaveSpace);
+	ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityLeaveSpace, entityLeaveSpace);
 	(*pSendBundle) << pEntity_->id();
 	ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onEntityLeaveSpace, entityLeaveSpace);
 	pEntity_->clientMailbox()->postMail(pSendBundle);
@@ -744,7 +744,7 @@ bool Witness::update()
 		bool isBufferedSendBundleMessageLength = pSendBundle->packets().size() > 0 ? true : 
 			(pSendBundle->pCurrPacket() && pSendBundle->pCurrPacket()->length() > 0);
 		
-		NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START(pEntity_->id(), (*pSendBundle));
+		NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 		addBaseDataToStream(pSendBundle);
 
 		AOI_ENTITIES::iterator iter = aoiEntities_.begin();
@@ -773,13 +773,13 @@ bool Witness::update()
 				otherEntity->addPositionAndDirectionToStream(*s1, true);			
 				otherEntity->addClientDataToStream(s1, true);
 				
-				ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onUpdatePropertys, updatePropertys);
+				ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onUpdatePropertys, updatePropertys);
 				(*pSendBundle) << otherEntity->id();
 				(*pSendBundle).append(*s1);
 				MemoryStream::reclaimPoolObject(s1);
 				ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onUpdatePropertys, updatePropertys);
 				
-				ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onEntityEnterWorld, entityEnterWorld);
+				ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityEnterWorld, entityEnterWorld);
 				(*pSendBundle) << otherEntity->id();
 				otherEntity->pScriptModule()->addSmartUTypeToBundle(pSendBundle);
 				if (!otherEntity->isOnGround() || otherEntity->parent())
@@ -803,7 +803,7 @@ bool Witness::update()
 
 				if((pEntityRef->flags() & ENTITYREF_FLAG_NORMAL) > 0)
 				{
-					ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onEntityLeaveWorldOptimized, leaveWorld);
+					ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityLeaveWorldOptimized, leaveWorld);
 					_addAOIEntityIDToBundle(pSendBundle, pEntityRef);
 					ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onEntityLeaveWorldOptimized, leaveWorld);
 					
@@ -840,7 +840,7 @@ bool Witness::update()
 		}
 
 		size_t pSendBundleMessageLength = pSendBundle->currMsgLength();
-		if (pSendBundleMessageLength > 8/*NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START产生的基础包大小*/)
+		if (pSendBundleMessageLength > 8/*NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN产生的基础包大小*/)
 		{
 			if(pSendBundleMessageLength > PACKET_MAX_SIZE_TCP)
 			{
@@ -855,7 +855,7 @@ bool Witness::update()
 		{
 			// 如果bundle是channel缓存的包
 			// 取出来重复利用的如果想丢弃本次消息发送
-			// 此时应该将NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START从其中抹除掉
+			// 此时应该将NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN从其中抹除掉
 			if(isBufferedSendBundleMessageLength)
 			{
 				KBE_ASSERT(pSendBundleMessageLength == 8);
@@ -882,7 +882,7 @@ void Witness::addBaseDataToStream(Network::Bundle* pSendBundle)
 
 		if (KBEVec3Length(&changeDir) > 0.0004f)
 		{
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onUpdateBaseDir, onUpdateBaseDir);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onUpdateBaseDir, onUpdateBaseDir);
 			(*pSendBundle) << bdir.yaw() << bdir.pitch() << bdir.roll();
 			ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onUpdateBaseDir, onUpdateBaseDir);
 			lastBaseDir_ = bdir;
@@ -897,13 +897,13 @@ void Witness::addBaseDataToStream(Network::Bundle* pSendBundle)
 
 	if (fabs(lastBasePos_.y - bpos.y) > 0.0004f)
 	{
-		ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onUpdateBasePos, basePos);
+		ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onUpdateBasePos, basePos);
 		pSendBundle->appendPackAnyXYZ(bpos.x, bpos.y, bpos.z, 0.f);
 		ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onUpdateBasePos, basePos);
 	}
 	else
 	{
-		ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, ClientInterface::onUpdateBasePosXZ, basePos);
+		ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onUpdateBasePosXZ, basePos);
 		pSendBundle->appendPackAnyXZ(bpos.x, bpos.z, 0.f);
 		ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onUpdateBasePosXZ, basePos);
 	}
@@ -928,7 +928,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			Position3D relativePos;
 			relativePosition(relativePos, otherEntity);
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			ENTITY_MESSAGE_FORWARD_CLIENT_END(pForwardBundle, ClientInterface::onUpdateData_xz, update);
@@ -939,7 +939,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			Position3D relativePos;
 			relativePosition(relativePos, otherEntity);
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
@@ -950,7 +950,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 		{
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_y, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_y, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			(*pForwardBundle) << angle2int8(dir.yaw());
 			ENTITY_MESSAGE_FORWARD_CLIENT_END(pForwardBundle, ClientInterface::onUpdateData_y, update);
@@ -960,7 +960,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 		{
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_r, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_r, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			(*pForwardBundle) << angle2int8(dir.roll());
 			ENTITY_MESSAGE_FORWARD_CLIENT_END(pForwardBundle, ClientInterface::onUpdateData_r, update);
@@ -970,7 +970,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 		{
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_p, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_p, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			(*pForwardBundle) << angle2int8(dir.pitch());
 			ENTITY_MESSAGE_FORWARD_CLIENT_END(pForwardBundle, ClientInterface::onUpdateData_p, update);
@@ -980,7 +980,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 		{
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_ypr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_ypr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			(*pForwardBundle) << angle2int8(dir.yaw());
 			(*pForwardBundle) << angle2int8(dir.pitch());
@@ -992,7 +992,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 		{
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_yp, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_yp, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			(*pForwardBundle) << angle2int8(dir.yaw());
 			(*pForwardBundle) << angle2int8(dir.pitch());
@@ -1003,7 +1003,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 		{
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_yr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_yr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			(*pForwardBundle) << angle2int8(dir.yaw());
 			(*pForwardBundle) << angle2int8(dir.roll());
@@ -1014,7 +1014,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 		{
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_pr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_pr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			(*pForwardBundle) << angle2int8(dir.pitch());
 			(*pForwardBundle) << angle2int8(dir.roll());
@@ -1027,7 +1027,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz_y, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz_y, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			(*pForwardBundle) << angle2int8(dir.yaw());
@@ -1040,7 +1040,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz_p, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz_p, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			(*pForwardBundle) << angle2int8(dir.pitch());
@@ -1053,7 +1053,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz_r, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz_r, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			(*pForwardBundle) << angle2int8(dir.roll());
@@ -1066,7 +1066,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz_yr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz_yr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			(*pForwardBundle) << angle2int8(dir.yaw());
@@ -1080,7 +1080,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz_yp, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz_yp, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			(*pForwardBundle) << angle2int8(dir.yaw());
@@ -1094,7 +1094,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz_pr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz_pr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			(*pForwardBundle) << angle2int8(dir.pitch());
@@ -1108,7 +1108,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 			
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xz_ypr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xz_ypr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			(*pForwardBundle) << angle2int8(dir.yaw());
@@ -1123,7 +1123,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz_y, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz_y, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
@@ -1137,7 +1137,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz_p, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz_p, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
@@ -1151,7 +1151,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz_r, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz_r, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
@@ -1165,7 +1165,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz_yr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz_yr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
@@ -1180,7 +1180,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz_yp, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz_yp, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
@@ -1195,7 +1195,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz_pr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz_pr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
@@ -1210,7 +1210,7 @@ void Witness::addUpdateToStream(Network::Bundle* pForwardBundle, uint32 flags, E
 			relativePosition(relativePos, otherEntity);
 			const Direction3D& dir = otherEntity->localDirection();
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pForwardBundle, ClientInterface::onUpdateData_xyz_ypr, update);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pForwardBundle, ClientInterface::onUpdateData_xyz_ypr, update);
 			_addAOIEntityIDToBundle(pForwardBundle, pEntityRef);
 			pForwardBundle->appendPackXZ(relativePos.x, relativePos.z);
 			pForwardBundle->appendPackY(relativePos.y);
