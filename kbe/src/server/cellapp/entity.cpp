@@ -4588,9 +4588,9 @@ void Entity::callSelfClientMethod(const Network::MessageHandler& msgHandler, con
 		if (pChannel)
 		{
 			pSendBundle = pChannel->createSendBundle();
-			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START(id(), (*pSendBundle));
+			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(id(), (*pSendBundle));
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, msgHandler, callSelfClientMethod);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, msgHandler, callSelfClientMethod);
 
 			if (mstream->wpos() > 0)
 				(*pSendBundle).append(mstream->data(), (int)mstream->wpos());
@@ -4670,9 +4670,9 @@ void Entity::callOtherClientsMethod(const Network::MessageHandler& msgHandler, c
 			continue;
 
 		Network::Bundle* pSendBundle = pChannel->createSendBundle();
-		NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_START(pAoiEntity->id(), (*pSendBundle));
+		NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pAoiEntity->id(), (*pSendBundle));
 
-		ENTITY_MESSAGE_FORWARD_CLIENT_START(pSendBundle, msgHandler, callOtherClientsMethod);
+		ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, msgHandler, callOtherClientsMethod);
 
 		if (mstream->wpos() > 0)
 			(*pSendBundle).append(mstream->data(), (int)mstream->wpos());
