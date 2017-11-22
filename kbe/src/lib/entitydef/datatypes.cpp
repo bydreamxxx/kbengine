@@ -27,6 +27,7 @@ namespace KBEngine{
 DataTypes::DATATYPE_MAP DataTypes::dataTypes_;
 DataTypes::DATATYPE_MAP DataTypes::dataTypesLowerName_;
 DataTypes::UID_DATATYPE_MAP DataTypes::uid_dataTypes_;
+DataTypes::DATATYPE_ORDERS DataTypes::dataTypesOrders_;
 
 //-------------------------------------------------------------------------------------
 DataTypes::DataTypes()
@@ -105,6 +106,14 @@ bool DataTypes::loadAlias(std::string& file)
 		std::string aliasName = xml->getKey(node);
 		TiXmlNode* childNode = node->FirstChild();
 
+		// 不允许前面加_, 因为内部产生的一些临时结构前面使用了_, 避免误判
+		if (aliasName[0] == '_')
+		{
+			ERROR_MSG(fmt::format("DataTypes::loadAlias: Not allowed to use the prefix \"_\"! aliasName={}\n",
+				aliasName.c_str()));
+			return false;
+		}
+
 		if(childNode != NULL)
 		{
 			type = xml->getValStr(childNode);
@@ -165,6 +174,8 @@ bool DataTypes::loadAlias(std::string& file)
 //-------------------------------------------------------------------------------------
 bool DataTypes::addDataType(std::string name, DataType* dataType)
 {
+	dataTypesOrders_.push_back(name);
+
 	dataType->aliasName(name);
 	std::string lowername = name;
 	std::transform(lowername.begin(), lowername.end(), lowername.begin(), tolower);	

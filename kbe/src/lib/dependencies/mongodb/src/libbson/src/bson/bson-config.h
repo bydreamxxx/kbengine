@@ -82,7 +82,7 @@
 /*
  * Define to 1 if you have _set_output_format (VS2013 and older).
  */
-#define BSON_NEEDS_SET_OUTPUT_FORMAT 1
+#define BSON_NEEDS_SET_OUTPUT_FORMAT 0
 #if BSON_NEEDS_SET_OUTPUT_FORMAT != 1
 # undef BSON_NEEDS_SET_OUTPUT_FORMAT
 #endif

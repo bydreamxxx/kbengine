@@ -3024,7 +3024,7 @@ PyObject* Entity::__py_pyEntitiesInRange(PyObject* self, PyObject* args)
 
 	if(!pobj->isReal())
 	{
-		PyErr_Format(PyExc_AssertionError, "%s::entitiesInAOI: not is real entity(%d).", 
+		PyErr_Format(PyExc_AssertionError, "%s::entitiesInRange: not is real entity(%d).", 
 			pobj->scriptName(), pobj->id());
 		PyErr_PrintEx(0);
 		return 0;
@@ -3033,9 +3033,10 @@ PyObject* Entity::__py_pyEntitiesInRange(PyObject* self, PyObject* args)
 	PyObject* pyPosition = NULL, *pyEntityType = NULL;
 	float radius = 0.f;
 
-	if(pobj->isDestroyed())
+	if(pobj->isDestroyed() && !pobj->hasFlags(ENTITY_FLAGS_DESTROYING) /* 允许在销毁期间调用 */)
 	{
-		PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: entity is destroyed!");
+		PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: entity(%d) is destroyed!",
+			pobj->scriptName(), pobj->id());
 		PyErr_PrintEx(0);
 		return 0;
 	}
@@ -3044,7 +3045,8 @@ PyObject* Entity::__py_pyEntitiesInRange(PyObject* self, PyObject* args)
 	{
 		if(PyArg_ParseTuple(args, "f", &radius) == -1)
 		{
-			PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: args error!");
+			PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: args error! entity(%d)",
+				pobj->scriptName(), pobj->id());
 			PyErr_PrintEx(0);
 			return 0;
 		}
@@ -3053,14 +3055,16 @@ PyObject* Entity::__py_pyEntitiesInRange(PyObject* self, PyObject* args)
 	{
 		if(PyArg_ParseTuple(args, "fO", &radius, &pyEntityType) == -1)
 		{
-			PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: args error!");
+			PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: args error! entity(%d)",
+				pobj->scriptName(), pobj->id());
 			PyErr_PrintEx(0);
 			return 0;
 		}
 
 		if(pyEntityType && pyEntityType != Py_None && !PyUnicode_Check(pyEntityType))
 		{
-			PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: args(entityType) error!");
+			PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: args(entityType) error! entity(%d)",
+				pobj->scriptName(), pobj->id());
 			PyErr_PrintEx(0);
 			return 0;
 		}
@@ -3070,28 +3074,32 @@ PyObject* Entity::__py_pyEntitiesInRange(PyObject* self, PyObject* args)
 	{
 		if(PyArg_ParseTuple(args, "fOO", &radius, &pyEntityType, &pyPosition) == -1)
 		{
-			PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: args error!");
+			PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: args error! entity(%d)",
+				pobj->scriptName(), pobj->id());
 			PyErr_PrintEx(0);
 			return 0;
 		}
 		
 		if(pyEntityType && pyEntityType != Py_None && !PyUnicode_Check(pyEntityType))
 		{
-			PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: args(entityType) error!");
+			PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: args(entityType) error! entity(%d)",
+				pobj->scriptName(), pobj->id());
 			PyErr_PrintEx(0);
 			return 0;
 		}
 
 		if (pyPosition != Py_None && (!PySequence_Check(pyPosition) || PySequence_Size(pyPosition) < 3))
 		{
-			PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: args(position) error!");
+			PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: args(position) error! entity(%d)",
+				pobj->scriptName(), pobj->id());
 			PyErr_PrintEx(0);
 			return 0;
 		}
 	}
 	else
 	{
-		PyErr_Format(PyExc_TypeError, "Entity::entitiesInRange: args error!");
+		PyErr_Format(PyExc_TypeError, "%s::entitiesInRange: args error! entity(%d)",
+			pobj->scriptName(), pobj->id());
 		PyErr_PrintEx(0);
 		return 0;
 	}

@@ -126,8 +126,7 @@ void ScriptDefModule::onLoaded(void)
 	if(EntityDef::entitydefAliasID())
 	{
 		int aliasID = ENTITY_BASE_PROPERTY_ALIASID_MAX;
-		PROPERTYDESCRIPTION_MAP::iterator iter1 = cellPropertyDescr_.begin();
-		iter1 = clientPropertyDescr_.begin();
+		 PROPERTYDESCRIPTION_MAP::iterator iter1 = clientPropertyDescr_.begin();
 		for(; iter1 != clientPropertyDescr_.end(); ++iter1)
 		{
 			if(iter1->second->hasClient())
