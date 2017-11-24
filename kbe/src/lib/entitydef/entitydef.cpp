@@ -436,7 +436,7 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 							   TiXmlNode* defNode, 
 							   ScriptDefModule* pScriptModule)
 {
-	TiXmlNode* implementsNode = defxml->enterNode(defNode, "Interfaces");
+	TiXmlNode* implementsNode = defxml->enterNode(defNode, "Implements");
 	if(implementsNode == NULL)
 		return true;
 
