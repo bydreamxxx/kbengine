@@ -219,8 +219,12 @@ inline uint64 secondsToStamps(float seconds)
 #define KBE_NEXT_ONLY								2
 
 /** c/c++数据类别转换成KBEDataTypeID */
+#define KBE_DATATYPE2ID_MAX							20
 uint16 datatype2id(std::string datatype);
 
+/** c/c++数据类别转换成原生类别UINT16 ... */
+std::string datatype2nativetype(std::string datatype);
+std::string datatype2nativetype(uint16 datatype);
 
 }
 

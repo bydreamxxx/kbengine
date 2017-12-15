@@ -18,11 +18,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KBE_CLIENT_TEMPLATES_H
-#define KBE_CLIENT_TEMPLATES_H
+#ifndef KBE_CLIENT_SDK_H
+#define KBE_CLIENT_SDK_H
 
 #include "common/common.h"
 #include "helper/debug_helper.h"
+#include "network/message_handler.h"
 
 namespace KBEngine{
 
@@ -33,17 +34,45 @@ class FixedDictType;
 class FixedArrayType;
 class DataType;
 
-class ClientTemplates
+class ClientSDK
 {
 public:
-	ClientTemplates();
-	virtual ~ClientTemplates();
+	ClientSDK();
+	virtual ~ClientSDK();
 
 	virtual bool good() const;
 
+	virtual std::string name() const {
+		return "unknown";
+	}
+
 	virtual bool create(const std::string& path);
 
-	virtual void onCreateModuleFileName(const std::string& moduleName);
+	virtual void onCreateEntityModuleFileName(const std::string& moduleName);
+	virtual void onCreateServerErrorDescrsModuleFileName();
+	virtual void onCreateEngineMessagesModuleFileName();
+	virtual void onCreateEntityDefsModuleFileName();
+
+	virtual bool copyPluginsSourceToPath(const std::string& path);
+
+	virtual bool writeServerErrorDescrsModule();
+	virtual bool writeServerErrorDescrsModuleBegin();
+	virtual bool writeServerErrorDescrsModuleErrDescr(int errorID, const std::string& errname, const std::string& errdescr);
+	virtual bool writeServerErrorDescrsModuleEnd();
+
+	virtual bool writeEngineMessagesModule();
+	virtual bool writeEngineMessagesModuleBegin();
+	virtual bool writeEngineMessagesModuleMessage(Network::ExposedMessageInfo& messageInfos, COMPONENT_TYPE componentType);
+	virtual bool writeEngineMessagesModuleEnd();
+
+	bool writeEntityDefsModule();
+	virtual bool writeEntityDefsModuleBegin();
+	virtual bool writeEntityDefsModuleEnd();
+	bool writeEntityDefModule(ScriptDefModule* pScriptDefModule);
+	virtual bool writeEntityDefModuleType(const DataType* pDataType);
+	virtual bool writeEntityDefScriptModule(ScriptDefModule* pScriptDefModule);
+	virtual bool writeEntityDefMethodDescr(ScriptDefModule* pScriptDefModule, MethodDescription* pDescr, COMPONENT_TYPE componentType);
+	virtual bool writeEntityDefPropertyDescr(ScriptDefModule* pScriptDefModule, PropertyDescription* pDescr);
 
 	virtual bool writeTypes();
 	virtual bool writeTypesBegin();
@@ -179,144 +208,146 @@ public:
 
 	virtual bool saveFile();
 
-	virtual bool writeModule(ScriptDefModule* pEntityScriptDefModule);
-	virtual bool writeModuleBegin(ScriptDefModule* pEntityScriptDefModule);
-	virtual bool writeModuleEnd(ScriptDefModule* pEntityScriptDefModule);
+	virtual bool writeEntityModule(ScriptDefModule* pEntityScriptDefModule);
+	virtual bool writeEntityModuleBegin(ScriptDefModule* pEntityScriptDefModule);
+	virtual bool writeEntityModuleEnd(ScriptDefModule* pEntityScriptDefModule);
 
-	virtual bool writePropertys(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityPropertys(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule);
 
-	virtual bool writeProperty(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription);
 
-	virtual bool writeProperty_INT8(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_INT8(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_INT16(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_INT16(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_INT32(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_INT32(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_INT64(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_INT64(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_UINT8(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_UINT8(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_UINT16(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_UINT16(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_UINT32(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_UINT32(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_UINT64(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_UINT64(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_FLOAT(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_FLOAT(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_DOUBLE(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_DOUBLE(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_STRING(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_STRING(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_UNICODE(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_UNICODE(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_PYTHON(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_PYTHON(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_PY_DICT(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_PY_DICT(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_PY_TUPLE(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_PY_TUPLE(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_PY_LIST(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_PY_LIST(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_BLOB(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_BLOB(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_ARRAY(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_ARRAY(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_FIXED_DICT(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_FIXED_DICT(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_VECTOR2(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_VECTOR2(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_VECTOR3(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_VECTOR3(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_VECTOR4(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_VECTOR4(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeProperty_MAILBOX(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityProperty_MAILBOX(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription) {
 		return false;
 	}
 
-	virtual bool writeMethods(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityMethods(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule);
 
-	virtual bool writeMethod(ScriptDefModule* pEntityScriptDefModule,
+	virtual bool writeEntityMethod(ScriptDefModule* pEntityScriptDefModule,
 		ScriptDefModule* pCurrScriptDefModule, MethodDescription* pMethodDescription, const char* fillString);
 
-	virtual bool writeMethodArgs_ARRAY(FixedArrayType* pFixedArrayType, std::string& stackArgsTypeBody, const std::string& childItemName);
-	virtual bool writeMethodArgs_Const_Ref(DataType* pDataType, std::string& stackArgsTypeBody);
+	virtual bool writeEntityMethodArgs_ARRAY(FixedArrayType* pFixedArrayType, std::string& stackArgsTypeBody, const std::string& childItemName);
+	virtual bool writeEntityMethodArgs_Const_Ref(DataType* pDataType, std::string& stackArgsTypeBody);
 
-	static ClientTemplates* createClientTemplates(const std::string& type);
+	virtual bool writeEntityProcessMessagesMethod(ScriptDefModule* pEntityScriptDefModule);
+
+	static ClientSDK* createClientSDK(const std::string& type);
 
 protected:
-	std::string path_;
+	std::string basepath_, currpath_;
 	std::string sourcefileBody_;
 	std::string sourcefileName_;
 };

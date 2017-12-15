@@ -53,7 +53,6 @@ bool EntityTableRedis::initialize(ScriptDefModule* sm, std::string name)
 	// 找到所有存储属性并且创建出所有的字段
 	ScriptDefModule::PROPERTYDESCRIPTION_MAP& pdescrsMap = sm->getPersistentPropertyDescriptions();
 	ScriptDefModule::PROPERTYDESCRIPTION_MAP::const_iterator iter = pdescrsMap.begin();
-	std::string hasUnique = "";
 
 	for(; iter != pdescrsMap.end(); ++iter)
 	{
@@ -73,8 +72,7 @@ bool EntityTableRedis::initialize(ScriptDefModule* sm, std::string name)
 			return false;
 		}
 		
-		tableItems_[pETItem->utype()].reset(pETItem);
-		tableFixedOrderItems_.push_back(pETItem);
+		addItem(pETItem);
 	}
 
 	// 特殊处理， 数据库保存方向和位置
@@ -104,16 +102,14 @@ bool EntityTableRedis::initialize(ScriptDefModule* sm, std::string name)
 		pETItem->utype(posuid);
 		pETItem->tableName(this->tableName());
 		pETItem->itemName("position");
-		tableItems_[pETItem->utype()].reset(pETItem);
-		tableFixedOrderItems_.push_back(pETItem);
+		addItem(pETItem);
 
 		pETItem = this->createItem("VECTOR3", "");
 		pETItem->pParentTable(this);
 		pETItem->utype(diruid);
 		pETItem->tableName(this->tableName());
 		pETItem->itemName("direction");
-		tableItems_[pETItem->utype()].reset(pETItem);
-		tableFixedOrderItems_.push_back(pETItem);
+		addItem(pETItem);
 	}
 
 	init_db_item_name();

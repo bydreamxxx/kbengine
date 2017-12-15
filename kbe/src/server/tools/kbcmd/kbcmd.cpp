@@ -21,8 +21,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "profile.h"
 #include "kbcmd.h"
 #include "kbcmd_interface.h"
-#include "client_templates_unity.h"
-#include "client_templates_ue4.h"
+#include "client_sdk_unity.h"
+#include "client_sdk_ue4.h"
 #include "network/common.h"
 #include "network/tcp_packet.h"
 #include "network/udp_packet.h"
@@ -30,6 +30,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "thread/threadpool.h"
 #include "server/components.h"
 #include "server/telnet_server.h"
+#include "entitydef/entitydef.h"
 
 #include "baseapp/baseapp_interface.h"
 #include "cellapp/cellapp_interface.h"
@@ -104,6 +105,8 @@ void KBCMD::handleMainTick()
 //-------------------------------------------------------------------------------------
 bool KBCMD::initializeBegin()
 {
+	EntityDef::entityAliasID(ServerConfig::getSingleton().getCellApp().aliasEntityID);
+	EntityDef::entitydefAliasID(ServerConfig::getSingleton().getCellApp().entitydefAliasID);
 	return true;
 }
 
