@@ -23,15 +23,10 @@
 		};
 		    	
 		public string name = "";
-    	public KBEDATATYPE_BASE utype = null;
 		public UInt16 properUtype = 0;
 		public UInt32 properFlags = 0;
 		public Int16 aliasID = -1;
-		
-		public string defaultValStr = "";
-		public System.Reflection.MethodInfo setmethod = null;
-		
-		public object val = null;
+		public object defaultVal = null;
 		
 		public Property()
 		{

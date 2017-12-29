@@ -1141,6 +1141,10 @@ PyObject* PythonType::createFromStream(MemoryStream* mstream)
 {
 	std::string datas = "";
 	mstream->readBlob(datas);
+
+	if (datas.size() == 0)
+		Py_RETURN_NONE;
+
 	return script::Pickler::unpickle(datas);
 }
 
@@ -1189,6 +1193,18 @@ PyObject* PyDictType::parseDefaultStr(std::string defaultVal)
 }
 
 //-------------------------------------------------------------------------------------
+PyObject* PyDictType::createFromStream(MemoryStream* mstream)
+{
+	std::string datas = "";
+	mstream->readBlob(datas);
+
+	if (datas.size() == 0)
+		return PyDict_New();
+
+	return script::Pickler::unpickle(datas);
+}
+
+//-------------------------------------------------------------------------------------
 PyTupleType::PyTupleType(DATATYPE_UID did):
 PythonType(did)
 {
@@ -1233,6 +1249,18 @@ PyObject* PyTupleType::parseDefaultStr(std::string defaultVal)
 }
 
 //-------------------------------------------------------------------------------------
+PyObject* PyTupleType::createFromStream(MemoryStream* mstream)
+{
+	std::string datas = "";
+	mstream->readBlob(datas);
+
+	if (datas.size() == 0)
+		return PyTuple_New(0);
+
+	return script::Pickler::unpickle(datas);
+}
+
+//-------------------------------------------------------------------------------------
 PyListType::PyListType(DATATYPE_UID did):
 PythonType(did)
 {
@@ -1274,6 +1302,18 @@ PyObject* PyListType::parseDefaultStr(std::string defaultVal)
 		Py_DECREF(pyVal);
 
 	return PyList_New(0);
+}
+
+//-------------------------------------------------------------------------------------
+PyObject* PyListType::createFromStream(MemoryStream* mstream)
+{
+	std::string datas = "";
+	mstream->readBlob(datas);
+
+	if (datas.size() == 0)
+		return PyList_New(0);
+
+	return script::Pickler::unpickle(datas);
 }
 
 //-------------------------------------------------------------------------------------
@@ -1543,7 +1583,7 @@ PyObject* FixedArrayType::createNewFromObj(PyObject* pyobj)
 }
 
 //-------------------------------------------------------------------------------------
-bool FixedArrayType::initialize(XML* xml, TiXmlNode* node)
+bool FixedArrayType::initialize(XML* xml, TiXmlNode* node, const std::string& parentName)
 {
 	dataType_ = NULL;
 	TiXmlNode* arrayNode = xml->enterNode(node, "of");
@@ -1558,12 +1598,15 @@ bool FixedArrayType::initialize(XML* xml, TiXmlNode* node)
 	if(strType == "ARRAY")
 	{
 		FixedArrayType* dataType = new FixedArrayType();
-		if(dataType->initialize(xml, arrayNode)){
+
+		if(dataType->initialize(xml, arrayNode, std::string("_") + parentName +
+			dataType->aliasName() + "_ArrayType"))
+		{
 			dataType_ = dataType;
 			dataType_->incRef();
 
-			DataTypes::addDataType(std::string("_") + KBEngine::StringConv::val2str(KBEngine::genUUID64()) + 
-				dataType->aliasName(), dataType);
+			DataTypes::addDataType(std::string("_") + parentName +
+				dataType->aliasName() + "_ArrayType", dataType);
 		}
 		else
 		{
@@ -1836,7 +1879,7 @@ PyObject* FixedDictType::createNewFromObj(PyObject* pyobj)
 }
 
 //-------------------------------------------------------------------------------------
-bool FixedDictType::initialize(XML* xml, TiXmlNode* node)
+bool FixedDictType::initialize(XML* xml, TiXmlNode* node, std::string& parentName)
 {
 	TiXmlNode* propertiesNode = xml->enterNode(node, "Properties");
 	if(propertiesNode == NULL)
@@ -1881,7 +1924,7 @@ bool FixedDictType::initialize(XML* xml, TiXmlNode* node)
 				DictItemDataTypePtr pDictItemDataType(new DictItemDataType());
 				pDictItemDataType->dataType = dataType;
 
-				if(dataType->initialize(xml, typeNode))
+				if(dataType->initialize(xml, typeNode, std::string("_") + parentName + std::string("_") + typeName + "_ArrayType"))
 				{
 					DATATYPE_UID uid = dataType->id();
 					EntityDef::md5().append((void*)&uid, sizeof(DATATYPE_UID));
@@ -1900,7 +1943,7 @@ bool FixedDictType::initialize(XML* xml, TiXmlNode* node)
 					pDictItemDataType->databaseLength = databaseLength;
 					EntityDef::md5().append((void*)&persistent, sizeof(bool));
 					EntityDef::md5().append((void*)&databaseLength, sizeof(uint32));
-					DataTypes::addDataType(std::string("_") + KBEngine::StringConv::val2str(KBEngine::genUUID64()) + typeName, dataType);
+					DataTypes::addDataType(std::string("_") + parentName + std::string("_") + typeName + "_ArrayType", dataType);
 				}
 				else
 				{

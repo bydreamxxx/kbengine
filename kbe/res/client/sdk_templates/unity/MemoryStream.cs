@@ -124,6 +124,11 @@
 			return _converter.GetString(datas_, offset, rpos - offset - 1);
 		}
 	
+		public string readUnicode()
+		{
+			return System.Text.Encoding.UTF8.GetString(readBlob());
+		}
+
 		public byte[] readBlob()
 		{
 			UInt32 size = readUint32();
@@ -134,6 +139,26 @@
 			return buf;
 		}
 	
+		public Vector2 readVector2()
+		{
+			return new Vector2(readFloat(), readFloat());
+		}
+
+		public Vector3 readVector3()
+		{
+			return new Vector3(readFloat(), readFloat(), readFloat());
+		}
+
+		public Vector4 readVector4()
+		{
+			return new Vector4(readFloat(), readFloat(), readFloat(), readFloat());
+		}
+
+		public byte[] readPython()
+		{
+			return readBlob();
+		}
+
 		public Vector2 readPackXZ()
 		{
 			PackFloatXType xPackData;
@@ -285,6 +310,27 @@
 			}
 			
 			datas_[wpos++] = 0;
+		}
+
+		public void writeVector2(Vector2 v)
+		{
+			writeFloat(v.x);
+			writeFloat(v.y);
+		}
+
+		public void writeVector3(Vector3 v)
+		{
+			writeFloat(v.x);
+			writeFloat(v.y);
+			writeFloat(v.z);
+		}
+
+		public void writeVector4(Vector4 v)
+		{
+			writeFloat(v.x);
+			writeFloat(v.y);
+			writeFloat(v.z);
+			writeFloat(v.w);
 		}
 
 		//---------------------------------------------------------------------------------
