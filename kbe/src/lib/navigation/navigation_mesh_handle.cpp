@@ -441,14 +441,124 @@ int NavMeshHandle::findRandomPointAroundCircle(int layer, uint16 flags, const Po
 		return NAV_ERROR_NEARESTPOLY;
 	}
 
-	Position3D currpos;
+	//Get square(inner square of radius) across polygon.
+	const float squareSize = (float)(1.414*maxRadius);
+	float squareVerts[12] = {
+		spos[0] - squareSize / 2, spos[1], spos[2] + squareSize / 2,\
+		spos[0] + squareSize / 2, spos[1], spos[2] + squareSize / 2,\
+		spos[0] + squareSize / 2, spos[1], spos[2] - squareSize / 2,\
+		spos[0] - squareSize / 2, spos[1], spos[2] - squareSize / 2,\
+		};
 
+	static const int maxResult = 32;
+	dtPolyRef polyRefs[maxResult];
+	dtPolyRef parentPolyRefs[maxResult];
+	int polyCount = 0;
+	float cost[maxResult];
+	navmeshQuery->findPolysAroundShape(startRef, squareVerts, 4, &filter, polyRefs, parentPolyRefs, cost, &polyCount, maxResult);
+	if (polyCount == 0) 
+	{
+		return (int)points.size();
+	}
+
+	//Get all overlap polygon area.
+	dtPolyRef* allPolyRefs = new dtPolyRef[polyCount];
+	float* allPolyVerts = new float[(DT_VERTS_PER_POLYGON + 4) * 3 * polyCount];
+	int* allPolyVertsCount = new int[polyCount];
+	float* allPolyAreas = new float[polyCount];
+	int n = 0;
+
+	for (int i = 0; i < polyCount; i++)
+	{
+		const dtMeshTile* tile = 0;
+		const dtPoly* poly = 0;
+		dtPolyRef ref = polyRefs[i];
+		navmeshQuery->getAttachedNavMesh()->getTileAndPolyByRefUnsafe(ref, &tile, &poly);
+
+		if (poly->getType() != DT_POLYTYPE_GROUND) continue;
+
+		// Get overLap polygon.
+		float polyVerts[3 * DT_VERTS_PER_POLYGON];
+		for (int j = 0; j < poly->vertCount; ++j)
+		{
+			const float* v = &tile->verts[poly->verts[j] * 3];
+			dtVcopy(&polyVerts[j * 3], v);
+		}
+
+		float overlapPolyVerts[(DT_VERTS_PER_POLYGON + 4) * 3];
+		int nOverlapPolyVerts;
+		getOverlapPolyPoly2D(squareVerts, 4, polyVerts, poly->vertCount, overlapPolyVerts, &nOverlapPolyVerts);
+		if (nOverlapPolyVerts <= 0) continue;
+
+		// Caculate area of overLap polygon.
+		float polyArea = 0.0f;
+		for (int j = 2; j < nOverlapPolyVerts; ++j)
+		{
+			const float* va = &overlapPolyVerts[0];
+			const float* vb = &overlapPolyVerts[(j - 1) * 3];
+			const float* vc = &overlapPolyVerts[j * 3];
+			polyArea += dtTriArea2D(va, vb, vc);	//Vertices must sorted as clockwise, otherwise the area will be negative number.The result value is double of triangle area.
+		}
+		allPolyRefs[n] = ref;
+		allPolyAreas[n] = polyArea;
+		allPolyVertsCount[n] = nOverlapPolyVerts;
+
+		int startIndex = (DT_VERTS_PER_POLYGON + 4) * 3 * n;
+		for (int j = 0; j < nOverlapPolyVerts; ++j)
+		{
+			allPolyVerts[startIndex + j * 3] = overlapPolyVerts[j * 3];
+			allPolyVerts[startIndex + j * 3 + 1] = overlapPolyVerts[j * 3 + 1];
+			allPolyVerts[startIndex + j * 3 + 2] = overlapPolyVerts[j * 3 + 2];
+		}
+
+		n++;
+	}
+
+	if (n == 0) 
+	{
+		delete[] allPolyRefs;
+		delete[] allPolyVerts;
+		delete[] allPolyVertsCount;
+		delete[] allPolyAreas;
+		return (int)points.size();
+	}
+
+	//Random N point
+	Position3D currpos;
 	for (uint32 i = 0; i < max_points; i++)
 	{
 		float pt[3];
-		dtPolyRef ref;
-		dtStatus status = navmeshQuery->findRandomPointAroundCircle(startRef, spos, maxRadius, &filter, frand, &ref, pt);
-		if (dtStatusSucceed(status))
+		dtPolyRef randomRef = INVALID_NAVMESH_POLYREF;
+		float allAreaSum = 0.0f;
+		for (int j = 0; j < n; j++)
+		{
+			allAreaSum += allPolyAreas[j];
+			const float u = frand();
+			if (u*allAreaSum <= allPolyAreas[j])
+			{
+				// Randomly pick point on polygon.
+				float areas[DT_VERTS_PER_POLYGON + 4];
+				const float s = frand();
+				const float t = frand();
+				int startIndex = (DT_VERTS_PER_POLYGON + 4) * 3 * j;
+				dtRandomPointInConvexPoly(&allPolyVerts[startIndex], allPolyVertsCount[j], areas, s, t, pt);
+
+				float h = 0.0f;
+				dtStatus status = navmeshQuery->getPolyHeight(allPolyRefs[j], pt, &h);
+				if (dtStatusFailed(status))
+				{
+					delete[] allPolyRefs;
+					delete[] allPolyVerts;
+					delete[] allPolyVertsCount;
+					delete[] allPolyAreas;
+					return status;
+				}
+				pt[1] = h;
+				randomRef = allPolyRefs[j];
+			}
+		}
+
+		if (randomRef)
 		{
 			currpos.x = pt[2] / UNIT_CONVERSION * -1;
 			currpos.y = pt[1] / UNIT_CONVERSION;
@@ -458,6 +568,10 @@ int NavMeshHandle::findRandomPointAroundCircle(int layer, uint16 flags, const Po
 		}
 	}
 
+	delete[] allPolyRefs;
+	delete[] allPolyVerts;
+	delete[] allPolyVertsCount;
+	delete[] allPolyAreas;
 	return (int)points.size();
 }
 
@@ -807,5 +921,165 @@ bool NavMeshHandle::_create(int layer, const std::string& resPath, const std::st
 }
 
 //-------------------------------------------------------------------------------------
+
+void NavMeshHandle::getOverlapPolyPoly2D(const float* polyVertsA, const int nPolyVertsA, const float* polyVertsB, const int nPolyVertsB, float* intsectPt, int* intsectPtCount)
+{
+	*intsectPtCount = 0;
+
+	///Find polyA's verts which in polyB.
+	for (int i = 0; i < nPolyVertsA; ++i)
+	{
+		const float* va = &polyVertsA[i * 3];
+		if (dtPointInPolygon(va, polyVertsB, nPolyVertsB))
+		{
+			intsectPt[*intsectPtCount * 3] = va[0];
+			intsectPt[*intsectPtCount * 3 + 1] = va[1];
+			intsectPt[*intsectPtCount * 3 + 2] = va[2];
+			*intsectPtCount += 1;
+		}
+	}
+
+	///Find polyB's verts which in polyA.
+	for (int i = 0; i < nPolyVertsB; ++i)
+	{
+		const float* va = &polyVertsB[i * 3];
+		if (dtPointInPolygon(va, polyVertsA, nPolyVertsA))
+		{
+			intsectPt[*intsectPtCount * 3] = va[0];
+			intsectPt[*intsectPtCount * 3 + 1] = va[1];
+			intsectPt[*intsectPtCount * 3 + 2] = va[2];
+			*intsectPtCount += 1;
+		}
+	}
+
+	///Find edge intersection of polyA and polyB.
+	for (int i = 0; i < nPolyVertsA; ++i)
+	{
+		const float* p1 = &polyVertsA[i * 3];
+		int p2_idx = (i + 1) % nPolyVertsA;
+		const float* p2 = &polyVertsA[p2_idx * 3];
+
+		for (int j = 0; j < nPolyVertsB; ++j)
+		{
+			const float* q1 = &polyVertsB[j * 3];
+			int q2_idx = (j + 1) % nPolyVertsB;
+			const float* q2 = &polyVertsB[q2_idx * 3];
+
+			if (isSegSegCross2D(p1, p2, q1, q2))				 ///If two segment is cross
+			{
+				float s, t;
+				if (dtIntersectSegSeg2D(p1, p2, q1, q2, s, t))	///Caculate intersection point
+				{
+					float pt[3];
+					dtVlerp(pt, q1, q2, t);
+					intsectPt[*intsectPtCount * 3] = pt[0];
+					intsectPt[*intsectPtCount * 3 + 1] = pt[1];
+					intsectPt[*intsectPtCount * 3 + 2] = pt[2];
+					*intsectPtCount += 1;
+				}
+			}
+		}
+	}
+
+	///sort intersection to clockwise.
+	if (*intsectPtCount > 0)
+	{
+		clockwiseSortPoints(intsectPt, *intsectPtCount);
+	}
+
+}
+//-------------------------------------------------------------------------------------
+inline float calAtan(float* srcPoint, float* point)
+{
+	return atan2(point[2] - srcPoint[2], point[0] - srcPoint[0]);
+}
+
+inline void swapPoint(float* a, float* b) 
+{
+	float tmp[3] = { a[0],a[1],a[2] };
+	a[0] = b[0];
+	a[1] = b[1];
+	a[2] = b[2];
+	b[0] = tmp[0];
+	b[1] = tmp[1];
+	b[2] = tmp[2];
+}
+
+void NavMeshHandle::clockwiseSortPoints(float* verts, const int nVerts)
+{
+	float center[3];
+	float x = 0.0;
+	float z = 0.0;
+	for (int i = 0; i < nVerts; ++i)
+	{
+		x += verts[i * 3];
+		z += verts[i * 3 + 2];
+	}
+	center[0] = x / nVerts;
+	center[1] = verts[1];
+	center[2] = z / nVerts;
+
+	//Put most left point in first position.
+	for (int i = 0; i < nVerts; i++)
+	{
+		if (verts[i * 3] < verts[0]) 
+		{
+			swapPoint(&verts[i * 3], &verts[0]);
+		}
+		else if (verts[i * 3] == verts[0] && verts[i * 3 + 2] < verts[2]) 
+		{
+			swapPoint(&verts[i * 3], &verts[0]);
+		}
+	}
+
+	//Sort points by slope.
+	for (int i = 1; i < nVerts; i++) 
+	{
+		for (int j = 1; j < nVerts - i; j++) 
+		{
+			int index = j * 3;
+			int n_index = (j + 1) * 3;
+			float angle = calAtan(&verts[0], &verts[index]);
+			float n_angle = calAtan(&verts[0], &verts[n_index]);
+			if (angle < n_angle) 
+			{
+				swapPoint(&verts[index], &verts[n_index]);
+			}
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------
+bool NavMeshHandle::isSegSegCross2D(const float* p1, const float *p2, const float* q1, const float* q2)
+{
+	bool ret = dtMin(p1[0], p2[0]) <= dtMax(q1[0], q2[0]) &&
+		dtMin(q1[0], q2[0]) <= dtMax(p1[0], p2[0]) &&
+		dtMin(p1[2], p2[2]) <= dtMax(q1[2], q2[2]) &&
+		dtMin(q1[2], q2[2]) <= dtMax(p1[2], p2[2]);
+
+	if (!ret)
+	{
+		return false;
+	}
+
+	long line1, line2;
+	line1 = (long)(p1[0] * (q1[2] - p2[2]) + p2[0] * (p1[2] - q1[2]) + q1[0] * (p2[2] - p1[2]));
+	line2 = (long)(p1[0] * (q2[2] - p2[2]) + p2[0] * (p1[2] - q2[2]) + q2[0] * (p2[2] - p1[2]));
+	if (((line1 ^ line2) >= 0) && !(line1 == 0 && line2 == 0))
+	{
+		return false;
+	}
+
+	line1 = (long)(q1[0] * (p1[2] - q2[2]) + q2[0] * (q1[2] - p1[2]) + p1[0] * (q2[2] - q1[2]));
+	line2 = (long)(q1[0] * (p2[2] - q2[2]) + q2[0] * (q1[2] - p2[2]) + p2[0] * (q2[2] - q1[2]));
+	if (((line1 ^ line2) >= 0) && !(line1 == 0 && line2 == 0))
+	{
+		return false;
+	}
+
+	return true;
+}
+//-------------------------------------------------------------------------------------
+
 }
 
