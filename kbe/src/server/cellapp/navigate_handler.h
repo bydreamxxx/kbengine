@@ -47,6 +47,7 @@ public:
 	virtual MoveType type() const { return MOVE_TYPE_NAV; }
 
 protected:
+	Position3D realDestPos_;
 	int destPosIdx_;
 	VECTOR_POS3D_PTR paths_;
 
