@@ -18,20 +18,20 @@ You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KBE_BASE_MESSAGES_FORWARD_HANDLER_H
-#define KBE_BASE_MESSAGES_FORWARD_HANDLER_H
+#ifndef KBE_BASE_ENTITY_MESSAGES_FORWARD_HANDLER_H
+#define KBE_BASE_ENTITY_MESSAGES_FORWARD_HANDLER_H
 
 #include "helper/debug_helper.h"
 #include "common/common.h"
 
 namespace KBEngine{
 
-class Base;
-class BaseMessagesForwardCellappHandler : public Task
+class Entity;
+class EntityMessagesForwardCellappHandler : public Task
 {
 public:
-	BaseMessagesForwardCellappHandler(Base* pBase);
-	~BaseMessagesForwardCellappHandler();
+	EntityMessagesForwardCellappHandler(Entity* pEntity);
+	~EntityMessagesForwardCellappHandler();
 	
 	bool process();
 
@@ -43,7 +43,7 @@ public:
 	bool isStop() const{ return !startForward_; }
 
 private:
-	Base* pBase_;
+	Entity* pEntity_;
 	bool completed_;
 	std::vector<Network::Bundle*> bufferedSendToCellappMessages_;
 	bool startForward_;
@@ -53,7 +53,7 @@ private:
 class BaseMessagesForwardClientHandler : public Task
 {
 public:
-	BaseMessagesForwardClientHandler(Base* pBase, COMPONENT_ID cellappID);
+	BaseMessagesForwardClientHandler(Entity* pEntity, COMPONENT_ID cellappID);
 	~BaseMessagesForwardClientHandler();
 	
 	bool process();
@@ -74,7 +74,7 @@ public:
 	}
 
 private:
-	Base* pBase_;
+	Entity* pEntity_;
 	bool completed_;
 	std::vector<Network::Bundle*> bufferedSendToClientMessages_;
 	bool startForward_;
@@ -84,4 +84,4 @@ private:
 
 }
 
-#endif // KBE_BASE_MESSAGES_FORWARD_HANDLER_H
+#endif // KBE_BASE_ENTITY_MESSAGES_FORWARD_HANDLER_H

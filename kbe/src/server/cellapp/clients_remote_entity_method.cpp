@@ -68,16 +68,16 @@ PyObject* ClientsRemoteEntityMethod::tp_call(PyObject* self, PyObject* args,
 //-------------------------------------------------------------------------------------
 PyObject* ClientsRemoteEntityMethod::callmethod(PyObject* args, PyObject* kwds)
 {
-	// 获取entityAOI范围内其他entity
+	// 获取entityView范围内其他entity
 	// 向这些entity的client推送这个方法的调用
 	MethodDescription* methodDescription = getDescription();
 
 	Entity* pEntity = Cellapp::getSingleton().findEntity(id_);
 	if(pEntity == NULL || /*pEntity->pWitness() == NULL ||*/
-		pEntity->isDestroyed() /*|| pEntity->clientMailbox() == NULL*/)
+		pEntity->isDestroyed() /*|| pEntity->clientEntityCall() == NULL*/)
 	{
 		//WARNING_MSG(fmt::format("EntityRemoteMethod::callClientMethod: not found entity({}).\n", 
-		//	mailbox->id()));
+		//	entitycall->id()));
 
 		S_Return;
 	}
@@ -96,17 +96,17 @@ PyObject* ClientsRemoteEntityMethod::callmethod(PyObject* args, PyObject* kwds)
 		MemoryStream* mstream = MemoryStream::createPoolObject();
 		methodDescription->addToStream(mstream, args);
 
-		if((!otherClients_ && (pEntity->pWitness() && (pEntity->clientMailbox()))))
+		if((!otherClients_ && (pEntity->pWitness() && (pEntity->clientEntityCall()))))
 		{
 			Network::Bundle* pSendBundle = NULL;
-			Network::Channel* pChannel = pEntity->clientMailbox()->getChannel();
+			Network::Channel* pChannel = pEntity->clientEntityCall()->getChannel();
 
 			if (!pChannel)
 				pSendBundle = Network::Bundle::createPoolObject();
 			else
 				pSendBundle = pChannel->createSendBundle();
 
-			pEntity->clientMailbox()->newMail((*pSendBundle));
+			pEntity->clientEntityCall()->newCall((*pSendBundle));
 
 			if(mstream->wpos() > 0)
 				(*pSendBundle).append(mstream->data(), (int)mstream->wpos());
@@ -142,7 +142,7 @@ PyObject* ClientsRemoteEntityMethod::callmethod(PyObject* args, PyObject* kwds)
 				pSendBundle->currMsgLength(),
 				"::");
 
-			//mailbox->postMail((*pBundle));
+			//entitycall->sendCall((*pBundle));
 			pEntity->pWitness()->sendToClient(ClientInterface::onRemoteMethodCall, pSendBundle);
 		}
 
@@ -150,32 +150,32 @@ PyObject* ClientsRemoteEntityMethod::callmethod(PyObject* args, PyObject* kwds)
 		std::list<ENTITY_ID>::const_iterator iter = entities.begin();
 		for(; iter != entities.end(); ++iter)
 		{
-			Entity* pAoiEntity = Cellapp::getSingleton().findEntity((*iter));
-			if(pAoiEntity == NULL || pAoiEntity->pWitness() == NULL || pAoiEntity->isDestroyed())
+			Entity* pViewEntity = Cellapp::getSingleton().findEntity((*iter));
+			if(pViewEntity == NULL || pViewEntity->pWitness() == NULL || pViewEntity->isDestroyed())
 				continue;
 			
-			EntityMailbox* mailbox = pAoiEntity->clientMailbox();
-			if(mailbox == NULL)
+			EntityCall* entitycall = pViewEntity->clientEntityCall();
+			if(entitycall == NULL)
 				continue;
 
-			Network::Channel* pChannel = mailbox->getChannel();
+			Network::Channel* pChannel = entitycall->getChannel();
 			if(pChannel == NULL)
 				continue;
 
 			// 这个可能性是存在的，例如数据来源于createWitnessFromStream()
 			// 又如自己的entity还未在目标客户端上创建
-			if (!pAoiEntity->pWitness()->entityInAOI(pEntity->id()))
+			if (!pViewEntity->pWitness()->entityInView(pEntity->id()))
 				continue;
 			
 			Network::Bundle* pSendBundle = pChannel->createSendBundle();
-			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pAoiEntity->id(), (*pSendBundle));
+			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pViewEntity->id(), (*pSendBundle));
 			
 			int ialiasID = -1;
 			const Network::MessageHandler& msgHandler = 
-			pAoiEntity->pWitness()->getAOIEntityMessageHandler(ClientInterface::onRemoteMethodCall, 
+			pViewEntity->pWitness()->getViewEntityMessageHandler(ClientInterface::onRemoteMethodCall,
 					ClientInterface::onRemoteMethodCallOptimized, pEntity->id(), ialiasID);
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, msgHandler, aOIEntityMessage);
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, msgHandler, viewEntityMessage);
 
 			if(ialiasID != -1)
 			{
@@ -197,7 +197,7 @@ PyObject* ClientsRemoteEntityMethod::callmethod(PyObject* args, PyObject* kwds)
 					DebugHelper::getSingleton().changeLogger("packetlogs");
 
 				DEBUG_MSG(fmt::format("ClientsRemoteEntityMethod::callmethod: pushUpdateData: ClientInterface::onRemoteOtherEntityMethodCall({}::{})\n", 
-					pAoiEntity->scriptName(), methodDescription->getName()));
+					pViewEntity->scriptName(), methodDescription->getName()));
 
 				switch(Network::g_trace_packet)	
 				{
@@ -216,15 +216,15 @@ PyObject* ClientsRemoteEntityMethod::callmethod(PyObject* args, PyObject* kwds)
 					DebugHelper::getSingleton().changeLogger(COMPONENT_NAME_EX(g_componentType));
 			}
 
-			ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, msgHandler, aOIEntityMessage);
+			ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, msgHandler, viewEntityMessage);
 
 			// 记录这个事件产生的数据量大小
-			g_publicClientEventHistoryStats.trackEvent(pAoiEntity->scriptName(), 
+			g_publicClientEventHistoryStats.trackEvent(pViewEntity->scriptName(),
 				methodDescription->getName(), 
 				pSendBundle->currMsgLength(), 
 				"::");
 
-			pAoiEntity->pWitness()->sendToClient(ClientInterface::onRemoteMethodCallOptimized, pSendBundle);
+			pViewEntity->pWitness()->sendToClient(ClientInterface::onRemoteMethodCallOptimized, pSendBundle);
 		}
 
 		MemoryStream::reclaimPoolObject(mstream);

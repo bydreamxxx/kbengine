@@ -26,8 +26,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KBEngine{
 
-class Base;
-class EntityMailbox;
+class Entity;
+class EntityCall;
 
 class RestoreEntityHandler : public Task
 {
@@ -37,7 +37,7 @@ class RestoreEntityHandler : public Task
 		bool creatingCell;
 		bool processed;
 		SPACE_ID spaceID;
-		EntityMailbox* cell;
+		EntityCall* cell;
 	};
 
 public:

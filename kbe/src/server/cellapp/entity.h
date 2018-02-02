@@ -28,7 +28,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "common/common.h"
 #include "common/smartpointer.h"
 #include "helper/debug_helper.h"
-#include "entitydef/entity_mailbox.h"
+#include "entitydef/entity_call.h"
 #include "pyscript/math.h"
 #include "pyscript/scriptobject.h"
 #include "entitydef/datatypes.h"	
@@ -48,7 +48,7 @@ namespace KBEngine{
 
 class Chunk;
 class Entity;
-class EntityMailbox;
+class EntityCall;
 class Cellapp;
 class Witness;
 class AllClients;
@@ -133,15 +133,15 @@ public:
 
 public:
 	/** 
-		mailbox section
+		entitycall section
 	*/
-	INLINE EntityMailbox* baseMailbox() const;
-	DECLARE_PY_GET_MOTHOD(pyGetBaseMailbox);
-	INLINE void baseMailbox(EntityMailbox* mailbox);
+	INLINE EntityCall* baseEntityCall() const;
+	DECLARE_PY_GET_MOTHOD(pyGetBaseEntityCall);
+	INLINE void baseEntityCall(EntityCall* entitycall);
 	
-	INLINE EntityMailbox* clientMailbox() const;
-	DECLARE_PY_GET_MOTHOD(pyGetClientMailbox);
-	INLINE void clientMailbox(EntityMailbox* mailbox);
+	INLINE EntityCall* clientEntityCall() const;
+	DECLARE_PY_GET_MOTHOD(pyGetClientEntityCall);
+	INLINE void clientEntityCall(EntityCall* entitycall);
 
 	/**
 		all_clients
@@ -161,11 +161,11 @@ public:
 		脚本获取controlledBy属性
 	*/
 	INLINE bool isControlledNotSelfClient() const;
-	INLINE EntityMailbox* controlledBy() const;
-	INLINE void controlledBy(EntityMailbox* baseMailbox);
+	INLINE EntityCall* controlledBy() const;
+	INLINE void controlledBy(EntityCall* baseEntityCall);
 	DECLARE_PY_GETSET_MOTHOD(pyGetControlledBy, pySetControlledBy);
-	bool setControlledBy(EntityMailbox* baseMailbox);
-	void sendControlledByStatusMessage(EntityMailbox* baseMailbox, int8 isControlled);
+	bool setControlledBy(EntityCall* baseEntityCall);
+	void sendControlledByStatusMessage(EntityCall* baseEntityCall, int8 isControlled);
 
 	/** 
 		脚本获取和设置entity的position 
@@ -269,7 +269,7 @@ public:
 		entity传送
 		@cellAppID: 要传送到的目的cellappID
 		@targetEntityID：要传送到这个entity的space中
-		@sourceBaseAppID: 有可能是由某个baseapp上的base请求teleport的， 如果为0则为cellEntity发起
+		@sourceBaseAppID: 有可能是由某个baseapp上的entity请求teleport的， 如果为0则为cellEntity发起
 	*/
 	void teleportFromBaseapp(Network::Channel* pChannel, COMPONENT_ID cellAppID, ENTITY_ID targetEntityID, COMPONENT_ID sourceBaseAppID);
 
@@ -280,8 +280,8 @@ public:
 	void teleport(PyObject_ptr nearbyMBRef, Position3D& pos, Direction3D& dir);
 	void teleportLocal(PyObject_ptr nearbyMBRef, Position3D& pos, Direction3D& dir);
 	void teleportRefEntity(Entity* entity, Position3D& pos, Direction3D& dir);
-	void teleportRefMailbox(EntityMailbox* nearbyMBRef, Position3D& pos, Direction3D& dir);
-	void onTeleportRefMailbox(EntityMailbox* nearbyMBRef, Position3D& pos, Direction3D& dir);
+	void teleportRefEntityCall(EntityCall* nearbyMBRef, Position3D& pos, Direction3D& dir);
+	void onTeleportRefEntityCall(EntityCall* nearbyMBRef, Position3D& pos, Direction3D& dir);
 
 	/**
 		传送成功和失败相关回调
@@ -313,20 +313,20 @@ public:
 	void onRestore();
 
 	/**
-		脚本调试aoi
+		脚本调试view
 	*/
-	void debugAOI();
-	DECLARE_PY_MOTHOD_ARG0(pyDebugAOI);
+	void debugView();
+	DECLARE_PY_MOTHOD_ARG0(pyDebugView);
 
 	/** 
-		当前entity设置自身的Aoi半径范围 
+		当前entity设置自身的View半径范围 
 	*/
-	int32 setAoiRadius(float radius, float hyst);
-	float getAoiRadius(void) const;
-	float getAoiHystArea(void) const;
-	DECLARE_PY_MOTHOD_ARG2(pySetAoiRadius, float, float);
-	DECLARE_PY_MOTHOD_ARG0(pyGetAoiRadius);
-	DECLARE_PY_MOTHOD_ARG0(pyGetAoiHystArea);
+	int32 setViewRadius(float radius, float hyst);
+	float getViewRadius(void) const;
+	float getViewHystArea(void) const;
+	DECLARE_PY_MOTHOD_ARG2(pySetViewRadius, float, float);
+	DECLARE_PY_MOTHOD_ARG0(pyGetViewRadius);
+	DECLARE_PY_MOTHOD_ARG0(pyGetViewHystArea);
 
 	/** 
 		当前entity是否为real 
@@ -413,9 +413,9 @@ public:
 	static PyObject* __py_pyEntitiesInRange(PyObject* self, PyObject* args);
 
 	/** 
-		脚本请求获得AOI范围内的entities 
+		脚本请求获得View范围内的entities 
 	*/
-	DECLARE_PY_MOTHOD_ARG0(pyEntitiesInAOI);
+	DECLARE_PY_MOTHOD_ARG0(pyEntitiesInView);
 
 	/**
 		设置获取是否自动备份
@@ -530,9 +530,9 @@ public:
 							uint32 controllerID, int32 userarg);
 
 	/** 
-		一个entity进入了AOI区域
+		一个entity进入了View区域
 	*/
-	void onEnteredAoI(Entity* entity);
+	void onEnteredView(Entity* entity);
 
 	/** 
 		停止任何移动行为
@@ -689,7 +689,7 @@ public:
 
 private:
 	/** 
-		发送teleport结果到base端
+		发送teleport结果到baseEntity端
 	*/
 	void _sendBaseTeleportResult(ENTITY_ID sourceEntityID, COMPONENT_ID sourceBaseAppID, 
 		SPACE_ID spaceID, SPACE_ID lastSpaceID, bool fromCellTeleport);
@@ -709,18 +709,18 @@ private:
 	static int32											_scriptCallbacksBufferCount;
 
 protected:
-	// 这个entity的客户端部分的mailbox
-	EntityMailbox*											clientMailbox_;
+	// 这个entity的客户端部分的entitycall
+	EntityCall*												clientEntityCall_;
 
-	// 这个entity的baseapp部分的mailbox
-	EntityMailbox*											baseMailbox_;
+	// 这个entity的baseapp部分的entitycall
+	EntityCall*												baseEntityCall_;
 
 	/** 这个entity的坐标和朝向当前受谁的客户端控制
 	    null表示没有客户端在控制（即系统控制），
-	    否则指向控制这个entity的对象的baseMailbox_，
+	    否则指向控制这个entity的对象的baseEntityCall_，
 		玩家自己控制自己则Entity.controlledBy = self.base
 	*/
-	EntityMailbox *											controlledBy_;
+	EntityCall *											controlledBy_;
 
 	// 如果一个entity为ghost，那么entity会存在一个源cell的指向
 	COMPONENT_ID											realCell_;

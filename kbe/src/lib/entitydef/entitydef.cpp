@@ -27,7 +27,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "resmgr/resmgr.h"
 #include "common/smartpointer.h"
 #include "entitydef/volatileinfo.h"
-#include "entitydef/entity_mailbox.h"
+#include "entitydef/entity_call.h"
 
 #ifndef CODE_INLINE
 #include "entitydef.inl"
@@ -575,19 +575,50 @@ bool EntityDef::loadAllDefDescriptions(const std::string& moduleName,
 bool EntityDef::validDefPropertyName(ScriptDefModule* pScriptModule, const std::string& name)
 {
 	int i = 0;
-	while(true)
+
+	while (true)
 	{
 		std::string limited = ENTITY_LIMITED_PROPERTYS[i];
 
-		if(limited == "")
+		if (limited == "")
 			break;
 
-		if(name == limited)
+		if (name == limited)
 			return false;
 
 		++i;
 	};
 
+	PyObject* pyKBEModule =
+		PyImport_ImportModule(const_cast<char*>("KBEngine"));
+
+	PyObject* pyEntityModule =
+		PyObject_GetAttrString(pyKBEModule, const_cast<char *>("Entity"));
+
+	Py_DECREF(pyKBEModule);
+
+	if (pyEntityModule != NULL)
+	{
+		PyObject* pyEntityAttr =
+			PyObject_GetAttrString(pyEntityModule, const_cast<char *>(name.c_str()));
+
+		if (pyEntityAttr != NULL)
+		{
+			Py_DECREF(pyEntityAttr);
+			Py_DECREF(pyEntityModule);
+			return false;
+		}
+		else
+		{
+			PyErr_Clear();
+		}
+	}
+	else
+	{
+		PyErr_Clear();
+	}
+
+	Py_XDECREF(pyEntityModule);
 	return true;
 }
 
@@ -1388,6 +1419,7 @@ bool EntityDef::checkDefMethod(ScriptDefModule* pScriptModule,
 			ERROR_MSG(fmt::format("EntityDef::checkDefMethod: class {} does not have method[{}], defined in {}.def!\n",
 				moduleName.c_str(), iter->first.c_str(), moduleName));
 
+			PyErr_Clear();
 			return false;
 		}
 	}
@@ -1612,7 +1644,7 @@ bool EntityDef::installScript(PyObject* mod)
 	script::PyMemoryStream::installScript(NULL);
 	APPEND_SCRIPT_MODULE_METHOD(mod, MemoryStream, script::PyMemoryStream::py_new, METH_VARARGS, 0);
 
-	EntityMailbox::installScript(NULL);
+	EntityCall::installScript(NULL);
 	FixedArray::installScript(NULL);
 	FixedDict::installScript(NULL);
 	VolatileInfo::installScript(NULL);
@@ -1627,7 +1659,7 @@ bool EntityDef::uninstallScript()
 	if(_isInit)
 	{
 		script::PyMemoryStream::uninstallScript();
-		EntityMailbox::uninstallScript();
+		EntityCall::uninstallScript();
 		FixedArray::uninstallScript();
 		FixedDict::uninstallScript();
 		VolatileInfo::uninstallScript();

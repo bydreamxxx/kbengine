@@ -20,8 +20,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
-#ifndef KBE_BASE_H
-#define KBE_BASE_H
+#ifndef KBE_BASE_ENTITY_H
+#define KBE_BASE_ENTITY_H
 	
 #include "profile.h"
 #include "common/common.h"
@@ -36,8 +36,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 	
 namespace KBEngine{
 
-class EntityMailbox;
-class BaseMessagesForwardCellappHandler;
+class EntityCall;
+class EntityMessagesForwardCellappHandler;
 class BaseMessagesForwardClientHandler;
 
 namespace Network
@@ -46,15 +46,15 @@ class Channel;
 }
 
 
-class Base : public script::ScriptObject
+class Entity : public script::ScriptObject
 {
 	/** 子类化 将一些py操作填充进派生类 */
-	BASE_SCRIPT_HREADER(Base, ScriptObject)	
-	ENTITY_HEADER(Base)
+	BASE_SCRIPT_HREADER(Entity, ScriptObject)
+	ENTITY_HEADER(Entity)
 public:
-	Base(ENTITY_ID id, const ScriptDefModule* pScriptModule, 
+	Entity(ENTITY_ID id, const ScriptDefModule* pScriptModule,
 		PyTypeObject* pyType = getScriptType(), bool isInitialised = true);
-	~Base();
+	~Entity();
 
 	/** 
 		是否存储数据库 
@@ -83,27 +83,22 @@ public:
 	DECLARE_PY_MOTHOD_ARG0(pyDestroyCellEntity);
 	
 	/** 
-		脚本请求销毁base实体 
+		脚本获取entitycall 
 	*/
-	DECLARE_PY_MOTHOD_ARG0(pyDestroyBase);
+	DECLARE_PY_GET_MOTHOD(pyGetCellEntityCall);
+
+	EntityCall* cellEntityCall(void) const;
+
+	void cellEntityCall(EntityCall* entitycall);
 	
 	/** 
-		脚本获取mailbox 
+		脚本获取entitycall 
 	*/
-	DECLARE_PY_GET_MOTHOD(pyGetCellMailbox);
+	DECLARE_PY_GET_MOTHOD(pyGetClientEntityCall);
 
-	EntityMailbox* cellMailbox(void) const;
+	EntityCall* clientEntityCall() const;
 
-	void cellMailbox(EntityMailbox* mailbox);
-	
-	/** 
-		脚本获取mailbox 
-	*/
-	DECLARE_PY_GET_MOTHOD(pyGetClientMailbox);
-
-	EntityMailbox* clientMailbox() const;
-
-	void clientMailbox(EntityMailbox* mailbox);
+	void clientEntityCall(EntityCall* entitycall);
 
 	/**
 		是否创建过space
@@ -210,13 +205,13 @@ public:
 	/** 
 		为一个baseEntity在指定的cell上还原一个cellEntity 
 	*/
-	void restoreCell(EntityMailboxAbstract* cellMailbox);
+	void restoreCell(EntityCallAbstract* cellEntityCall);
 	INLINE bool inRestore();
 
 	/** 
 		创建一个cellEntity在一个新的space上 
 	*/
-	DECLARE_PY_MOTHOD_ARG1(createInNewSpace, PyObject_ptr);
+	DECLARE_PY_MOTHOD_ARG1(createCellEntityInNewSpace, PyObject_ptr);
 
 	/** 网络接口
 		客户端直接发送消息给cell实体
@@ -300,9 +295,9 @@ protected:
 	void eraseEntityLog();
 
 protected:
-	// 这个entity的客户端mailbox cellapp mailbox
-	EntityMailbox*							clientMailbox_;
-	EntityMailbox*							cellMailbox_;
+	// 这个entity的客户端entitycall cellapp entitycall
+	EntityCall*								clientEntityCall_;
+	EntityCall*								cellEntityCall_;
 
 	// entity创建后，在cell部分未创建时，将一些cell属性数据保存在这里
 	PyObject*								cellDataDict_;
@@ -349,7 +344,7 @@ protected:
 
 
 #ifdef CODE_INLINE
-#include "base.inl"
+#include "entity.inl"
 #endif
 
-#endif // KBE_BASE_H
+#endif // KBE_BASE_ENTITY_H

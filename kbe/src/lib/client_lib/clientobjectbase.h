@@ -41,7 +41,7 @@ namespace client{
 class Entity;
 }
 
-class EntityMailbox;
+class EntityCall;
 
 namespace Network
 {
@@ -72,7 +72,7 @@ public:
 	*/
 	client::Entity* createEntity(const char* entityType, PyObject* params,
 		bool isInitializeScript = true, ENTITY_ID eid = 0, bool initProperty = true, 
-		EntityMailbox* base = NULL, EntityMailbox* cell = NULL);
+		EntityCall* base = NULL, EntityCall* cell = NULL);
 
 	PY_CALLBACKMGR& callbackMgr(){ return pyCallbackMgr_; }	
 
@@ -136,9 +136,9 @@ public:
 	ENTITY_ID readEntityIDFromStream(MemoryStream& s);
 
 	/**
-		由mailbox来尝试获取一个channel的实例
+		由entitycall来尝试获取一个channel的实例
 	*/
-	virtual Network::Channel* findChannelByMailbox(EntityMailbox& mailbox);
+	virtual Network::Channel* findChannelByEntityCall(EntityCall& entitycall);
 
 	/** 网络接口
 		客户端与服务端第一次建立交互, 服务端返回
@@ -365,9 +365,9 @@ public:
 	ENTITY_ID getTargetID() const{ return targetID_; }
 	virtual void onTargetChanged(){}
 
-	ENTITY_ID getAoiEntityID(ENTITY_ID id);
-	ENTITY_ID getAoiEntityIDFromStream(MemoryStream& s);
-	ENTITY_ID getAoiEntityIDByAliasID(uint8 id);
+	ENTITY_ID getViewEntityID(ENTITY_ID id);
+	ENTITY_ID getViewEntityIDFromStream(MemoryStream& s);
+	ENTITY_ID getViewEntityIDByAliasID(uint8 id);
 
 	/** 
 		space相关操作接口
