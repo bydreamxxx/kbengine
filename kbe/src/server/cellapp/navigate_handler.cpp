@@ -32,6 +32,7 @@ NavigateHandler::NavigateHandler(KBEShared_ptr<Controller>& pController, const P
 											 float maxMoveDistance, VECTOR_POS3D_PTR paths_ptr,
 											PyObject* userarg):
 MoveToPointHandler(pController, pController->pEntity()->layer(), pController->pEntity()->position(), velocity, distance, faceMovement, true, userarg),
+realDestPos_(destPos),
 destPosIdx_(0),
 paths_(paths_ptr),
 maxMoveDistance_(maxMoveDistance)
@@ -45,6 +46,18 @@ maxMoveDistance_(maxMoveDistance)
 	else
 	{
 		destPos_ = (*paths_)[destPosIdx_++];
+	}
+
+	//如果路点在终点的最小距离外，则将最小距离调整为0，以便完全抵达路点；否则最小距离取差值
+	Vector3 movement = destPos_ - realDestPos_;
+	float dist = KBEVec3Length(&movement);
+	if (dist >= distance_)
+	{
+		distance_ = 0.0f;
+	}
+	else
+	{
+		distance_ -= dist;
 	}
 	
 	updatableName = "NavigateHandler";
@@ -82,6 +95,14 @@ void NavigateHandler::createFromStream(KBEngine::MemoryStream& s)
 //-------------------------------------------------------------------------------------
 bool NavigateHandler::requestMoveOver(const Position3D& oldPos)
 {
+	//已经到达，后面的路点就不走了
+	Vector3 realMovement = this->pController_->pEntity()->position() - realDestPos_;
+	float realDist = KBEVec3Length(&realMovement);
+	if (realDist <= distance_)
+	{
+		return MoveToPointHandler::requestMoveOver(oldPos);
+	}
+
 	if (destPosIdx_ == ((int)paths_->size()))
 	{
 		return MoveToPointHandler::requestMoveOver(oldPos);
@@ -97,6 +118,18 @@ bool NavigateHandler::requestMoveOver(const Position3D& oldPos)
 		else
 		{
 			destPos_ = (*paths_)[destPosIdx_++];
+		}
+
+		//如果路点在终点的最小距离外，则将最小距离调整为0，以便完全抵达路点；否则最小距离取差值
+		Vector3 movement = destPos_ - realDestPos_;
+		float dist = KBEVec3Length(&movement);
+		if (dist >= distance_)
+		{
+			distance_ = 0.0f;
+		}
+		else
+		{
+			distance_ -= dist;
 		}
 	}
 
