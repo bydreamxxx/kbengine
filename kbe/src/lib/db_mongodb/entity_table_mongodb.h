@@ -379,7 +379,7 @@ namespace KBEngine {
 
 		virtual ~EntityTableItemMongodb_MAILBOX(){};
 
-		uint8 type() const{ return TABLE_ITEM_TYPE_MAILBOX; }
+		uint8 type() const{ return TABLE_ITEM_TYPE_ENTITYCALL; }
 
 		/**
 		同步entity表到数据库中

@@ -4580,10 +4580,10 @@ void Entity::callSelfClientMethod(const Network::MessageHandler& msgHandler, con
 	}
 
 	// 发给自己
-	if (clientMailbox())
+	if (clientEntityCall())
 	{
 		Network::Bundle* pSendBundle = NULL;
-		Network::Channel* pChannel = clientMailbox()->getChannel();
+		Network::Channel* pChannel = clientEntityCall()->getChannel();
 
 		if (pChannel)
 		{
@@ -4627,7 +4627,7 @@ void Entity::callSelfClientMethod(const Network::MessageHandler& msgHandler, con
 				pSendBundle->currMsgLength(),
 				"::");
 
-			clientMailbox()->postMail(pSendBundle);
+			clientEntityCall()->sendCall(pSendBundle);
 		}
 	}
 }
@@ -4656,7 +4656,7 @@ void Entity::callOtherClientsMethod(const Network::MessageHandler& msgHandler, c
 		if (pAoiEntity == NULL || pAoiEntity->pWitness() == NULL || pAoiEntity->isDestroyed())
 			continue;
 
-		EntityMailbox* mailbox = pAoiEntity->clientMailbox();
+		EntityCall* mailbox = pAoiEntity->clientEntityCall();
 		if (mailbox == NULL)
 			continue;
 
@@ -4666,7 +4666,7 @@ void Entity::callOtherClientsMethod(const Network::MessageHandler& msgHandler, c
 
 		// 这个可能性是存在的，例如数据来源于createWitnessFromStream()
 		// 又如自己的entity还未在目标客户端上创建
-		if (!pAoiEntity->pWitness()->entityInAOI(id()))
+		if (!pAoiEntity->pWitness()->entityInView(id()))
 			continue;
 
 		Network::Bundle* pSendBundle = pChannel->createSendBundle();
@@ -4709,7 +4709,7 @@ void Entity::callOtherClientsMethod(const Network::MessageHandler& msgHandler, c
 			pSendBundle->currMsgLength(),
 			"::");
 
-		mailbox->postMail(pSendBundle);
+		mailbox->sendCall(pSendBundle);
 	}
 }
 
