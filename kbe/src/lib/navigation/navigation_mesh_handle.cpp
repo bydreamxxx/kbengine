@@ -33,6 +33,15 @@ static float frand()
 	return (float)rand()/(float)RAND_MAX;
 }
 
+bool ascendingCmpY(const Position3D& a, const Position3D& b)
+{
+	return a.y < b.y;
+}
+
+bool descendingCmpY(const Position3D& a, const Position3D& b)
+{
+	return a.y > b.y;
+}
 //-------------------------------------------------------------------------------------
 NavMeshHandle::NavMeshHandle():
 NavigationHandle(),
@@ -297,6 +306,68 @@ int NavMeshHandle::raycast(int layer, uint16 flags, const Position3D& start, con
 	}
 	
 	hitPointVec.push_back(Position3D(hitPoint[0], hitPoint[1], hitPoint[2]));
+	return 1;
+}
+
+int NavMeshHandle::verticalCollide(int layer, uint16 flags, const Position3D& position, const float startY, const float endY, std::vector<Position3D>& hitPointVec)
+{
+	std::map<int, NavmeshLayer>::iterator iter = navmeshLayer.find(layer);
+	if (iter == navmeshLayer.end())
+	{
+		ERROR_MSG(fmt::format("NavMeshHandle::raycast: not found layer({})\n", layer));
+		return NAV_ERROR;
+	}
+
+	dtNavMeshQuery* navmeshQuery = iter->second.pNavmeshQuery;
+
+	float height = abs(startY - endY) / 2;
+	const float extents[3] = { 2.f, height, 2.f };
+
+	float center[3];
+	center[0] = position.x;
+	center[1] = startY > endY ? endY + height : startY + height;
+	center[2] = position.z;
+
+	dtQueryFilter filter;
+	filter.setIncludeFlags(flags);
+	filter.setExcludeFlags(0);
+
+	dtPolyRef polys[MAX_POLYS];
+	int npolys = 0;
+
+	navmeshQuery->queryPolygons(center, extents, &filter, polys, &npolys, MAX_POLYS);
+	for (int i = 0; i < npolys; i++)
+	{
+		dtPolyRef polyRef = polys[i];
+		float h = 0;
+		dtStatus status = navmeshQuery->getPolyHeight(polyRef, center, &h);
+		if (dtStatusSucceed(status))
+		{
+			bool find = false;
+			std::vector<Position3D>::iterator iter = hitPointVec.begin();
+			for (; iter != hitPointVec.end(); iter++)
+			{
+				if ((h / UNIT_CONVERSION - iter->y) < 1e-2)
+				{
+					find = true;
+				}
+			}
+			if (!find) 
+			{
+				hitPointVec.push_back(Position3D(center[0], h, center[2]));
+			}
+		}
+	}
+
+	if (startY > endY)
+	{
+		std::sort(hitPointVec.begin(), hitPointVec.end(), descendingCmpY);
+	}
+	else
+	{
+		std::sort(hitPointVec.begin(), hitPointVec.end(), ascendingCmpY);
+	}
+
 	return 1;
 }
 #else
@@ -646,6 +717,71 @@ int NavMeshHandle::raycast(int layer, uint16 flags, const Position3D& start, con
 	hitPointVec.push_back(Position3D(hitPoint[2] / UNIT_CONVERSION * -1, hitPoint[1] / UNIT_CONVERSION, hitPoint[0] / UNIT_CONVERSION * -1));
 	return 1;
 }
+
+int NavMeshHandle::verticalCollide(int layer, uint16 flags, const Position3D& position, const float startY, const float endY, std::vector<Position3D>& hitPointVec)
+{
+	std::map<int, NavmeshLayer>::iterator iter = navmeshLayer.find(layer);
+	if (iter == navmeshLayer.end())
+	{
+		ERROR_MSG(fmt::format("NavMeshHandle::raycast: not found layer({})\n", layer));
+		return NAV_ERROR;
+	}
+
+	dtNavMeshQuery* navmeshQuery = iter->second.pNavmeshQuery;
+
+	float start_Y = startY * UNIT_CONVERSION;
+	float end_Y = endY * UNIT_CONVERSION;
+	float height = abs(start_Y - end_Y) / 2;
+	const float extents[3] = { 200.f, height, 200.f };
+
+	float center[3];
+	center[0] = position.z * UNIT_CONVERSION * -1;
+	center[1] = start_Y > end_Y ? end_Y + height : start_Y + height;
+	center[2] = position.x * UNIT_CONVERSION * -1;
+
+	dtQueryFilter filter;
+	filter.setIncludeFlags(flags);
+	filter.setExcludeFlags(0);
+
+	dtPolyRef polys[MAX_POLYS];
+	int npolys = 0;
+
+	navmeshQuery->queryPolygons(center, extents, &filter, polys, &npolys, MAX_POLYS);
+	for (int i = 0; i < npolys; i++) 
+	{
+		dtPolyRef polyRef = polys[i];
+		float h = 0;
+		dtStatus status = navmeshQuery->getPolyHeight(polyRef, center, &h);
+		if (dtStatusSucceed(status))
+		{
+			bool find = false; 
+			std::vector<Position3D>::iterator iter = hitPointVec.begin();
+			for (; iter != hitPointVec.end(); iter++)
+			{
+				if ((h / UNIT_CONVERSION - iter->y) < 1e-2) 
+				{
+					find = true;
+				}
+			}
+			if (!find) //ignore repeat h
+			{
+				hitPointVec.push_back(Position3D(center[2] / UNIT_CONVERSION * -1, h / UNIT_CONVERSION, center[0] / UNIT_CONVERSION * -1));
+			}
+		}
+	}
+
+	if (start_Y > end_Y)
+	{
+		std::sort(hitPointVec.begin(), hitPointVec.end(), descendingCmpY);
+	}
+	else 
+	{
+		std::sort(hitPointVec.begin(), hitPointVec.end(), ascendingCmpY);
+	}
+
+	return 1;
+}
+
 #endif
 
 //-------------------------------------------------------------------------------------
