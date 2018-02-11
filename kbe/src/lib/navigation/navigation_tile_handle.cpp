@@ -278,7 +278,7 @@ int NavTileHandle::raycast(int layer, uint16 flags, const Position3D& start, con
 }
 
 //-------------------------------------------------------------------------------------
-int NavTileHandle::verticalCollide(int layer, uint16 flags, const Position3D& position, const float startY, const float endY, std::vector<Position3D>& hitPointVec)
+int NavTileHandle::collideVertical(int layer, uint16 flags, const Position3D& position, const float startDeviationY, const float endDeviationY, std::vector<Position3D>& hitPointVec)
 {
 	return 1;
 }
