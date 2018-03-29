@@ -1007,7 +1007,6 @@ inline void swapPoint(float* a, float* b)
 
 void NavMeshHandle::clockwiseSortPoints(float* verts, const int nVerts)
 {
-	float center[3];
 	float x = 0.0;
 	float z = 0.0;
 	for (int i = 0; i < nVerts; ++i)
@@ -1015,9 +1014,6 @@ void NavMeshHandle::clockwiseSortPoints(float* verts, const int nVerts)
 		x += verts[i * 3];
 		z += verts[i * 3 + 2];
 	}
-	center[0] = x / nVerts;
-	center[1] = verts[1];
-	center[2] = z / nVerts;
 
 	//Put most left point in first position.
 	for (int i = 0; i < nVerts; i++)
