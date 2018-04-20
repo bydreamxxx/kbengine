@@ -749,6 +749,10 @@ EntityTableItem* EntityTableMysql::createItem(std::string type, std::string defa
 	{
 		return new EntityTableItemMysql_ENTITYCALL("blob", 0, BINARY_FLAG | BLOB_FLAG, FIELD_TYPE_BLOB);
 	}
+	else if (type == "ENTITY_COMPONENT")
+	{
+		return new EntityTableItemMysql_Component("blob", 0, BINARY_FLAG | BLOB_FLAG, FIELD_TYPE_BLOB);
+	}
 
 	KBE_ASSERT(false && "not found type.\n");
 	return new EntityTableItemMysql_STRING("", 0, 0, FIELD_TYPE_STRING);
@@ -775,17 +779,17 @@ DBID EntityTableMysql::writeTable(DBInterface* pdbi, DBID dbid, int8 shouldAutoL
 	context.dbid = dbid;
 	context.tableName = pModule->getName();
 	context.isEmpty = false;
-	context.readresultIdx = 0;
 
 	while(s->length() > 0)
 	{
 		ENTITY_PROPERTY_UID pid;
-		(*s) >> pid;
+		ENTITY_PROPERTY_UID child_pid;
+		(*s) >> pid >> child_pid;
 		
-		EntityTableItem* pTableItem = this->findItem(pid);
+		EntityTableItem* pTableItem = this->findItem(child_pid);
 		if(pTableItem == NULL)
 		{
-			ERROR_MSG(fmt::format("EntityTable::writeTable: not found item[{}].\n", pid));
+			ERROR_MSG(fmt::format("EntityTable::writeTable: not found item[{}].\n", child_pid));
 			return dbid;
 		}
 		
@@ -820,7 +824,6 @@ bool EntityTableMysql::removeEntity(DBInterface* pdbi, DBID dbid, ScriptDefModul
 	context.dbid = dbid;
 	context.tableName = pModule->getName();
 	context.isEmpty = false;
-	context.readresultIdx = 0;
 
 	std::vector<EntityTableItem*>::iterator iter = tableFixedOrderItems_.begin();
 	for(; iter != tableFixedOrderItems_.end(); ++iter)
@@ -845,7 +848,6 @@ bool EntityTableMysql::queryTable(DBInterface* pdbi, DBID dbid, MemoryStream* s,
 	context.dbid = dbid;
 	context.tableName = pModule->getName();
 	context.isEmpty = false;
-	context.readresultIdx = 0;
 
 	std::vector<EntityTableItem*>::iterator iter = tableFixedOrderItems_.begin();
 	for(; iter != tableFixedOrderItems_.end(); ++iter)
@@ -892,7 +894,6 @@ void EntityTableMysql::getWriteSqlItem(DBInterface* pdbi, MemoryStream* s, mysql
 	context1->parentTableDBID = 0;
 	context1->dbid = 0;
 	context1->isEmpty = (s == NULL);
-	context1->readresultIdx = 0;
 
 	KBEShared_ptr< mysql::DBContext > opTableValBox1Ptr(context1);
 	context.optable.push_back(std::pair<std::string/*tableName*/, KBEShared_ptr< mysql::DBContext > >
@@ -918,7 +919,6 @@ void EntityTableMysql::getReadSqlItem(mysql::DBContext& context)
 	context1->parentTableDBID = 0;
 	context1->dbid = 0;
 	context1->isEmpty = true;
-	context1->readresultIdx = 0;
 
 	KBEShared_ptr< mysql::DBContext > opTableValBox1Ptr(context1);
 	context.optable.push_back(std::pair<std::string/*tableName*/, KBEShared_ptr< mysql::DBContext > >
@@ -964,10 +964,14 @@ void EntityTableItemMysql_VECTOR2::addToStream(MemoryStream* s, mysql::DBContext
 {
 	for(ArraySize i = 0; i < 2; ++i)
 	{
+		std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+
 #ifdef CLIENT_NO_FLOAT
-		int32 v = atoi(context.results[context.readresultIdx++].c_str());
+		int32 v = atoi(resultDatas.second[resultDatas.first++].c_str());
+
 #else
-		float v = (float)atof(context.results[context.readresultIdx++].c_str());
+		float v = (float)atof(resultDatas.second[resultDatas.first++].c_str());
+
 #endif
 		(*s) << v;
 	}
@@ -1045,10 +1049,12 @@ void EntityTableItemMysql_VECTOR3::addToStream(MemoryStream* s, mysql::DBContext
 {
 	for(ArraySize i = 0; i < 3; ++i)
 	{
+		std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+
 #ifdef CLIENT_NO_FLOAT
-		int32 v = atoi(context.results[context.readresultIdx++].c_str());
+		int32 v = atoi(resultDatas.second[resultDatas.first++].c_str());
 #else
-		float v = (float)atof(context.results[context.readresultIdx++].c_str());
+		float v = (float)atof(resultDatas.second[resultDatas.first++].c_str());
 #endif
 		(*s) << v;
 	}
@@ -1126,10 +1132,12 @@ void EntityTableItemMysql_VECTOR4::addToStream(MemoryStream* s, mysql::DBContext
 {
 	for(ArraySize i = 0; i < 4; ++i)
 	{
+		std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+
 #ifdef CLIENT_NO_FLOAT
-		int32 v = atoi(context.results[context.readresultIdx++].c_str());
+		int32 v = atoi(resultDatas.second[resultDatas.first++].c_str());
 #else
-		float v = (float)atof(context.results[context.readresultIdx++].c_str());
+		float v = (float)atof(resultDatas.second[resultDatas.first++].c_str());
 #endif
 		(*s) << v;
 	}
@@ -1486,6 +1494,122 @@ void EntityTableItemMysql_FIXED_DICT::init_db_item_name(const char* exstrFlag)
 }
 
 //-------------------------------------------------------------------------------------
+bool EntityTableItemMysql_Component::isSameKey(std::string key)
+{
+	return false;
+}
+
+//-------------------------------------------------------------------------------------
+bool EntityTableItemMysql_Component::initialize(const PropertyDescription* pPropertyDescription,
+	const DataType* pDataType, std::string name)
+{
+	bool ret = EntityTableItemMysqlBase::initialize(pPropertyDescription, pDataType, name);
+	if (!ret)
+		return false;
+
+	EntityComponentType* pEntityComponentType = const_cast<EntityComponentType*>(static_cast<const EntityComponentType*>(pDataType));
+	ScriptDefModule* pEntityComponentScriptDefModule = pEntityComponentType->pScriptDefModule();
+
+	EntityTableMysql* pparentTable = static_cast<EntityTableMysql*>(this->pParentTable());
+	EntityTableMysql* pTable = new EntityTableMysql(pparentTable->pEntityTables());
+
+	std::string tableName = std::string(pparentTable->tableName()) + "_" + name;
+
+	pTable->tableName(tableName);
+	pTable->isChild(true);
+
+	ScriptDefModule::PROPERTYDESCRIPTION_MAP& pdescrsMap = pEntityComponentScriptDefModule->getPersistentPropertyDescriptions();
+	ScriptDefModule::PROPERTYDESCRIPTION_MAP::const_iterator iter = pdescrsMap.begin();
+
+	for (; iter != pdescrsMap.end(); ++iter)
+	{
+		PropertyDescription* pdescrs = iter->second;
+
+		EntityTableItem* pETItem = pparentTable->createItem(pdescrs->getDataType()->getName(), pdescrs->getDefaultValStr());
+
+		pETItem->pParentTable(pparentTable);
+		pETItem->utype(pdescrs->getUType());
+		pETItem->tableName(pTable->tableName());
+		pETItem->pParentTableItem(this);
+
+		bool ret = pETItem->initialize(pdescrs, pdescrs->getDataType(), pdescrs->getName());
+
+		if (!ret)
+		{
+			delete pETItem;
+			return false;
+		}
+
+		pTable->addItem(pETItem);
+	}
+
+	pChildTable_ = pTable;
+	pTable->pEntityTables()->addTable(pTable);
+	return true;
+}
+
+//-------------------------------------------------------------------------------------
+bool EntityTableItemMysql_Component::syncToDB(DBInterface* pdbi, void* pData)
+{
+	// 所有的表都会在bool EntityTables::syncToDB(DBInterface* pdbi)中被同步（包括子表），因此无需再做一次同步
+	//if(pChildTable_)
+	//	return pChildTable_->syncToDB(pdbi);
+	return true;
+}
+
+//-------------------------------------------------------------------------------------
+void EntityTableItemMysql_Component::addToStream(MemoryStream* s, mysql::DBContext& context, DBID resultDBID)
+{
+	if (pChildTable_)
+	{
+		mysql::DBContext::DB_RW_CONTEXTS::iterator iter = context.optable.begin();
+		for (; iter != context.optable.end(); ++iter)
+		{
+			if (pChildTable_->tableName() == iter->first)
+			{
+				std::vector<DBID>& dbids = iter->second->dbids[resultDBID];
+
+				if (dbids.size() > 0)
+				{
+					// 理论上一定是不会大于1个的
+					KBE_ASSERT(dbids.size() == 1);
+					static_cast<EntityTableMysql*>(pChildTable_)->addToStream(s, *iter->second.get(), dbids[0]);
+				}
+
+				return;
+			}
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------
+void EntityTableItemMysql_Component::getWriteSqlItem(DBInterface* pdbi, MemoryStream* s, mysql::DBContext& context)
+{
+	if (pChildTable_)
+	{
+		static_cast<EntityTableMysql*>(pChildTable_)->getWriteSqlItem(pdbi, s, context);
+	}
+}
+
+//-------------------------------------------------------------------------------------
+void EntityTableItemMysql_Component::getReadSqlItem(mysql::DBContext& context)
+{
+	if (pChildTable_)
+	{
+		static_cast<EntityTableMysql*>(pChildTable_)->getReadSqlItem(context);
+	}
+}
+
+//-------------------------------------------------------------------------------------
+void EntityTableItemMysql_Component::init_db_item_name(const char* exstrFlag)
+{
+	if (pChildTable_)
+	{
+		static_cast<EntityTableMysql*>(pChildTable_)->init_db_item_name();
+	}
+}
+
+//-------------------------------------------------------------------------------------
 bool EntityTableItemMysqlBase::initialize(const PropertyDescription* pPropertyDescription, 
 										  const DataType* pDataType, std::string name)
 {
@@ -1528,7 +1652,9 @@ bool EntityTableItemMysql_DIGIT::syncToDB(DBInterface* pdbi, void* pData)
 void EntityTableItemMysql_DIGIT::addToStream(MemoryStream* s, mysql::DBContext& context, DBID resultDBID)
 {
 	std::stringstream stream;
-	stream << context.results[context.readresultIdx++];
+
+	std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+	stream << resultDatas.second[resultDatas.first++];
 
 	if(dataSType_ == "INT8")
 	{
@@ -1705,7 +1831,8 @@ bool EntityTableItemMysql_STRING::syncToDB(DBInterface* pdbi, void* pData)
 void EntityTableItemMysql_STRING::addToStream(MemoryStream* s, 
 										mysql::DBContext& context, DBID resultDBID)
 {
-	(*s) << context.results[context.readresultIdx++];
+	std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+	(*s) << resultDatas.second[resultDatas.first++];
 }
 
 //-------------------------------------------------------------------------------------
@@ -1776,7 +1903,8 @@ bool EntityTableItemMysql_UNICODE::syncToDB(DBInterface* pdbi, void* pData)
 void EntityTableItemMysql_UNICODE::addToStream(MemoryStream* s, 
 								mysql::DBContext& context, DBID resultDBID)
 {
-	s->appendBlob(context.results[context.readresultIdx++]);
+	std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+	s->appendBlob(resultDatas.second[resultDatas.first++]);
 }
 
 //-------------------------------------------------------------------------------------
@@ -1826,7 +1954,9 @@ bool EntityTableItemMysql_BLOB::syncToDB(DBInterface* pdbi, void* pData)
 //-------------------------------------------------------------------------------------
 void EntityTableItemMysql_BLOB::addToStream(MemoryStream* s, mysql::DBContext& context, DBID resultDBID)
 {
-	std::string& datas = context.results[context.readresultIdx++];
+	std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+	std::string& datas = resultDatas.second[resultDatas.first++];
+
 	s->appendBlob(datas.data(), datas.size());
 }
 
@@ -1876,7 +2006,9 @@ bool EntityTableItemMysql_PYTHON::syncToDB(DBInterface* pdbi, void* pData)
 //-------------------------------------------------------------------------------------
 void EntityTableItemMysql_PYTHON::addToStream(MemoryStream* s, mysql::DBContext& context, DBID resultDBID)
 {
-	std::string& datas = context.results[context.readresultIdx++];
+	std::pair< std::vector<std::string>::size_type, std::vector<std::string> >& resultDatas = context.results[resultDBID];
+	std::string& datas = resultDatas.second[resultDatas.first++];
+
 	(*s).appendBlob(datas);
 }
 

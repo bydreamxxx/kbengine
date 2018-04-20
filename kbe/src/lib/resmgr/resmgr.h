@@ -114,6 +114,12 @@ public:
 	*/
 	std::string getPyUserScriptsPath();
 
+	/**
+		获得用户级库目录
+		assets\\*
+	*/
+	std::string getPyUserAssetsPath();
+
 	ResourceObjectPtr openResource(const char* res, const char* model, 
 		uint32 flags = RESOURCE_NORMAL);
 
