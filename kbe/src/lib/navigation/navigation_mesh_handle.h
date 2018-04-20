@@ -87,6 +87,8 @@ public:
 
 	int raycast(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPointVec);
 
+	int collideVertical(int layer, uint16 flags, const Position3D& position, const float startDeviationY, const float endDeviationY, std::vector<Position3D>& hitPointVec);
+
 	virtual NavigationHandle::NAV_TYPE type() const{ return NAV_MESH; }
 
 	static NavigationHandle* create(std::string resPath, const std::map< int, std::string >& params);

@@ -260,6 +260,9 @@ public:
 	int raycast(SPACE_ID spaceID, int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPos);
 	static PyObject* __py_raycast(PyObject* self, PyObject* args);
 
+	int collideVertical(SPACE_ID spaceID, int layer, uint16 flags, const Position3D& position, const float startDeviationY, const float endDeviationY, std::vector<Position3D>& hitPos);
+	static PyObject* __py_collideVertical(PyObject* self, PyObject* args);
+
 	bool navigatePathPoints(std::vector<Position3D>& outPaths, std::string path, Position3D& position, Position3D& destination, float maxSearchDistance, int8 layer, uint16 flags);
 	static PyObject* __py_navigatePathPoints(PyObject* self, PyObject* args);
 
