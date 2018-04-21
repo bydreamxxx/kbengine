@@ -287,9 +287,10 @@ public:
 protected:
 	/** 
 		定义属性数据被改变了 
+		wsf:参数dontNotify是冗余的，为了保持所有app的entity接口一致以便宏定义能统一处理
 	*/
 	void onDefDataChanged(EntityComponent* pEntityComponent, const PropertyDescription* propertyDescription,
-			PyObject* pyData);
+			PyObject* pyData, bool dontNotify = false);
 
 	/**
 		从db擦除在线log

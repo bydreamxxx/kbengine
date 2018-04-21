@@ -105,7 +105,7 @@ Entity::~Entity()
 
 //-------------------------------------------------------------------------------------
 void Entity::onDefDataChanged(EntityComponent* pEntityComponent, const PropertyDescription* propertyDescription,
-		PyObject* pyData)
+		PyObject* pyData, bool dontNotify)
 {
 	if(initing())
 		return;

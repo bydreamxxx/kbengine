@@ -457,7 +457,7 @@ int EntityComponent::onScriptSetAttribute(PyObject* attr, PyObject* value)
 					{
 						if (onDataChangedEvent_)
 						{
-							onDataChangedEvent_(this, propertyDescription, pySetObj);
+							onDataChangedEvent_(this, propertyDescription, pySetObj, false);
 						}
 						else
 						{
@@ -478,7 +478,7 @@ int EntityComponent::onScriptSetAttribute(PyObject* attr, PyObject* value)
 									else
 									{
 										onDataChangedEvent_ = (*static_cast<EntityComponent::OnDataChangedEvent*>(ptr));
-										onDataChangedEvent_(this, propertyDescription, pySetObj);
+										onDataChangedEvent_(this, propertyDescription, pySetObj, false);
 									}
 								}
 								else

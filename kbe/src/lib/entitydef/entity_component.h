@@ -175,7 +175,7 @@ public:
 
 	const ScriptDefModule::PROPERTYDESCRIPTION_MAP* pChildPropertyDescrs();
 
-	typedef std::tr1::function<void (EntityComponent*, const PropertyDescription*, PyObject*)> OnDataChangedEvent;
+	typedef std::tr1::function<void (EntityComponent*, const PropertyDescription*, PyObject*, bool)> OnDataChangedEvent;
 
 	static void onEntityDestroy(PyObject* pEntity, ScriptDefModule* pEntityScriptDescrs, bool callScript, bool beforeDestroy);
 	void onOwnerDestroyBegin(PyObject* pEntity, ScriptDefModule* pEntityScriptDescrs, bool callScript);

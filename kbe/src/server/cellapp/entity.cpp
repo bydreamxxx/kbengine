@@ -1997,7 +1997,7 @@ bool Entity::setDirectionFromPyObject(PyObject *value, bool dontNotifySelfClient
 	if(pScriptModule_->usePropertyDescrAlias() && directionDescription.aliasID() == -1)
 		directionDescription.aliasID(ENTITY_BASE_PROPERTY_ALIASID_DIRECTION_ROLL_PITCH_YAW);
 
-	onDefDataChanged((NULL, &directionDescription, value, dontNotifySelfClient);
+	onDefDataChanged(NULL, &directionDescription, value, dontNotifySelfClient);
 	updateChildrenPositionAndDirection();
 	return true;
 }
@@ -4556,7 +4556,7 @@ void Entity::parent(Entity* ent, bool callScript)
 		{
 			SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 			SCRIPT_OBJECT_CALL_ARGS1(this, const_cast<char*>("onLoseParent"),
-				const_cast<char*>("O"), old);
+				const_cast<char*>("O"), old, false);
 		}
 	}
 
@@ -4571,7 +4571,7 @@ void Entity::parent(Entity* ent, bool callScript)
 		if (callScript)
 		{
 			SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-			SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onGotParent"));
+			SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onGotParent"), false);
 		}
 	}
 
@@ -4886,7 +4886,7 @@ void Entity::removeAllChild()
 
 		SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 		SCRIPT_OBJECT_CALL_ARGS1(this, const_cast<char*>("onLoseParent"),
-			const_cast<char*>("O"), this);
+			const_cast<char*>("O"), this, false);
 	}
 	children_.clear();
 }
@@ -5241,4 +5241,6 @@ PyObject* Entity::pyDirectionWorldToLocal(PyObject_ptr pyDestination)
 	script::ScriptVector3 *result = new script::ScriptVector3(out.dir);
 	Py_INCREF(result);
 	return result;
+}
+
 }
