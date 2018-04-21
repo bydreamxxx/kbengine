@@ -344,7 +344,7 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 		dtStatus status = navmeshQuery->getPolyHeight(polyRef, center, &h);
 		if (dtStatusSucceed(status))
 		{
-			if (h < min(startY, endY) || h > max(startY, endY))
+			if (h < KBE_MIN(startY, endY) || h > KBE_MAX(startY, endY))
 			{
 				continue;
 			}
@@ -759,7 +759,7 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 		dtStatus status = navmeshQuery->getPolyHeight(polyRef, center, &h);
 		if (dtStatusSucceed(status))
 		{
-			if (h < min(startY, endY) || h > max(startY, endY)) 
+			if (h < KBE_MIN(startY, endY) || h > KBE_MAX(startY, endY)) 
 			{
 				continue;
 			}
