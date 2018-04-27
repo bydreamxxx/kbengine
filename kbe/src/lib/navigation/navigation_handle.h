@@ -66,6 +66,8 @@ public:
 
 	virtual int raycast(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPointVec) = 0;
 
+	virtual int collideVertical(int layer, uint16 flags, const Position3D& position, const float startDeviationY, const float endDeviationY, std::vector<Position3D>& hitPointVec) = 0;
+
 	std::string resPath;
 };
 
