@@ -4279,7 +4279,7 @@ void Entity::parent(Entity* ent, bool callScript)
 		{
 			SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 			SCRIPT_OBJECT_CALL_ARGS1(this, const_cast<char*>("onLoseParent"),
-				const_cast<char*>("O"), old);
+				const_cast<char*>("O"), old, false);
 		}
 	}
 
@@ -4294,7 +4294,7 @@ void Entity::parent(Entity* ent, bool callScript)
 		if (callScript)
 		{
 			SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-			SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onGotParent"));
+			SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onGotParent"), false);
 		}
 	}
 
@@ -4558,7 +4558,7 @@ void Entity::removeAllChild()
 
 		SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 		SCRIPT_OBJECT_CALL_ARGS1(this, const_cast<char*>("onLoseParent"),
-			const_cast<char*>("O"), this);
+			const_cast<char*>("O"), this, false);
 	}
 	children_.clear();
 }
