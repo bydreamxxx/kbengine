@@ -599,7 +599,7 @@ bool ClientSDKUnity::writeEntityCallEnd(ScriptDefModule* pScriptDefModule)
 }
 
 //-------------------------------------------------------------------------------------
-bool ClientSDKUnity::writeEntityCallMethod(ScriptDefModule* pScriptDefModule, MethodDescription* pMethodDescription, const char* fillString1, const char* fillString2, COMPONENT_TYPE componentType)
+bool ClientSDKUnity::writeEntityCallMethodBegin(ScriptDefModule* pScriptDefModule, MethodDescription* pMethodDescription, const char* fillString1, const char* fillString2, COMPONENT_TYPE componentType)
 {
 	sourcefileBody_ += fmt::format("\t\tpublic void {}({})\n\t\t{{\n", pMethodDescription->getName(), fillString1);
 
@@ -651,6 +651,13 @@ bool ClientSDKUnity::writeEntityCallMethod(ScriptDefModule* pScriptDefModule, Me
 	}
 
 	sourcefileBody_ += fmt::format("\t\t\tsendCall(null);\n");
+	return true;
+}
+
+//-------------------------------------------------------------------------------------
+bool ClientSDKUnity::writeEntityCallMethodEnd(ScriptDefModule* pScriptDefModule, MethodDescription* pMethodDescription)
+{
+	sourcefileBody_ += fmt::format("\t\t}}\n\n");
 	return true;
 }
 
@@ -743,9 +750,27 @@ bool ClientSDKUnity::createArrayChildClass(DataType* pRootDataType, DataType* pD
 		sourcefileBody_ += fmt::format("{}\tprivate DATATYPE_{} itemType = new DATATYPE_{}();\n\n",
 			tabs, pDataType->aliasName(), pDataType->aliasName());
 
-		sourcefileBody_ += fmt::format("{}\tpublic List<{}> createFromStreamEx(MemoryStream stream)\n{}\t{{\n", tabs, typeName, tabs);
+		// 如果是非匿名的数组，则第一层解析应该直接设置为有名字的类别
+		// 否则设置为系统List类别
+		if (numLayer == 1)
+		{
+			if (strlen(pRootDataType->aliasName()) == 0 || pRootDataType->aliasName()[0] == '_')
+			{
+				typeName = fmt::format("List<{}>", typeName);
+			}
+			else
+			{
+				typeName = pRootDataType->aliasName();
+			}
+		}
+		else
+		{
+			typeName = fmt::format("List<{}>", typeName);
+		}
+
+		sourcefileBody_ += fmt::format("{}\tpublic {} createFromStreamEx(MemoryStream stream)\n{}\t{{\n", tabs, typeName, tabs);
 		sourcefileBody_ += fmt::format("{}\t\tUInt32 size = stream.readUint32();\n", tabs);
-		sourcefileBody_ += fmt::format("{}\t\tList<{}> datas = new List<{}>();\n\n", tabs, typeName, typeName);
+		sourcefileBody_ += fmt::format("{}\t\t{} datas = new {}();\n\n", tabs, typeName, typeName);
 		sourcefileBody_ += fmt::format("{}\t\twhile(size > 0)\n", tabs);
 		sourcefileBody_ += fmt::format("{}\t\t{{\n", tabs);
 		sourcefileBody_ += fmt::format("{}\t\t\t--size;\n", tabs);
@@ -755,7 +780,7 @@ bool ClientSDKUnity::createArrayChildClass(DataType* pRootDataType, DataType* pD
 		sourcefileBody_ += fmt::format("{}\t}}\n\n", tabs);
 
 
-		sourcefileBody_ += fmt::format("{}\tpublic void addToStreamEx(Bundle stream, List<{}> v)\n{}\t{{\n", tabs, typeName, tabs);
+		sourcefileBody_ += fmt::format("{}\tpublic void addToStreamEx(Bundle stream, {} v)\n{}\t{{\n", tabs, typeName, tabs);
 		sourcefileBody_ += fmt::format("{}\t\tstream.writeUint32((UInt32)v.Count);\n", tabs);
 		sourcefileBody_ += fmt::format("{}\t\tfor(int i=0; i<v.Count; ++i)\n", tabs);
 		sourcefileBody_ += fmt::format("{}\t\t{{\n", tabs);
@@ -763,7 +788,7 @@ bool ClientSDKUnity::createArrayChildClass(DataType* pRootDataType, DataType* pD
 		std::string writeName;
 		if (isFixedType)
 		{
-			writeName = fmt::format("itemType.addToStream(stream, v[i])");
+			writeName = fmt::format("itemType.addToStreamEx(stream, v[i])");
 		}
 		else
 		{
@@ -834,7 +859,7 @@ bool ClientSDKUnity::createArrayChildClass(DataType* pRootDataType, DataType* pD
 		std::string writeName;
 		if (isFixedType)
 		{
-			writeName = fmt::format("itemType.addToStream(stream, v[i])", writeName);
+			writeName = fmt::format("itemType.addToStreamEx(stream, v[i])", writeName);
 		}
 		else
 		{
@@ -1062,7 +1087,7 @@ bool ClientSDKUnity::writeCustomDataType(const DataType* pDataType)
 			std::string writeName;
 			if (isFixedType)
 			{
-				writeName = fmt::format("itemType.addToStream(stream, v[i])", writeName);
+				writeName = fmt::format("itemType.addToStreamEx(stream, v[i])", writeName);
 			}
 			else
 			{
@@ -1092,7 +1117,7 @@ bool ClientSDKUnity::writeCustomDataType(const DataType* pDataType)
 			sourcefileBody_ += fmt::format("\t\t}}\n\n");
 
 			sourcefileBody_ += fmt::format("\t\tpublic void addToStreamEx(Bundle stream, {} v)\n\t\t{{\n", typeName);
-			std::string writeName = fmt::format("itemType.addToStream(stream, v)", writeName);
+			std::string writeName = fmt::format("itemType.addToStreamEx(stream, v)", writeName);
 			sourcefileBody_ += fmt::format("\t\t\t{};\n", writeName);
 			sourcefileBody_ += fmt::format("\t\t}}\n");
 
@@ -1124,7 +1149,7 @@ bool ClientSDKUnity::writeCustomDataType(const DataType* pDataType)
 			std::string writeName;
 			if (isFixedType)
 			{
-				writeName = fmt::format("itemType.addToStream(stream, v[i])", writeName);
+				writeName = fmt::format("itemType.addToStreamEx(stream, v[i])", writeName);
 			}
 			else
 			{
@@ -1541,29 +1566,25 @@ bool ClientSDKUnity::writeTypeItemType_UNICODE(const std::string& itemName, cons
 //-------------------------------------------------------------------------------------
 bool ClientSDKUnity::writeTypeItemType_PYTHON(const std::string& itemName, const std::string& childItemName)
 {
-	ERROR_MSG("ClientSDKUnity::writeTypeItemType_PYTHON(): nonsupport!\n");
-	return false;
+	return writeTypeItemType_BLOB(itemName, childItemName);
 }
 
 //-------------------------------------------------------------------------------------
 bool ClientSDKUnity::writeTypeItemType_PY_DICT(const std::string& itemName, const std::string& childItemName)
 {
-	ERROR_MSG("ClientSDKUnity::writeTypeItemType_PY_DICT(): nonsupport!\n");
-	return false;
+	return writeTypeItemType_BLOB(itemName, childItemName);
 }
 
 //-------------------------------------------------------------------------------------
 bool ClientSDKUnity::writeTypeItemType_PY_TUPLE(const std::string& itemName, const std::string& childItemName)
 {
-	ERROR_MSG("ClientSDKUnity::writeTypeItemType_PY_TUPLE(): nonsupport!\n");
-	return false;
+	return writeTypeItemType_BLOB(itemName, childItemName);
 }
 
 //-------------------------------------------------------------------------------------
 bool ClientSDKUnity::writeTypeItemType_PY_LIST(const std::string& itemName, const std::string& childItemName)
 {
-	ERROR_MSG("ClientSDKUnity::writeTypeItemType_PY_LIST(): nonsupport!\n");
-	return false;
+	return writeTypeItemType_BLOB(itemName, childItemName);
 }
 
 //-------------------------------------------------------------------------------------
@@ -1577,7 +1598,16 @@ bool ClientSDKUnity::writeTypeItemType_BLOB(const std::string& itemName, const s
 bool ClientSDKUnity::writeTypeItemType_ARRAY(const std::string& itemName, const std::string& childItemName, DataType* pDataType)
 {
 	std::string typeStr;
-	getArrayType(pDataType, typeStr);
+
+	if (childItemName.size() == 0 || childItemName[0] == '_')
+	{
+		getArrayType(pDataType, typeStr);
+	}
+	else
+	{
+		typeStr = childItemName;
+	}
+
 	sourcefileBody_ += fmt::format("\t\tpublic {} {} = new {}();\n", typeStr, itemName, typeStr);
 	return true;
 }
@@ -1607,7 +1637,7 @@ bool ClientSDKUnity::writeTypeItemType_VECTOR3(const std::string& itemName, cons
 #ifdef CLIENT_NO_FLOAT
 	sourcefileBody_ += fmt::format("\t\tpublic Vector3Int {} = new Vector3Int(0, 0, 0);\n", itemName);
 #else
-	sourcefileBody_ += fmt::format("\t\tpublic Vector3 {} = new Vector2(0f, 0f, 0f);\n", itemName);
+	sourcefileBody_ += fmt::format("\t\tpublic Vector3 {} = new Vector3(0f, 0f, 0f);\n", itemName);
 #endif
 
 	return true;
@@ -1651,7 +1681,7 @@ bool ClientSDKUnity::writeEntityModuleBegin(ScriptDefModule* pEntityScriptDefMod
 
 	sourcefileBody_ += fmt::format("\tpublic abstract class {} : Entity\n\t{{\n", newModuleName);
 
-	// 写mailbox属性
+	// 写entityCall属性
 	sourcefileBody_ += fmt::format("\t\tpublic EntityBaseEntityCall_{} baseEntityCall = null;\n", newModuleName);
 	sourcefileBody_ += fmt::format("\t\tpublic EntityCellEntityCall_{} cellEntityCall = null;\n\n", newModuleName);
 	return true;
@@ -2112,7 +2142,7 @@ bool ClientSDKUnity::writeEntityProperty_UINT64(ScriptDefModule* pEntityScriptDe
 bool ClientSDKUnity::writeEntityProperty_FLOAT(ScriptDefModule* pEntityScriptDefModule,
 	ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription)
 {
-	sourcefileBody_ += fmt::format("\t\tpublic float {} = {};\n", pPropertyDescription->getName(),
+	sourcefileBody_ += fmt::format("\t\tpublic float {} = {}f;\n", pPropertyDescription->getName(),
 		(strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : "0f"));
 
 	std::string name = pPropertyDescription->getName();
