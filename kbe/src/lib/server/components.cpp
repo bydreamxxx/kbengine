@@ -186,9 +186,6 @@ void Components::addComponent(int32 uid, const char* username,
 {
 	COMPONENTS& components = getComponents(componentType);
 
-	if(!checkComponents(uid, componentID, pid))
-		return;
-
 	ComponentInfos* cinfos = findComponent(componentType, uid, componentID);
 	if(cinfos != NULL)
 	{
@@ -1113,11 +1110,14 @@ RESTART_RECV:
 					COMPONENT_NAME_EX((COMPONENT_TYPE)args.componentType),
 					inet_ntoa((struct in_addr&)args.intaddr),
 					ntohs(args.intport)));
-
-				Components::getSingleton().addComponent(args.uid, args.username.c_str(), 
-					(KBEngine::COMPONENT_TYPE)args.componentType, args.componentID, args.globalorderid, args.grouporderid, args.gus,
-					args.intaddr, args.intport, args.extaddr, args.extport, args.extaddrEx, args.pid, args.cpu, args.mem, 
-					args.usedmem, args.extradata, args.extradata1, args.extradata2, 123);
+				
+				if (Components::getSingleton().checkComponents(args.uid, args.componentID, args.pid))
+				{
+					Components::getSingleton().addComponent(args.uid, args.username.c_str(),
+						(KBEngine::COMPONENT_TYPE)args.componentType, args.componentID, args.globalorderid, args.grouporderid, args.gus,
+						args.intaddr, args.intport, args.extaddr, args.extport, args.extaddrEx, args.pid, args.cpu, args.mem,
+						args.usedmem, args.extradata, args.extradata1, args.extradata2, 123);
+				}
 
 				isContinue = true;
 			}while(bhandler.pCurrPacket()->length() > 0);
@@ -1269,10 +1269,13 @@ RESTART_RECV:
 						inet_ntoa((struct in_addr&)args.intaddr),
 						ntohs(args.intport)));
 
-					Components::getSingleton().addComponent(args.uid, args.username.c_str(), 
-						(KBEngine::COMPONENT_TYPE)args.componentType, args.componentID, args.globalorderid, args.grouporderid, args.gus,
-						args.intaddr, args.intport, args.extaddr, args.extport, args.extaddrEx, args.pid, args.cpu, args.mem, 
-						args.usedmem, args.extradata, args.extradata1, args.extradata2, args.extradata3);
+					if (Components::getSingleton().checkComponents(args.uid, args.componentID, args.pid)) 
+					{
+						Components::getSingleton().addComponent(args.uid, args.username.c_str(),
+							(KBEngine::COMPONENT_TYPE)args.componentType, args.componentID, args.globalorderid, args.grouporderid, args.gus,
+							args.intaddr, args.intport, args.extaddr, args.extport, args.extaddrEx, args.pid, args.cpu, args.mem,
+							args.usedmem, args.extradata, args.extradata1, args.extradata2, args.extradata3);
+					}
 
 					isContinue = true;
 				}while(bhandler.pCurrPacket()->length() > 0);

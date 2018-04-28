@@ -169,9 +169,12 @@ void Machine::onBroadcastInterface(Network::Channel* pChannel, int32 uid, std::s
 				((int32)grouporderid),
 				pid));
 
-		Components::getSingleton().addComponent(uid, username.c_str(), 
-			(KBEngine::COMPONENT_TYPE)componentType, componentID, globalorderid, grouporderid, gus, intaddr, intport, extaddr, extport, extaddrEx,
-			pid, cpu, mem, usedmem, extradata, extradata1, extradata2, extradata3);
+		if (Components::getSingleton().checkComponents(uid, componentID, pid))
+		{
+			Components::getSingleton().addComponent(uid, username.c_str(),
+				(KBEngine::COMPONENT_TYPE)componentType, componentID, globalorderid, grouporderid, gus, intaddr, intport, extaddr, extport, extaddrEx,
+				pid, cpu, mem, usedmem, extradata, extradata1, extradata2, extradata3);
+		}
 	}
 }
 
