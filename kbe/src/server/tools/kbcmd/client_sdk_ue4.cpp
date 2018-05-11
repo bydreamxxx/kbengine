@@ -1162,6 +1162,7 @@ bool ClientSDKUE4::writeCustomDataType(const DataType* pDataType)
 	if (strcmp(pDataType->getName(), "FIXED_DICT") == 0)
 	{
 		fileBody() += fmt::format("\nclass KBENGINEPLUGINS_API DATATYPE_{} : DATATYPE_BASE\n{{\npublic:\n", typeName);
+		std::map<std::string, std::string> allClassName;
 
 		FixedDictType* dictdatatype = const_cast<FixedDictType*>(static_cast<const FixedDictType*>(pDataType));
 
@@ -1183,10 +1184,24 @@ bool ClientSDKUE4::writeCustomDataType(const DataType* pDataType)
 
 					std::string className = pKeyDataType->aliasName();
 
-					createArrayChildClass(pFixedArrayType, pFixedArrayType->getDataType(), className + "_ChildArray", "\t");
+					if (strlen(pFixedArrayType->aliasName()) == 0 || pFixedArrayType->aliasName()[0] == '_')
+					{
+						std::map<std::string, std::string>::iterator findChildClassNameIter = allClassName.find(className + "_ChildArray");
 
-					fileBody() += fmt::format("\tDATATYPE_{} {}_DataType;\n\n",
-						className + "_ChildArray", keyiter->first, className + "_ChildArray");
+						if (findChildClassNameIter == allClassName.end())
+						{
+							allClassName[className + "_ChildArray"] = typeName;
+							createArrayChildClass(pFixedArrayType, pFixedArrayType->getDataType(), className + "_ChildArray", "\t");
+						}
+
+						fileBody() += fmt::format("\tDATATYPE_{} {}_DataType;\n\n",
+							className + "_ChildArray", keyiter->first, className + "_ChildArray");
+					}
+					else
+					{
+						fileBody() += fmt::format("\tDATATYPE_{} {}_DataType;\n\n",
+							className, keyiter->first, className);
+					}
 				}
 				else
 				{
@@ -2479,7 +2494,7 @@ bool ClientSDKUE4::writeEntityProperty_STRING(ScriptDefModule* pEntityScriptDefM
 	ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription)
 {
 	fileBody() += fmt::format("\tFString {};\n", pPropertyDescription->getName());
-	initBody_ += fmt::format("\t{}(TEXT({})),\n", pPropertyDescription->getName(), (strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : "\"\""));
+	initBody_ += fmt::format("\t{}(TEXT(\"{}\")),\n", pPropertyDescription->getName(), (strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : ""));
 
 	std::string name = pPropertyDescription->getName();
 	name[0] = std::toupper(name[0]);
@@ -2492,7 +2507,7 @@ bool ClientSDKUE4::writeEntityProperty_UNICODE(ScriptDefModule* pEntityScriptDef
 	ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription)
 {
 	fileBody() += fmt::format("\tFString {};\n", pPropertyDescription->getName());
-	initBody_ += fmt::format("\t{}(TEXT({})),\n", pPropertyDescription->getName(), (strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : "\"\""));
+	initBody_ += fmt::format("\t{}(TEXT(\"{}\")),\n", pPropertyDescription->getName(), (strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : ""));
 
 	std::string name = pPropertyDescription->getName();
 	name[0] = std::toupper(name[0]);
