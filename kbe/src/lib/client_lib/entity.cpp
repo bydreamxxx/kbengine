@@ -135,6 +135,10 @@ PyObject* Entity::onScriptGetAttribute(PyObject* attr)
 }	
 
 //-------------------------------------------------------------------------------------
+void Entity::onInitializeScript()
+{
+
+}
 void Entity::onDefDataChanged(EntityComponent* pEntityComponent, const PropertyDescription* propertyDescription, PyObject* pyData, bool dontNotify)
 {
 }
@@ -545,7 +549,7 @@ void Entity::onEnterWorld()
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 	enterworld_ = true;
 
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onEnterWorld"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onEnterWorld"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -555,7 +559,7 @@ void Entity::onLeaveWorld()
 	enterworld_ = false;
 	spaceID(0);
 
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onLeaveWorld"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onLeaveWorld"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -563,7 +567,7 @@ void Entity::onEnterSpace()
 {
 	this->stopMove();
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onEnterSpace"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onEnterSpace"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -572,7 +576,7 @@ void Entity::onLeaveSpace()
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 	spaceID(0);
 
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onLeaveSpace"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onLeaveSpace"), GETERR));
 
 	this->stopMove();
 }
@@ -621,7 +625,7 @@ void Entity::onBecomePlayer()
 	}
 
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onBecomePlayer"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onBecomePlayer"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -631,7 +635,7 @@ void Entity::onBecomeNonPlayer()
 		return;
 	
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onBecomeNonPlayer"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onBecomeNonPlayer"), GETERR));
 
 	PyObject_SetAttrString(static_cast<PyObject*>(this), "__class__", (PyObject*)this->pScriptModule_->getScriptType());
 	SCRIPT_ERROR_CHECK();
@@ -713,7 +717,7 @@ void Entity::onMove(uint32 controllerId, int layer, const Position3D& oldPos, Py
 
 	AUTO_SCOPED_PROFILE("onMove");
 	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS2(pyTempObj, const_cast<char*>("onMove"),
-		const_cast<char*>("IO"), controllerId, userarg, false));
+		const_cast<char*>("IO"), controllerId, userarg, GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -726,7 +730,7 @@ void Entity::onMoveOver(uint32 controllerId, int layer, const Position3D& oldPos
 
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS2(pyTempObj, const_cast<char*>("onMoveOver"),
-		const_cast<char*>("IO"), controllerId, userarg, false));
+		const_cast<char*>("IO"), controllerId, userarg, GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -739,7 +743,7 @@ void Entity::onMoveFailure(uint32 controllerId, PyObject* userarg)
 
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS2(pyTempObj, const_cast<char*>("onMoveFailure"),
-		const_cast<char*>("IO"), controllerId, userarg, false));
+		const_cast<char*>("IO"), controllerId, userarg, GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -869,7 +873,7 @@ void Entity::onTimer(ScriptID timerID, int useraAgs)
 {
 	SCOPED_PROFILE(ONTIMER_PROFILE);
 	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS2(pyTempObj, const_cast<char*>("onTimer"),
-		const_cast<char*>("Ii"), timerID, useraAgs, false));
+		const_cast<char*>("Ii"), timerID, useraAgs, GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -880,7 +884,7 @@ void Entity::onControlled(bool p_controlled)
     PyObject *pyval = p_controlled ? Py_True : Py_False;
 
 	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS1(pyTempObj, const_cast<char*>("onControlled"),
-		const_cast<char*>("O"), pyval, false));
+		const_cast<char*>("O"), pyval, GETERR));
 }
 
 //-------------------------------------------------------------------------------------

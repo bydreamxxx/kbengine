@@ -1,8 +1,8 @@
 // Copyright 2008-2018 Yolo Technologies, Inc. All Rights Reserved. https://www.comblockengine.com
 
 #include "cellapp.h"
-#include "space.h"	
-#include "spaces.h"	
+#include "spacememory.h"	
+#include "spacememorys.h"	
 #include "loadnavmesh_threadtasks.h"
 #include "server/serverconfig.h"
 #include "common/deadline.h"
@@ -24,7 +24,7 @@ thread::TPTask::TPTaskState LoadNavmeshTask::presentMainThread()
 	
 	if (spaceID_ != 0)
 	{
-		Space* pSpace = Spaces::findSpace(spaceID_);
+		Space* pSpace = SpaceMemorys::findSpace(spaceID_);
 		if (pSpace == NULL || !pSpace->isGood())
 		{
 			ERROR_MSG(fmt::format("LoadNavmeshTask::presentMainThread(): not found space({})\n",

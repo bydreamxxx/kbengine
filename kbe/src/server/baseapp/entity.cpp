@@ -86,6 +86,12 @@ Entity::~Entity()
 }	
 
 //-------------------------------------------------------------------------------------
+void Entity::onInitializeScript()
+{
+
+}
+
+//-------------------------------------------------------------------------------------
 void Entity::onDefDataChanged(EntityComponent* pEntityComponent, const PropertyDescription* propertyDescription,
 		PyObject* pyData, bool dontNotify)
 {
@@ -101,8 +107,21 @@ void Entity::onDefDataChanged(EntityComponent* pEntityComponent, const PropertyD
 
 	if (pEntityComponent)
 	{
-		componentPropertyUID = (pEntityComponent ? pEntityComponent->pPropertyDescription()->getUType() : (ENTITY_PROPERTY_UID)0);
-		componentPropertyAliasID = (pEntityComponent ? pEntityComponent->pPropertyDescription()->aliasIDAsUint8() : 0);
+		PropertyDescription* pComponentPropertyDescription = pEntityComponent->pPropertyDescription();
+
+		if (pComponentPropertyDescription)
+		{
+			componentPropertyUID = pComponentPropertyDescription->getUType();
+			componentPropertyAliasID = pComponentPropertyDescription->aliasIDAsUint8();
+		}
+		else
+		{
+			ERROR_MSG(fmt::format("{}::onDefDataChanged: EntityComponent({}) not found pComponentPropertyDescription!\n",
+				pScriptModule_->getName(), pEntityComponent->pComponentScriptDefModuleDescrs()->getName()));
+
+			KBE_ASSERT(false);
+			return;
+		}
 	}
 
 	if((flags & ED_FLAG_BASE_AND_CLIENT) <= 0 || clientEntityCall_ == NULL)
@@ -148,7 +167,7 @@ void Entity::onDestroy(bool callScript)
 	if(callScript)
 	{
 		SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-		CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onDestroy"), false));
+		CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onDestroy"), GETERR));
 	}
 
 	if(this->hasDB())
@@ -390,9 +409,18 @@ void Entity::addPersistentsDataToStream(uint32 flags, MemoryStream* s)
 		const char* attrname = propertyDescription->getName();
 		if(propertyDescription->isPersistent() && (flags & propertyDescription->getFlags()) > 0)
 		{
+			bool isComponent = propertyDescription->getDataType()->type() == DATA_TYPE_ENTITY_COMPONENT;
+			if (isComponent)
+			{
+				// 由于存在一种情况， 组件def中没有内容， 但有cell脚本，此时baseapp上无法判断他是否有cell属性，所以写celldata时没有数据写入
+				EntityComponentType* pEntityComponentType = (EntityComponentType*)propertyDescription->getDataType();
+				if (pEntityComponentType->pScriptDefModule()->getPropertyDescrs().size() == 0 && pEntityComponentType->pScriptDefModule()->getCellPropertyDescriptions().size() == 0)
+					continue;
+			}
+
 			PyObject *key = PyUnicode_FromString(attrname);
 
-			if(propertyDescription->getDataType()->type() != DATA_TYPE_ENTITY_COMPONENT /* 如果是组件类型，应该先从实体自身找到这个组件属性 */
+			if(!isComponent /* 如果是组件类型，应该先从实体自身找到这个组件属性 */
 				&& cellDataDict_ != NULL && PyDict_Contains(cellDataDict_, key) > 0)
 			{
 				PyObject* pyVal = PyDict_GetItemString(cellDataDict_, attrname);
@@ -427,7 +455,7 @@ void Entity::addPersistentsDataToStream(uint32 flags, MemoryStream* s)
 			}
 			else
 			{
-				if (propertyDescription->getDataType()->type() != DATA_TYPE_ENTITY_COMPONENT)
+				if (!isComponent)
 				{
 					WARNING_MSG(fmt::format("{}::addPersistentsDataToStream: {} not found Persistent({}), use default values!\n",
 						this->scriptName(), this->id(), attrname));
@@ -844,7 +872,7 @@ void Entity::onCreateCellFailure(void)
 	creatingCell_ = false;
 	isGetingCellData_ = false;
 
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onCreateCellFailure"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onCreateCellFailure"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -992,7 +1020,7 @@ void Entity::onGetCell(Network::Channel* pChannel, COMPONENT_ID componentID)
 
 	if (!inRestore_)
 	{
-		CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onGetCell"), false));
+		CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onGetCell"), GETERR));
 	}
 }
 
@@ -1000,7 +1028,7 @@ void Entity::onGetCell(Network::Channel* pChannel, COMPONENT_ID componentID)
 void Entity::onClientDeath()
 {
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onClientDeath"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onClientDeath"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -1017,7 +1045,7 @@ void Entity::onLoseCell(Network::Channel* pChannel, MemoryStream& s)
 	isGetingCellData_ = false;
 	createdSpace_ = false;
 	
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onLoseCell"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onLoseCell"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -1027,7 +1055,7 @@ void Entity::onRestore()
 		return;
 
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onRestore"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onRestore"), GETERR));
 
 	inRestore_ = false;
 	isArchiveing_ = false;
@@ -1236,7 +1264,7 @@ void Entity::onWriteToDBCallback(ENTITY_ID eid,
 void Entity::onCellWriteToDBCompleted(CALLBACK_ID callbackID, int8 shouldAutoLoad, int dbInterfaceIndex)
 {
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onPreArchive"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onPreArchive"), GETERR));
 
 	if (dbInterfaceIndex >= 0)
 		dbInterfaceIndex_ = dbInterfaceIndex;
@@ -1315,7 +1343,7 @@ void Entity::onWriteToDB()
 	if (!cd)
 		cd = Py_None;
 
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS1(pyTempObj, const_cast<char*>("onWriteToDB"), const_cast<char*>("O"), cd, false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS1(pyTempObj, const_cast<char*>("onWriteToDB"), const_cast<char*>("O"), cd, GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -1558,7 +1586,7 @@ void Entity::onTeleportCB(Network::Channel* pChannel, SPACE_ID spaceID, bool fro
 void Entity::onTeleportFailure()
 {
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onTeleportFailure"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onTeleportFailure"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -1567,7 +1595,7 @@ void Entity::onTeleportSuccess(SPACE_ID spaceID)
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 
 	this->spaceID(spaceID);
-	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onTeleportSuccess"), false));
+	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS0(pyTempObj, const_cast<char*>("onTeleportSuccess"), GETERR));
 }
 
 //-------------------------------------------------------------------------------------
@@ -1711,7 +1739,7 @@ void Entity::onTimer(ScriptID timerID, int useraAgs)
 	SCOPED_PROFILE(ONTIMER_PROFILE);
 	
 	CALL_ENTITY_AND_COMPONENTS_METHOD(this, SCRIPT_OBJECT_CALL_ARGS2(pyTempObj, const_cast<char*>("onTimer"),
-		const_cast<char*>("Ii"), timerID, useraAgs, false));
+		const_cast<char*>("Ii"), timerID, useraAgs, GETERR));
 }
 
 //-------------------------------------------------------------------------------------

@@ -14,16 +14,21 @@ namespace KBEngine {
 // 调用所有组件的方法
 #define CALL_ENTITY_AND_COMPONENTS_METHOD(ENTITYOBJ, CALLCODE)													\
 {																												\
-	Py_INCREF(ENTITYOBJ);																						\
-	PyObject* pyTempObj = ENTITYOBJ;																			\
-	CALLCODE;																									\
-	CALL_ENTITY_COMPONENTS_METHOD(ENTITYOBJ, CALLCODE);															\
-	Py_DECREF(ENTITYOBJ);																						\
+	{																											\
+		bool GETERR = false;																					\
+		Py_INCREF(ENTITYOBJ);																					\
+		PyObject* pyTempObj = ENTITYOBJ;																		\
+		CALLCODE;																								\
+		CALL_ENTITY_COMPONENTS_METHOD(ENTITYOBJ, CALLCODE);														\
+		Py_DECREF(ENTITYOBJ);																					\
+	}																											\
 }																												\
+
 
 
 #define CALL_ENTITY_COMPONENTS_METHOD(ENTITYOBJ, CALLCODE)														\
 	{																											\
+		bool GETERR = false;																					\
 		ScriptDefModule::COMPONENTDESCRIPTION_MAP& componentDescrs = pScriptModule_->getComponentDescrs();		\
 		ScriptDefModule::COMPONENTDESCRIPTION_MAP::iterator comps_iter = componentDescrs.begin();				\
 		for (; comps_iter != componentDescrs.end(); ++comps_iter)												\
@@ -156,6 +161,10 @@ public:
 	}
 
 	const ScriptDefModule::PROPERTYDESCRIPTION_MAP* pChildPropertyDescrs();
+
+	ScriptDefModule* pComponentScriptDefModuleDescrs() {
+		return pComponentDescrs_;
+	}
 
 	typedef std::tr1::function<void (EntityComponent*, const PropertyDescription*, PyObject*, bool)> OnDataChangedEvent;
 

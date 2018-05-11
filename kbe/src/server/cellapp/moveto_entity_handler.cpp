@@ -9,9 +9,10 @@ namespace KBEngine{
 
 //-------------------------------------------------------------------------------------
 MoveToEntityHandler::MoveToEntityHandler(KBEShared_ptr<Controller>& pController, ENTITY_ID pTargetID, float velocity, float range, bool faceMovement, 
-		bool moveVertically, PyObject* userarg):
+		bool moveVertically, PyObject* userarg, const Position3D& offsetPos):
 MoveToPointHandler(pController, pController->pEntity()->layer(), pController->pEntity()->position(), velocity, range, faceMovement, moveVertically, userarg),
-pTargetID_(pTargetID)
+pTargetID_(pTargetID), 
+offsetPos_(offsetPos)
 {
 	updatableName = "MoveToEntityHandler";
 }
@@ -52,11 +53,12 @@ const Position3D& MoveToEntityHandler::destPos()
 	Entity* self = this->pController_->pEntity();
 	if (self && self->parent())
 	{
-		self->parent()->positionWorldToLocal(pEntity->position(), destPos_);
+		self->parent()->positionWorldToLocal(pEntity->position() + offsetPos_, destPos_);
 		return destPos_;
 	}
 
-	return pEntity->position();
+	destPos_ = pEntity->position() + offsetPos_;
+	return destPos_;
 }
 
 //-------------------------------------------------------------------------------------

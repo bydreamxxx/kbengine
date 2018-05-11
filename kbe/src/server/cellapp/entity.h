@@ -31,7 +31,7 @@ class CoordinateSystem;
 class EntityCoordinateNode;
 class Controller;
 class Controllers;
-class Space;
+class SpaceMemory;
 class VolatileInfo;
 
 namespace Network
@@ -52,7 +52,8 @@ class Entity : public script::ScriptObject
 	ENTITY_HEADER(Entity)
 
 public:
-	Entity(ENTITY_ID id, const ScriptDefModule* pScriptModule);
+	Entity(ENTITY_ID id, const ScriptDefModule* pScriptModule,
+		PyTypeObject* pyType = getScriptType(), bool isInitialised = true);
 	~Entity();
 	
 	/** 
@@ -278,8 +279,8 @@ public:
 	/**
 		进入离开space等回调
 	*/
-	void onEnterSpace(Space* pSpace);
-	void onLeaveSpace(Space* pSpace);
+	void onEnterSpace(SpaceMemory* pSpace);
+	void onLeaveSpace(SpaceMemory* pSpace);
 
 	/** 
 		当cellapp意外终止后， baseapp如果能找到合适的cellapp则将其恢复后
@@ -358,9 +359,9 @@ public:
 		entity移动到某个entity 
 	*/
 	uint32 moveToEntity(ENTITY_ID targetID, float velocity, float distance,
-			PyObject* userData, bool faceMovement, bool moveVertically);
+			PyObject* userData, bool faceMovement, bool moveVertically, const Position3D& offsetPos);
 	
-	DECLARE_PY_MOTHOD_ARG6(pyMoveToEntity, int32, float, float, PyObject_ptr, int32, int32);
+	static PyObject* __py_pyMoveToEntity(PyObject* self, PyObject* args);
 
 	/**
 	entity移动加速

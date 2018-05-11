@@ -50,6 +50,8 @@ ENTITY_SCRIPT_UID g_scriptUtype = 1;
 // 获得某个entity的函数地址
 EntityDef::GetEntityFunc EntityDef::__getEntityFunc;
 
+static std::map<std::string, std::vector<PropertyDescription*> > g_logComponentPropertys;
+
 //-------------------------------------------------------------------------------------
 EntityDef::EntityDef()
 {
@@ -145,12 +147,18 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 
 	__entitiesPath = Resmgr::getSingleton().getPyUserScriptsPath();
 
+	g_entityFlagMapping["CELL"]									= ED_FLAG_CELL_PUBLIC;
+	g_entityFlagMapping["CELL_AND_CLIENT"]						= ED_FLAG_CELL_PUBLIC_AND_OWN;
+	g_entityFlagMapping["CELL_AND_CLIENTS"]						= ED_FLAG_ALL_CLIENTS;
+	g_entityFlagMapping["CELL_AND_OTHER_CLIENTS"]				= ED_FLAG_OTHER_CLIENTS;
+	g_entityFlagMapping["BASE_AND_CLIENT"]						= ED_FLAG_BASE_AND_CLIENT;
+	g_entityFlagMapping["BASE"]									= ED_FLAG_BASE;
+
 	g_entityFlagMapping["CELL_PUBLIC"]							= ED_FLAG_CELL_PUBLIC;
 	g_entityFlagMapping["CELL_PRIVATE"]							= ED_FLAG_CELL_PRIVATE;
 	g_entityFlagMapping["ALL_CLIENTS"]							= ED_FLAG_ALL_CLIENTS;
 	g_entityFlagMapping["CELL_PUBLIC_AND_OWN"]					= ED_FLAG_CELL_PUBLIC_AND_OWN;
-	g_entityFlagMapping["BASE_AND_CLIENT"]						= ED_FLAG_BASE_AND_CLIENT;
-	g_entityFlagMapping["BASE"]									= ED_FLAG_BASE;
+
 	g_entityFlagMapping["OTHER_CLIENTS"]						= ED_FLAG_OTHER_CLIENTS;
 	g_entityFlagMapping["OWN_CLIENT"]							= ED_FLAG_OWN_CLIENT;
 
@@ -562,7 +570,7 @@ bool EntityDef::loadComponents(const std::string& defFilePath,
 
 		// 产生一个属性描述实例
 		ENTITY_PROPERTY_UID			futype = 0;
-		uint32						flags = ENTITY_BASE_DATA_FLAGS | ENTITY_CELL_DATA_FLAGS | ENTITY_CLIENT_DATA_FLAGS;
+		uint32						flags = ED_FLAG_BASE | ED_FLAG_CELL_PUBLIC | ENTITY_CLIENT_DATA_FLAGS;
 		bool						isPersistent = true;
 		bool						isIdentifier = false;		// 是否是一个索引键
 		uint32						databaseLength = 0;			// 这个属性在数据库中的长度
@@ -592,8 +600,6 @@ bool EntityDef::loadComponents(const std::string& defFilePath,
 		// 查找是否有这个模块，如果有说明已经加载过相关描述，这里无需再次加载
 		ScriptDefModule* pCompScriptDefModule = findScriptModule(componentTypeName.c_str(), false);
 
-		PropertyDescription* pPropertyDescription = NULL;
-
 		if (!pCompScriptDefModule)
 		{
 			__scriptTypeMappingUType[componentTypeName] = g_scriptUtype;
@@ -602,25 +608,28 @@ bool EntityDef::loadComponents(const std::string& defFilePath,
 			pCompScriptDefModule->isComponentModule(true);
 
 			EntityDef::__scriptModules.push_back(pCompScriptDefModule);
-
-			pPropertyDescription = addComponentProperty(futype, componentTypeName, componentName, flags, isPersistent, isIdentifier,
-				indexType, databaseLength, defaultStr, detailLevel, pScriptModule, pCompScriptDefModule);
 		}
 		else
 		{
-			pPropertyDescription = addComponentProperty(futype, componentTypeName, componentName, flags, isPersistent, isIdentifier,
-				indexType, databaseLength, defaultStr, detailLevel, pScriptModule, pCompScriptDefModule);
+			flags = ED_FLAG_UNKOWN;
 
-			if (!pCompScriptDefModule->hasBase())
-				flags &= ~ENTITY_BASE_DATA_FLAGS;
+			if (pCompScriptDefModule->hasBase())
+				flags |= ED_FLAG_BASE;
 
-			if (!pCompScriptDefModule->hasCell())
-				flags &= ~ENTITY_CELL_DATA_FLAGS;
+			if (pCompScriptDefModule->hasCell())
+				flags |= ED_FLAG_CELL_PUBLIC;
 
-			if (!pCompScriptDefModule->hasClient())
-				flags &= ~ENTITY_CLIENT_DATA_FLAGS;
+			if (pCompScriptDefModule->hasClient())
+			{
+				if (pCompScriptDefModule->hasBase())
+					flags |= ED_FLAG_BASE_AND_CLIENT;
+				else
+					flags |= (ED_FLAG_ALL_CLIENTS | ED_FLAG_CELL_PUBLIC_AND_OWN | ED_FLAG_OTHER_CLIENTS | ED_FLAG_OWN_CLIENT);
+			}
 
-			pPropertyDescription->setFlags(flags);
+			g_logComponentPropertys[pScriptModule->getName()].push_back(addComponentProperty(futype, componentTypeName, componentName, flags, isPersistent, isIdentifier,
+				indexType, databaseLength, defaultStr, detailLevel, pScriptModule, pCompScriptDefModule));
+
 			pScriptModule->addComponentDescription(componentName.c_str(), pCompScriptDefModule);
 			continue;
 		}
@@ -650,7 +659,7 @@ bool EntityDef::loadComponents(const std::string& defFilePath,
 		}
 
 		// 遍历所有的interface， 并将他们的方法和属性加入到模块中
-		if (!loadInterfaces(defFilePath, componentTypeName, componentXml.get(), componentRootNode, pCompScriptDefModule, false))
+		if (!loadInterfaces(defFilePath, componentTypeName, componentXml.get(), componentRootNode, pCompScriptDefModule, true))
 		{
 			ERROR_MSG(fmt::format("EntityDef::loadComponents: failed to load component:{} interface.\n",
 				componentTypeName.c_str()));
@@ -658,16 +667,25 @@ bool EntityDef::loadComponents(const std::string& defFilePath,
 			return false;
 		}
 		
-		if (!pCompScriptDefModule->hasBase())
-			flags &= ~ENTITY_BASE_DATA_FLAGS;
+		flags = ED_FLAG_UNKOWN;
 
-		if (!pCompScriptDefModule->hasCell())
-			flags &= ~ENTITY_CELL_DATA_FLAGS;
+		if (pCompScriptDefModule->hasBase())
+			flags |= ED_FLAG_BASE;
 
-		if (!pCompScriptDefModule->hasClient())
-			flags &= ~ENTITY_CLIENT_DATA_FLAGS;
+		if (pCompScriptDefModule->hasCell())
+			flags |= ED_FLAG_CELL_PUBLIC;
 
-		pPropertyDescription->setFlags(flags);
+		if (pCompScriptDefModule->hasClient())
+		{
+			if (pCompScriptDefModule->hasBase())
+				flags |= ED_FLAG_BASE_AND_CLIENT;
+			
+			if (pCompScriptDefModule->hasCell())
+				flags |= (ED_FLAG_ALL_CLIENTS | ED_FLAG_CELL_PUBLIC_AND_OWN | ED_FLAG_OTHER_CLIENTS | ED_FLAG_OWN_CLIENT);
+		}
+
+		g_logComponentPropertys[pScriptModule->getName()].push_back(addComponentProperty(futype, componentTypeName, componentName, flags, isPersistent, isIdentifier,
+			indexType, databaseLength, defaultStr, detailLevel, pScriptModule, pCompScriptDefModule));
 
 		pScriptModule->addComponentDescription(componentName.c_str(), pCompScriptDefModule);
 	}
@@ -1854,6 +1872,45 @@ ERASE_PROPERTYS:
 
 		setScriptModuleHasComponentEntity(pScriptModule, true);
 
+		{
+			std::vector<ScriptDefModulePtr>::iterator entityScriptModuleIter = EntityDef::__scriptModules.begin();
+			for (; entityScriptModuleIter != EntityDef::__scriptModules.end(); ++entityScriptModuleIter)
+			{
+				std::vector<PropertyDescription*>& componentPropertys = g_logComponentPropertys[(*entityScriptModuleIter)->getName()];
+				std::vector<PropertyDescription*>::iterator componentPropertysIter = componentPropertys.begin();
+				for (; componentPropertysIter != componentPropertys.end(); ++componentPropertysIter)
+				{
+					PropertyDescription* pComponentPropertyDescription = (*componentPropertysIter);
+					ScriptDefModule* pCompScriptModule = static_cast<EntityComponentType*>(pComponentPropertyDescription->getDataType())->pScriptDefModule();
+
+					if (pCompScriptModule->getName() != componentScriptName)
+						continue;
+
+					uint32 pflags = pComponentPropertyDescription->getFlags();
+
+  					if (g_componentType == BASEAPP_TYPE)
+					{
+						pflags |= ENTITY_BASE_DATA_FLAGS;
+					}
+					else if (g_componentType == CELLAPP_TYPE)
+					{
+						pflags |= ENTITY_CELL_DATA_FLAGS;
+					}
+					else
+					{
+						pflags |= ENTITY_CLIENT_DATA_FLAGS;
+					}
+
+					pComponentPropertyDescription->setFlags(pflags);
+
+					if ((*entityScriptModuleIter)->findPropertyDescription(pComponentPropertyDescription->getName(), g_componentType) != pComponentPropertyDescription)
+					{
+						(*entityScriptModuleIter)->addPropertyDescription(pComponentPropertyDescription->getName(), pComponentPropertyDescription, g_componentType, true);
+					}
+				}
+			}
+		}
+
 		PyObject* pyClass =
 			PyObject_GetAttrString(pyModule, const_cast<char *>(componentScriptName.c_str()));
 
@@ -1916,6 +1973,7 @@ ERASE_PROPERTYS:
 		S_RELEASE(pyModule);
 	}
 
+	g_logComponentPropertys.clear();
 	return true;
 }
 
