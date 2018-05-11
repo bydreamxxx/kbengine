@@ -24,7 +24,7 @@ thread::TPTask::TPTaskState LoadNavmeshTask::presentMainThread()
 	
 	if (spaceID_ != 0)
 	{
-		Space* pSpace = SpaceMemorys::findSpace(spaceID_);
+		SpaceMemory* pSpace = SpaceMemorys::findSpace(spaceID_);
 		if (pSpace == NULL || !pSpace->isGood())
 		{
 			ERROR_MSG(fmt::format("LoadNavmeshTask::presentMainThread(): not found space({})\n",

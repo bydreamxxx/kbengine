@@ -2046,7 +2046,7 @@ int Cellapp::raycast(SPACE_ID spaceID, int layer, uint16 flags, const Position3D
 
 int Cellapp::collideVertical(SPACE_ID spaceID, int layer, uint16 flags, const Position3D& position, const float startDeviationY, const float endDeviationY, std::vector<Position3D>& hitPos)
 {
-	Space* pSpace = Spaces::findSpace(spaceID);
+	SpaceMemory* pSpace = SpaceMemorys::findSpace(spaceID);
 	if (pSpace == NULL)
 	{
 		ERROR_MSG(fmt::format("Cellapp::collideVertical: not found space({})!\n",
