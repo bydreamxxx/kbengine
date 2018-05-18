@@ -151,6 +151,22 @@ PyObject* EntityComponent::owner(bool attempt)
 }
 
 //-------------------------------------------------------------------------------------
+void EntityComponent::updateOwner(ENTITY_ID id, PyObject* pOwner)
+{
+	if (pOwner == owner_)
+	{
+		KBE_ASSERT(ownerID_ == id);
+		return;
+	}
+
+	ownerID_ = id;
+	owner_ = pOwner;
+
+	if (owner_)
+		Py_INCREF(owner_);
+}
+
+//-------------------------------------------------------------------------------------
 PyObject* EntityComponent::pyGetOwner()
 {
 	PyObject* pyobj = owner();
@@ -387,6 +403,29 @@ PyObject* EntityComponent::onScriptGetAttribute(PyObject* attr)
 	char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
 	PyMem_Free(PyUnicode_AsWideCharStringRet0);
 
+	/*
+	// 如果是ghost调用def方法则需要rpc调用。
+	if (!isReal())
+	{
+		MethodDescription* pMethodDescription = const_cast<ScriptDefModule*>(pScriptModule())->findCellMethodDescription(ccattr);
+
+		if (pMethodDescription)
+		{
+			free(ccattr);
+			return new RealEntityMethod(pMethodDescription, this);
+		}
+	}
+	else
+	{
+		// 如果访问了def持久化类容器属性
+		// 由于没有很好的监测容器类属性内部的变化，这里使用一个折中的办法进行标脏
+		PropertyDescription* pPropertyDescription = const_cast<ScriptDefModule*>(pScriptModule())->findPersistentPropertyDescription(ccattr);
+		if (pPropertyDescription && (pPropertyDescription->getFlags() & ENTITY_CELL_DATA_FLAGS) > 0)
+		{
+			setDirty();
+		}
+	}
+	*/
 	free(ccattr);
 	return ScriptObject::onScriptGetAttribute(attr);
 }
@@ -1236,6 +1275,10 @@ PyObject* EntityComponent::createCellData()
 //-------------------------------------------------------------------------------------
 void EntityComponent::createFromDict(PyObject* pyDict)
 {
+	// 设置为-1， 避免onScriptSetAttribute中尝试广播属性
+	ENTITY_ID oid = ownerID_;
+	ownerID_ = -1;
+
 	const ScriptDefModule::PROPERTYDESCRIPTION_MAP* pPropertyDescrs = pChildPropertyDescrs();
 
 	ScriptDefModule::PROPERTYDESCRIPTION_MAP::const_iterator iter = pPropertyDescrs->begin();
@@ -1252,7 +1295,7 @@ void EntityComponent::createFromDict(PyObject* pyDict)
 				CRITICAL_MSG(fmt::format("EntityComponent::createFromDict: {} type(curr_py: {} != {}) error! name={}, utype={}, owner={}, ownerID={}, domain={}.\n",
 					propertyDescription->getName(), (pyVal ? pyVal->ob_type->tp_name : "unknown"), propertyDescription->getDataType()->getName(),
 					pComponentDescrs_ ? pComponentDescrs_->getName() : "", pComponentDescrs_ ? pComponentDescrs_->getUType() : 0,
-					owner()->ob_type->tp_name, ownerID(), COMPONENT_NAME_EX(componentType())));
+					(ownerID() > 0 ? owner()->ob_type->tp_name : "unknown"), ownerID(), COMPONENT_NAME_EX(componentType())));
 			}
 			else
 			{
@@ -1266,14 +1309,20 @@ void EntityComponent::createFromDict(PyObject* pyDict)
 
 			ERROR_MSG(fmt::format("EntityComponent::createFromDict: not found property({}), use default values! name={}, utype={}, owner={}, ownerID={}, domain={}.\n",
 				propertyDescription->getName(), pComponentDescrs_ ? pComponentDescrs_->getName() : "", pComponentDescrs_ ? pComponentDescrs_->getUType() : 0,
-				owner()->ob_type->tp_name, ownerID(), COMPONENT_NAME_EX(componentType())));
+				(ownerID() > 0 ? owner()->ob_type->tp_name : "unknown"), ownerID(), COMPONENT_NAME_EX(componentType())));
 		}
 	}
+
+	ownerID_ = oid;
 }
 
 //-------------------------------------------------------------------------------------
 void EntityComponent::updateFromDict(PyObject* pyDict) 
 {
+	// 设置为-1， 避免onScriptSetAttribute中尝试广播属性
+	ENTITY_ID oid = ownerID_;
+	ownerID_ = -1;
+
 	PyObject *key, *value;
 	Py_ssize_t pos = 0;
 
@@ -1341,10 +1390,12 @@ void EntityComponent::updateFromDict(PyObject* pyDict)
 	}
 
 	SCRIPT_ERROR_CHECK();
+
+	ownerID_ = oid;
 }
 
 //-------------------------------------------------------------------------------------
-void EntityComponent::convertDictDataToEntityComponent(ENTITY_ID entityID, ScriptDefModule* pEntityScriptDescrs, PyObject* cellData)
+void EntityComponent::convertDictDataToEntityComponent(ENTITY_ID entityID, PyObject* pEntity, ScriptDefModule* pEntityScriptDescrs, PyObject* cellData)
 {
 	ScriptDefModule::COMPONENTDESCRIPTION_MAP& componentDescrs = pEntityScriptDescrs->getComponentDescrs();
 
@@ -1380,7 +1431,10 @@ void EntityComponent::convertDictDataToEntityComponent(ENTITY_ID entityID, Scrip
 
 		PropertyDescription* pPropertyDescription = pEntityScriptDescrs->findCellPropertyDescription(comps_iter->first.c_str());
 		KBE_ASSERT(pPropertyDescription);
+
 		pEntityComponent->pPropertyDescription(pPropertyDescription);
+		pEntityComponent->updateOwner(entityID, pEntity);
+
 		PyDict_SetItemString(cellData, comps_iter->first.c_str(), pEntityComponent);
 		Py_DECREF(pEntityComponent);
 	}
