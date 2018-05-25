@@ -69,6 +69,13 @@ PyObject* createDictDataFromPersistentStream(MemoryStream& s, const char* entity
 
 			if (propertyDescription->getDataType()->type() == DATA_TYPE_ENTITY_COMPONENT)
 			{
+				// 如果某个实体没有cell部分， 而组件属性没有base部分则忽略
+				if (!pScriptModule->hasCell())
+				{
+					if (!propertyDescription->hasBase())
+						continue;
+				}
+
 				bool hasComponentData = false;
 				EntityComponentType* pEntityComponentType = ((EntityComponentType*)propertyDescription->getDataType());
 
@@ -82,7 +89,7 @@ PyObject* createDictDataFromPersistentStream(MemoryStream& s, const char* entity
 					}
 					else
 					{
-						pyVal = propertyDescription->createFromPersistentStream(&s);
+						pyVal = ((EntityComponentDescription*)propertyDescription)->createFromPersistentStream(pScriptModule, &s);
 
 						if (!propertyDescription->isSameType(pyVal))
 						{
@@ -3639,11 +3646,11 @@ void Baseapp::registerPendingLogin(Network::Channel* pChannel, KBEngine::MemoryS
 	DBID										entityDBID;
 	uint32										flags;
 	uint64										deadline;
-	COMPONENT_TYPE								componentType;
+	int											clientType;
 	bool										forceInternalLogin;
 	bool										needCheckPassword;
 
-	s >> loginName >> accountName >> password >> needCheckPassword >> entityID >> entityDBID >> flags >> deadline >> componentType >> forceInternalLogin;
+	s >> loginName >> accountName >> password >> needCheckPassword >> entityID >> entityDBID >> flags >> deadline >> clientType >> forceInternalLogin;
 	s.readBlob(datas);
 
 	Network::Bundle* pBundle = Network::Bundle::createPoolObject();
@@ -3671,7 +3678,7 @@ void Baseapp::registerPendingLogin(Network::Channel* pChannel, KBEngine::MemoryS
 	ptinfos->entityDBID = entityDBID;
 	ptinfos->flags = flags;
 	ptinfos->deadline = deadline;
-	ptinfos->ctype = (COMPONENT_CLIENT_TYPE)componentType;
+	ptinfos->ctype = (COMPONENT_CLIENT_TYPE)clientType;
 	ptinfos->datas = datas;
 	ptinfos->needCheckPassword = needCheckPassword;
 	pendingLoginMgr_.add(ptinfos);
@@ -5402,7 +5409,8 @@ void Baseapp::reqAccountBindEmail(Network::Channel* pChannel, ENTITY_ID entityID
 	PyObject* py__ACCOUNT_NAME__ = PyObject_GetAttrString(pEntity, "__ACCOUNT_NAME__");
 	if(py__ACCOUNT_NAME__ == NULL)
 	{
-		DEBUG_MSG(fmt::format("Baseapp::reqAccountBindEmail: entity({}) __ACCOUNT_NAME__ is NULL\n", entityID));
+		DEBUG_MSG(fmt::format("Baseapp::reqAccountBindEmail: {}({}) not found __ACCOUNT_NAME__!\n", pEntity->scriptName(), entityID));
+		PyErr_Clear();
 		return;
 	}
 
@@ -5417,7 +5425,7 @@ void Baseapp::reqAccountBindEmail(Network::Channel* pChannel, ENTITY_ID entityID
 
 	if(accountName.size() == 0)
 	{
-		DEBUG_MSG(fmt::format("Baseapp::reqAccountBindEmail: entity({}) __ACCOUNT_NAME__ is NULL\n", entityID));
+		DEBUG_MSG(fmt::format("Baseapp::reqAccountBindEmail: {}({}) __ACCOUNT_NAME__ is NULL!\n", pEntity->scriptName(), entityID));
 		return;
 	}
 
@@ -5547,7 +5555,8 @@ void Baseapp::reqAccountNewPassword(Network::Channel* pChannel, ENTITY_ID entity
 	PyObject* py__ACCOUNT_NAME__ = PyObject_GetAttrString(pEntity, "__ACCOUNT_NAME__");
 	if(py__ACCOUNT_NAME__ == NULL)
 	{
-		DEBUG_MSG(fmt::format("Baseapp::reqAccountNewPassword: entity({}) __ACCOUNT_NAME__ is NULL\n", entityID));
+		DEBUG_MSG(fmt::format("Baseapp::reqAccountNewPassword: {}({}) not found __ACCOUNT_NAME__!\n", pEntity->scriptName(), entityID));
+		PyErr_Clear();
 		return;
 	}
 
@@ -5562,7 +5571,7 @@ void Baseapp::reqAccountNewPassword(Network::Channel* pChannel, ENTITY_ID entity
 
 	if(accountName.size() == 0)
 	{
-		DEBUG_MSG(fmt::format("Baseapp::reqAccountNewPassword: entity({}) __ACCOUNT_NAME__ is NULL\n", entityID));
+		DEBUG_MSG(fmt::format("Baseapp::reqAccountNewPassword: {}({}) __ACCOUNT_NAME__ is NULL!\n", pEntity->scriptName(), entityID));
 		return;
 	}
 
