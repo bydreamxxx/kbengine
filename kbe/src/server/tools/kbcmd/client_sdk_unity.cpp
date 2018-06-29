@@ -99,19 +99,19 @@ std::string ClientSDKUnity::typeToType(const std::string& type)
 	}
 	else if (type == "PYTHON")
 	{
-		return type;
+		return "byte[]";
 	}
 	else if (type == "PY_DICT")
 	{
-		return type;
+		return "byte[]";
 	}
 	else if (type == "PY_TUPLE")
 	{
-		return type;
+		return "byte[]";
 	}
 	else if (type == "PY_LIST")
 	{
-		return type;
+		return "byte[]";
 	}
 	else if (type == "BLOB")
 	{
@@ -1417,7 +1417,7 @@ bool ClientSDKUnity::writeTypeItemType_AliasName(const std::string& itemName, co
 		sourcefileBody_ += fmt::format("\t\tpublic static implicit operator {}({} value)\n\t\t{{\n", ntype, itemName);
 		sourcefileBody_ += fmt::format("\t\t\treturn value.value;\n\t\t}}\n\n");
 
-		sourcefileBody_ += fmt::format("\t\tpublic static implicit operator {}(int value)\n\t\t{{\n", itemName);
+		sourcefileBody_ += fmt::format("\t\tpublic static implicit operator {}({} value)\n\t\t{{\n", itemName, ntype);
 		sourcefileBody_ += fmt::format("\t\t\t{} tvalue = ({})value;\n\t\t\treturn new {}(tvalue);\n\t\t}}\n\n", ntype, ntype, itemName);
 
 		sourcefileBody_ += fmt::format("\t\tpublic static {} MaxValue\n\t\t{{\n", ntype);
@@ -2158,7 +2158,7 @@ bool ClientSDKUnity::writeEntityProperty_FLOAT(ScriptDefModule* pEntityScriptDef
 	ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription)
 {
 	sourcefileBody_ += fmt::format("\t\tpublic float {} = {}f;\n", pPropertyDescription->getName(),
-		(strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : "0f"));
+		(strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : "0"));
 
 	std::string name = pPropertyDescription->getName();
 	name[0] = std::toupper(name[0]);
@@ -2170,8 +2170,8 @@ bool ClientSDKUnity::writeEntityProperty_FLOAT(ScriptDefModule* pEntityScriptDef
 bool ClientSDKUnity::writeEntityProperty_DOUBLE(ScriptDefModule* pEntityScriptDefModule,
 	ScriptDefModule* pCurrScriptDefModule, PropertyDescription* pPropertyDescription)
 {
-	sourcefileBody_ += fmt::format("\t\tpublic double {} = {};\n", pPropertyDescription->getName(),
-		(strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : "0d"));
+	sourcefileBody_ += fmt::format("\t\tpublic double {} = {}d;\n", pPropertyDescription->getName(),
+		(strlen(pPropertyDescription->getDefaultValStr()) > 0 ? pPropertyDescription->getDefaultValStr() : "0"));
 
 	std::string name = pPropertyDescription->getName();
 	name[0] = std::toupper(name[0]);
