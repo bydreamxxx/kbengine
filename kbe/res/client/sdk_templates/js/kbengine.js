@@ -2343,7 +2343,7 @@ KBEngine.KBEngineArgs = function()
 	this.updateHZ = @{KBE_UPDATEHZ} * 10;
 	this.serverHeartbeatTick = 15;
 
-	// Reference: http://www.kbengine.org/docs/programming/clientsdkprogramming.html, client types
+	// Reference: http://kbengine.github.io/docs/programming/clientsdkprogramming.html, client types
 	this.clientType = 5;
 
 	// 在Entity初始化时是否触发属性的set_*事件(callPropertysSetMethods)
@@ -3289,7 +3289,11 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 	}
 	
 	this.reloginBaseapp = function()
-	{  
+	{
+		var dateObject = new Date();
+		KBEngine.app.lastTickTime = dateObject.getTime();
+		KBEngine.app.lastTickCBTime = dateObject.getTime();
+
 		if(KBEngine.app.socket != undefined && KBEngine.app.socket != null)
 			return;
 		
