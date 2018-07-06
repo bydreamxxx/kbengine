@@ -343,13 +343,13 @@ FString KBEngineApp::serverErr(uint16 id)
 
 void KBEngineApp::updatePlayerToServer()
 {
-	if (!pArgs_->syncPlayer || spaceID_ == 0)
+	if (pArgs_->syncPlayerMS <= 0 || spaceID_ == 0)
 		return;
 
 	double tnow = getTimeSeconds();
 	double span = tnow - lastUpdateToServerTime_;
 
-	if (span < 0.1)
+	if (span < ((double)pArgs_->syncPlayerMS / 1000.0))
 		return;
 
 	Entity* pPlayerEntity = player();
@@ -673,6 +673,9 @@ void KBEngineApp::onLogin_baseapp()
 
 void KBEngineApp::reloginBaseapp()
 {
+	lastTickTime_ = getTimeSeconds();
+	lastTickCBTime_ = getTimeSeconds();
+
 	if(pNetworkInterface_->valid())
 		return;
 
