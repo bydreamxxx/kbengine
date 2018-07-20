@@ -433,11 +433,10 @@ void Proxy::onGetWitness()
 //-------------------------------------------------------------------------------------
 double Proxy::getRoundTripTime() const
 {
-	if(clientEntityCall() == NULL || clientEntityCall()->getChannel() == NULL || 
-		clientEntityCall()->getChannel()->pEndPoint() == NULL)
+	if (clientEntityCall() == NULL || clientEntityCall()->getChannel() == NULL)
 		return 0.0;
 
-	return double(clientEntityCall()->getChannel()->pEndPoint()->getRTT()) / 1000000.0;
+	return double(clientEntityCall()->getChannel()->getRTT()) / 1000000.0;
 }
 
 //-------------------------------------------------------------------------------------
@@ -788,10 +787,15 @@ bool Proxy::sendToClient(const Network::MessageHandler& msgHandler, Network::Bun
 }
 
 //-------------------------------------------------------------------------------------
-bool Proxy::sendToClient(Network::Bundle* pBundle)
+bool Proxy::sendToClient(Network::Bundle* pBundle, bool immediately)
 {
-	if(pushBundle(pBundle))
-		return true;
+	if (pushBundle(pBundle))
+	{
+		if (immediately)
+			return sendToClient(false);
+		else
+			return true;
+	}
 
 	ERROR_MSG(fmt::format("Proxy::sendToClient: {} pBundles is NULL, not found channel.\n", id()));
 	Network::Bundle::reclaimPoolObject(pBundle);
