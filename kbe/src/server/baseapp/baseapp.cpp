@@ -76,9 +76,13 @@ PyObject* createDictDataFromPersistentStream(MemoryStream& s, const char* entity
 						continue;
 				}
 
-				bool hasComponentData = false;
 				EntityComponentType* pEntityComponentType = ((EntityComponentType*)propertyDescription->getDataType());
 
+				// 和dbmgr判断保持一致，如果没有持久化属性dbmgr将不会传输数据过来
+				if (pEntityComponentType->pScriptDefModule()->getPersistentPropertyDescriptions().size() == 0)
+					continue;
+
+				bool hasComponentData = false;
 				s >> hasComponentData;
 
 				if (hasComponentData)
@@ -4245,9 +4249,13 @@ void Baseapp::forwardMessageToClientFromCellapp(Network::Channel* pChannel,
 	pSendBundle->pCurrMsgHandler(pMessageHandler);
 
 	if (!pBufferedSendToClientMessages)
-		static_cast<Proxy*>(pEntity)->sendToClient(pSendBundle);
+	{
+		static_cast<Proxy*>(pEntity)->sendToClient(pSendBundle, true);
+	}
 	else
+	{
 		pBufferedSendToClientMessages->pushMessages(pSendBundle);
+	}
 
 	if(Network::g_trace_packet > 0 && s.length() >= sizeof(Network::MessageID))
 	{
@@ -4375,7 +4383,6 @@ void Baseapp::onEntityCall(Network::Channel* pChannel, KBEngine::MemoryStream& s
 		return;
 	}
 	
-
 	switch(calltype)
 	{
 		// 本组件是baseapp，那么确认邮件的目的地是这里， 那么执行最终操作

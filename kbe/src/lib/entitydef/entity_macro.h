@@ -346,6 +346,7 @@ public:																										\
 				if(PyObject_TypeCheck(pComponentProperty, EntityComponent::getScriptType()))				\
 				{																							\
 					EntityComponent* pEntityComponent = static_cast<EntityComponent*>(pComponentProperty);	\
+					pEntityComponent->updateOwner(id(), this);												\
 					pEntityComponent->onAttached();															\
 				}																							\
 				else																						\
@@ -366,9 +367,9 @@ public:																										\
 		onInitializeScript();																				\
 	}																										\
 																											\
-	void initializeEntity(PyObject* dictData)																\
+	void initializeEntity(PyObject* dictData, bool persistentData = false)									\
 	{																										\
-		createNamespace(dictData);																			\
+		createNamespace(dictData, persistentData);															\
 		initializeScript();																					\
 	}																										\
 																											\
@@ -395,7 +396,7 @@ public:																										\
 		return _reload(fullReload);																			\
 	}																										\
 																											\
-	void createNamespace(PyObject* dictData)																\
+	void createNamespace(PyObject* dictData, bool persistentData = false)									\
 	{																										\
 		if(dictData == NULL)																				\
 			return;																							\
@@ -417,7 +418,7 @@ public:																										\
 		if(cellDataDict == NULL)																			\
 		{																									\
 			PyErr_Clear();																					\
-			EntityComponent::convertDictDataToEntityComponent(id(), this, pScriptModule_, dictData);		\
+			EntityComponent::convertDictDataToEntityComponent(id(), this, pScriptModule_, dictData, persistentData); \
 		}																									\
 																											\
 		while(PyDict_Next(dictData, &pos, &key, &value))													\
@@ -1559,6 +1560,10 @@ public:																										\
 			if(dataType)																					\
 			{																								\
 				PyObject* defObj = propertyDescription->newDefaultVal();									\
+																											\
+				if(dataType->type() == DATA_TYPE_ENTITY_COMPONENT)											\
+					((EntityComponent*)defObj)->updateOwner(id(), this);									\
+																											\
 				PyObject_SetAttrString(static_cast<PyObject*>(this),										\
 							propertyDescription->getName(), defObj);										\
 				Py_DECREF(defObj);																			\

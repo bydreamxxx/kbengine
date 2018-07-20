@@ -60,8 +60,6 @@ public:
 		CHANNEL_WEB = 1,
 	};
 
-	typedef std::vector<Packet*> BufferedReceives;
-
 	enum Flags
 	{
 		FLAG_SENDING = 0x00000001,		// 发送信息中
@@ -110,19 +108,19 @@ public:
 
 	typedef std::vector<Bundle*> Bundles;
 	Bundles & bundles();
-	
+	const Bundles & bundles() const;
+
 	/**
 		创建发送bundle，该bundle可能是从send放入发送队列中获取的，如果队列为空
 		则创建一个新的
 	*/
 	Bundle* createSendBundle();
-	
-	int32 bundlesLength();
-
-	const Bundles & bundles() const;
-	INLINE void pushBundle(Bundle* pBundle);
 	void clearBundle();
 
+	int32 bundlesLength();
+
+	INLINE void pushBundle(Bundle* pBundle);
+	
 	bool sending() const { return (flags_ & FLAG_SENDING) > 0;}
 	void stopSend();
 
@@ -164,11 +162,10 @@ public:
 	void updateLastReceivedTime()		{ lastReceivedTime_ = timestamp(); }
 		
 	void addReceiveWindow(Packet* pPacket);
-	
-	BufferedReceives& bufferedReceives(){ return bufferedReceives_; }
 
 	virtual bool process();
-	void processPackets(KBEngine::Network::MessageHandlers* pMsgHandlers);
+	void updateTick(KBEngine::Network::MessageHandlers* pMsgHandlers);
+	void processPackets(KBEngine::Network::MessageHandlers* pMsgHandlers, Packet* pPacket);
 
 	bool isCondemn() const { return (flags_ & FLAG_CONDEMN) > 0; }
 	void condemn();
@@ -192,7 +189,7 @@ public:
 	COMPONENT_ID componentID() const{ return componentID_; }
 	void componentID(COMPONENT_ID cid){ componentID_ = cid; }
 
-	virtual void handshake();
+	bool handshake(Packet* pPacket);
 
 	KBEngine::Network::MessageHandlers* pMsgHandlers() const { return pMsgHandlers_; }
 	void pMsgHandlers(KBEngine::Network::MessageHandlers* pMsgHandlers) { pMsgHandlers_ = pMsgHandlers; }
@@ -219,6 +216,11 @@ public:
 
 	void protocoltype(ProtocolType v) { protocoltype_ = v; }
 	void protocolSubtype(ProtocolSubType v) { protocolSubtype_ = v; }
+
+	/**
+		round-trip time (RTT) Microseconds
+	*/
+	uint32 getRTT();
 
 private:
 	static int kcp_output(const char *buf, int len, ikcpcb *kcp, void *user);
@@ -252,7 +254,7 @@ private:
 	
 	Bundles						bundles_;
 	
-	BufferedReceives			bufferedReceives_;
+	uint32						lastTickBufferedReceives_;
 
 	PacketReader*				pPacketReader_;
 

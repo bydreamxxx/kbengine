@@ -944,7 +944,7 @@ void Cellapp::onCreateCellEntityInNewSpaceFromBaseapp(Network::Channel* pChannel
 
 		space->addEntity(e);
 		e->spaceID(space->id());
-		e->initializeEntity(cellData);
+		e->initializeEntity(cellData, true);
 		Py_XDECREF(cellData);
 
 		// Ìí¼Óµ½space
@@ -1179,7 +1179,7 @@ void Cellapp::_onCreateCellEntityFromBaseapp(std::string& entityType, ENTITY_ID 
 		
 		cellData = e->createCellDataFromStream(pCellData);
 
-		e->createNamespace(cellData);
+		e->createNamespace(cellData, true);
 
 		if(hasClient)
 		{
