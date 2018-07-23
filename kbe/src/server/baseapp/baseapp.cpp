@@ -3760,76 +3760,73 @@ void Baseapp::loginBaseapp(Network::Channel* pChannel,
 			return;
 		}
 
-		if (pEntity->clientEntityCall() != NULL)
-		{	
-			//防止在onLogOnAttempt中销毁了
-			Py_INCREF(pEntity);
+		// 防止在onLogOnAttempt中销毁了
+		Py_INCREF(pEntity);
 
-			// 通知脚本异常登录请求有脚本决定是否允许这个通道强制登录
-			int32 ret = pEntity->onLogOnAttempt(pChannel->addr().ipAsString(),
-				ntohs(pChannel->addr().port), password.c_str());
+		// 通知脚本异常登录请求有脚本决定是否允许这个通道强制登录
+		int32 ret = pEntity->onLogOnAttempt(pChannel->addr().ipAsString(),
+			ntohs(pChannel->addr().port), password.c_str());
 
-			if (pEntity->isDestroyed())
-			{
-				Py_DECREF(pEntity);
-
-				loginBaseappFailed(pChannel, accountName, SERVER_ERR_OP_FAILED);
-				return;
-			}
-			
-			switch (ret)
-			{
-			case LOG_ON_ACCEPT:
-				{
-					// 通告在别处登录
-					Network::Channel* pOldClientChannel = pEntity->clientEntityCall()->getChannel();
-					if(pOldClientChannel != NULL)
-					{
-						INFO_MSG(fmt::format("Baseapp::loginBaseapp: script LOG_ON_ACCEPT. oldClientChannel={}\n",
-							pOldClientChannel->c_str()));
-					
-						kickChannel(pOldClientChannel, SERVER_ERR_ACCOUNT_LOGIN_ANOTHER);
-					}
-					else
-					{
-						INFO_MSG("Baseapp::loginBaseapp: script LOG_ON_ACCEPT.\n");
-					}
-				
-					pEntity->clientEntityCall()->addr(pChannel->addr());
-					pEntity->addr(pChannel->addr());
-					pEntity->setClientType(ptinfos->ctype);
-					pEntity->setLoginDatas(ptinfos->datas);
-					createClientProxies(pEntity, true);
-					pEntity->onGetWitness();
-					break;
-				}
-			
-			case LOG_ON_WAIT_FOR_DESTROY:
-			default:
-				INFO_MSG("Baseapp::loginBaseapp: script LOG_ON_REJECT.\n");
-				loginBaseappFailed(pChannel, accountName, SERVER_ERR_ACCOUNT_IS_ONLINE);
-				Py_DECREF(pEntity);
-				return;
-			}
-
-			Py_INCREF(pEntity);
-		}
-		else
+		if (pEntity->isDestroyed())
 		{
-			// 创建entity的客户端entitycall
-			EntityCall* entityClientEntityCall = new EntityCall(pEntity->pScriptModule(),
-				&pChannel->addr(), 0, pEntity->id(), ENTITYCALL_TYPE_CLIENT);
+			Py_DECREF(pEntity);
 
-			pEntity->clientEntityCall(entityClientEntityCall);
-			pEntity->addr(pChannel->addr());
-			pEntity->setClientType(ptinfos->ctype);
-			pEntity->setLoginDatas(ptinfos->datas);
-
-			// 将通道代理的关系与该entity绑定， 在后面通信中可提供身份合法性识别
-			entityClientEntityCall->getChannel()->proxyID(pEntity->id());
-			createClientProxies(pEntity, true);
-			pEntity->onGetWitness();
+			loginBaseappFailed(pChannel, accountName, SERVER_ERR_OP_FAILED);
+			return;
 		}
+
+		switch (ret)
+		{
+		case LOG_ON_ACCEPT:
+			if (pEntity->clientEntityCall() != NULL)
+			{
+				// 通告在别处登录
+				Network::Channel* pOldClientChannel = pEntity->clientEntityCall()->getChannel();
+				if (pOldClientChannel != NULL)
+				{
+					INFO_MSG(fmt::format("Baseapp::loginBaseapp: script LOG_ON_ACCEPT. oldClientChannel={}\n",
+						pOldClientChannel->c_str()));
+
+					kickChannel(pOldClientChannel, SERVER_ERR_ACCOUNT_LOGIN_ANOTHER);
+				}
+				else
+				{
+					INFO_MSG("Baseapp::loginBaseapp: script LOG_ON_ACCEPT.\n");
+				}
+
+				pEntity->clientEntityCall()->addr(pChannel->addr());
+				pEntity->addr(pChannel->addr());
+				pEntity->setClientType(ptinfos->ctype);
+				pEntity->setLoginDatas(ptinfos->datas);
+				createClientProxies(pEntity, true);
+				pEntity->onGetWitness();
+			}
+			else
+			{
+				// 创建entity的客户端entitycall
+				EntityCall* entityClientEntityCall = new EntityCall(pEntity->pScriptModule(),
+					&pChannel->addr(), 0, pEntity->id(), ENTITYCALL_TYPE_CLIENT);
+
+				pEntity->clientEntityCall(entityClientEntityCall);
+				pEntity->addr(pChannel->addr());
+				pEntity->setClientType(ptinfos->ctype);
+				pEntity->setLoginDatas(ptinfos->datas);
+
+				// 将通道代理的关系与该entity绑定， 在后面通信中可提供身份合法性识别
+				entityClientEntityCall->getChannel()->proxyID(pEntity->id());
+				createClientProxies(pEntity, true);
+				pEntity->onGetWitness();
+			}
+			break;
+		case LOG_ON_WAIT_FOR_DESTROY:
+		default:
+			INFO_MSG("Baseapp::loginBaseapp: script LOG_ON_REJECT.\n");
+			loginBaseappFailed(pChannel, accountName, SERVER_ERR_ACCOUNT_IS_ONLINE);
+			Py_DECREF(pEntity);
+			return;
+		};
+
+		Py_DECREF(pEntity);
 	}
 	else
 	{
