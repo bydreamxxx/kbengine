@@ -1667,6 +1667,7 @@ bool Entity::setPositionFromPyObject(PyObject *value, bool dontNotifySelfClient)
 	Position3D pos;
 	script::ScriptVector3::convertPyObjectToVector3(pos, value);
 	position(pos);
+	isOnGround_ = false;
 
 	static ENTITY_PROPERTY_UID posuid = 0;
 	if(posuid == 0)
