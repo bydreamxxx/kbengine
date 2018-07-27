@@ -124,6 +124,7 @@ Entity::Entity(ENTITY_ID id, const ScriptDefModule* pScriptModule,
 	PyTypeObject* pyType, bool isInitialised) :
 ScriptObject(pyType, isInitialised),
 ENTITY_CONSTRUCTION(Entity),
+_adjustPosCountOnAddParent(Entity::ADJUST_POS_COUNT_ON_ADD_PARENT),
 clientEntityCall_(NULL),
 baseEntityCall_(NULL),
 realCell_(0),
@@ -157,8 +158,7 @@ layer_(0),
 isDirty_(true),
 pCustomVolatileinfo_(NULL),
 pParent_(NULL),
-children_(),
-_adjustPosCountOnAddParent(Entity::ADJUST_POS_COUNT_ON_ADD_PARENT)
+children_()
 {
 	pyPositionChangedCallback_ = std::tr1::bind(&Entity::onPyPositionChanged, this);
 	pyDirectionChangedCallback_ = std::tr1::bind(&Entity::onPyDirectionChanged, this);
