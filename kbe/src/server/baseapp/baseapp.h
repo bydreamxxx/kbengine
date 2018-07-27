@@ -351,6 +351,8 @@ public:
 	*/
 	void onUpdateDataFromClient(Network::Channel* pChannel, KBEngine::MemoryStream& s);
 	void onUpdateDataFromClientForControlledEntity(Network::Channel* pChannel, KBEngine::MemoryStream& s);
+	void onUpdateDataFromClientOnParent(Network::Channel* pChannel, KBEngine::MemoryStream& s);
+	void onUpdateDataFromClientForControlledEntityOnParent(Network::Channel* pChannel, KBEngine::MemoryStream& s);
 
 
 	/** ÍøÂç½Ó¿Ú
