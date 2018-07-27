@@ -2319,7 +2319,7 @@ void Entity::onUpdateDataFromClientOnParent(KBEngine::MemoryStream& s)
 
 	if (checkMoveForTopSpeed(pos))
 	{	
-		if(parent() != nullptr && parentID == parent()->id())
+		if(parent() != NULL && parentID == parent()->id())
 		{
 			if (_adjustPosCountOnAddParent > 0)
 			{
