@@ -117,6 +117,7 @@ BASE_SCRIPT_INIT(Entity, 0, 0, 0, 0, 0)
 Entity::BufferedScriptCallArray Entity::_scriptCallbacksBuffer;
 int32 Entity::_scriptCallbacksBufferCount = 0;
 int32 Entity::_scriptCallbacksBufferNum = 0;
+const int Entity::ADJUST_POS_COUNT_ON_ADD_PARENT = 3;
 
 //-------------------------------------------------------------------------------------
 Entity::Entity(ENTITY_ID id, const ScriptDefModule* pScriptModule,
@@ -156,7 +157,8 @@ layer_(0),
 isDirty_(true),
 pCustomVolatileinfo_(NULL),
 pParent_(NULL),
-children_()
+children_(),
+_adjustPosCountOnAddParent(Entity::ADJUST_POS_COUNT_ON_ADD_PARENT)
 {
 	pyPositionChangedCallback_ = std::tr1::bind(&Entity::onPyPositionChanged, this);
 	pyDirectionChangedCallback_ = std::tr1::bind(&Entity::onPyDirectionChanged, this);
@@ -1666,8 +1668,8 @@ bool Entity::setPositionFromPyObject(PyObject *value, bool dontNotifySelfClient)
 
 	Position3D pos;
 	script::ScriptVector3::convertPyObjectToVector3(pos, value);
-	position(pos);
 	isOnGround_ = false;
+	position(pos);
 
 	static ENTITY_PROPERTY_UID posuid = 0;
 	if(posuid == 0)
@@ -2269,6 +2271,123 @@ void Entity::onUpdateDataFromClient(KBEngine::MemoryStream& s)
 			Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
 			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(targetID, (*pSendBundle));
 			
+			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onSetEntityPosAndDir, setEntityPosAndDir);
+
+			(*pSendBundle) << id();
+			(*pSendBundle) << currpos.x << currpos.y << currpos.z;
+			(*pSendBundle) << localDirection().roll() << localDirection().pitch() << localDirection().yaw();
+
+			ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onSetEntityPosAndDir, setEntityPosAndDir);
+			pW->sendToClient(ClientInterface::onSetEntityPosAndDir, pSendBundle);
+		}
+	}
+
+	updateChildrenPositionAndDirection();
+}
+
+//-------------------------------------------------------------------------------------
+void Entity::onUpdateDataFromClientOnParent(KBEngine::MemoryStream& s)
+{
+	if (spaceID_ == 0)
+	{
+		s.done();
+		return;
+	}
+
+	int32 parentID;
+	Position3D localPos;
+	Position3D pos;
+	Direction3D dir;
+	uint8 isOnGround = 0;
+	float yaw, pitch, roll;
+	SPACE_ID currSpace;
+
+	s >> parentID >> localPos.x >> localPos .y >> localPos .z >> pos.x >> pos.y >> pos.z >> roll >> pitch >> yaw >> isOnGround >> currSpace;
+	isOnGround_ = isOnGround > 0;
+
+	if (spaceID_ != currSpace)
+	{
+		s.done();
+		return;
+	}
+
+	dir.yaw(yaw);
+	dir.pitch(pitch);
+	dir.roll(roll);
+	this->direction(dir);
+	syncDirectionWorldToLocal();
+
+	if (checkMoveForTopSpeed(pos))
+	{	
+		if(parent() != nullptr && parentID == parent()->id())
+		{
+			if (_adjustPosCountOnAddParent > 0)
+			{
+				_adjustPosCountOnAddParent -= 1;
+				Position3D calculLocalPos;
+				parent()->positionWorldToLocal(pos, calculLocalPos);
+
+				// 使用parent当前位置转换的本地坐标逐渐趋向于本客户端同步过来的坐标
+				Position3D distVector = (localPos - calculLocalPos) * (float(_adjustPosCountOnAddParent) / Entity::ADJUST_POS_COUNT_ON_ADD_PARENT);
+				localPos -= distVector;
+			}
+			this->localPosition(localPos);
+			syncPositionLocalToWorld();
+		}
+		else
+		{
+			_adjustPosCountOnAddParent = Entity::ADJUST_POS_COUNT_ON_ADD_PARENT;
+			this->position(pos);
+			syncPositionWorldToLocal();
+		}
+	}
+	else
+	{
+		if (this->pWitness() == NULL && this->controlledBy_ == NULL)
+			return;
+
+		Position3D currpos = this->position();
+		Position3D movment = pos - currpos;
+		float ydist = fabs(movment.y);
+		movment.y = 0.f;
+
+		DEBUG_MSG(fmt::format("{}::onUpdateDataFromClientOnParent: {} position[({},{},{}) -> ({},{},{}), (xzDist={})>(topSpeed={}) || (yDist={})>(topSpeedY={})] invalid. reset client!\n",
+			this->scriptName(), this->id(),
+			this->position().x, this->position().y, this->position().z,
+			pos.x, pos.y, pos.z,
+			movment.length(), topSpeed_,
+			ydist, topSpeedY_));
+
+		// this->position(currpos);
+
+		// 如果我已经被控制，那么，数据的来源则是控制者的客户端，
+		// 所以，我们需要做的是通知来源客户端，而不仅仅是自己的客户端。
+		Witness* pW = NULL;
+		KBEngine::ENTITY_ID targetID = 0;
+
+		if (controlledBy_ != NULL)
+		{
+			targetID = controlledBy_->id();
+			Entity* entity = Cellapp::getSingleton().findEntity(targetID);
+
+			if (entity->isReal())
+				pW = entity->pWitness();
+		}
+		else
+		{
+			targetID = id();
+
+			if (isReal())
+				pW = this->pWitness();
+		}
+
+		// 在跨进程teleport时，极端情况（ghost）在某种状态下witness此时可能为None
+		if (pW)
+		{
+			// 通知重置
+			Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
+			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(targetID, (*pSendBundle));
+
 			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onSetEntityPosAndDir, setEntityPosAndDir);
 
 			(*pSendBundle) << id();

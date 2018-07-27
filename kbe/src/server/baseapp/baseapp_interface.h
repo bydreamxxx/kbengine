@@ -187,6 +187,11 @@ NETWORK_INTERFACE_DECLARE_BEGIN(BaseappInterface)
 	BASEAPP_MESSAGE_DECLARE_STREAM(onUpdateDataFromClient,							NETWORK_VARIABLE_MESSAGE)
 	BASEAPP_MESSAGE_EXPOSED(onUpdateDataFromClientForControlledEntity)
 	BASEAPP_MESSAGE_DECLARE_STREAM(onUpdateDataFromClientForControlledEntity,		NETWORK_VARIABLE_MESSAGE)
+										
+	BASEAPP_MESSAGE_EXPOSED(onUpdateDataFromClientOnParent)
+	BASEAPP_MESSAGE_DECLARE_STREAM(onUpdateDataFromClientOnParent,					NETWORK_VARIABLE_MESSAGE)
+	BASEAPP_MESSAGE_EXPOSED(onUpdateDataFromClientForControlledEntityOnParent)
+	BASEAPP_MESSAGE_DECLARE_STREAM(onUpdateDataFromClientForControlledEntityOnParent, NETWORK_VARIABLE_MESSAGE)
 
 	// executeRawDatabaseCommand从dbmgr的回调
 	BASEAPP_MESSAGE_DECLARE_STREAM(onExecuteRawDatabaseCommandCB,					NETWORK_VARIABLE_MESSAGE)

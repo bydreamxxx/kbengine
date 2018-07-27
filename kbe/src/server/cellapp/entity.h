@@ -69,6 +69,8 @@ class Entity : public script::ScriptObject
 	BASE_SCRIPT_HREADER(Entity, ScriptObject)	
 	ENTITY_HEADER(Entity)
 
+	const static int ADJUST_POS_COUNT_ON_ADD_PARENT;
+
 public:
 	Entity(ENTITY_ID id, const ScriptDefModule* pScriptModule,
 		PyTypeObject* pyType = getScriptType(), bool isInitialised = true);
@@ -480,6 +482,7 @@ public:
 		client更新数据
 	*/
 	void onUpdateDataFromClient(KBEngine::MemoryStream& s);
+	void onUpdateDataFromClientOnParent(KBEngine::MemoryStream& s);
 
 	/** 
 		添加一个范围触发器  
@@ -701,6 +704,9 @@ private:
 	static BufferedScriptCallArray							_scriptCallbacksBuffer;
 	static int32											_scriptCallbacksBufferNum;
 	static int32											_scriptCallbacksBufferCount;
+
+	// 客户端控制的entity获得parent时，位置同步在不同坐标系间平滑过渡的次数
+	int32													_adjustPosCountOnAddParent;
 
 protected:
 	// 这个entity的客户端部分的entityCall

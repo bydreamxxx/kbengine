@@ -4477,6 +4477,59 @@ void Baseapp::onUpdateDataFromClient(Network::Channel* pChannel, KBEngine::Memor
 	s.done();
 }
 
+//-------------------------------------------------------------------------------------
+void Baseapp::onUpdateDataFromClientOnParent(Network::Channel* pChannel, KBEngine::MemoryStream& s)
+{
+	if (shuttingdown_ != SHUTDOWN_STATE_STOP)
+	{
+		s.done();
+		return;
+	}
+
+	AUTO_SCOPED_PROFILE("onUpdateDataFromClientOnParent");
+
+	ENTITY_ID srcEntityID = pChannel->proxyID();
+	if (srcEntityID <= 0)
+	{
+		ERROR_MSG(fmt::format("Baseapp::onUpdateDataFromClientOnParent: pChannel does not bind proxy! addr={}\n",
+			pChannel->c_str()));
+
+		pChannel->condemn();
+		s.done();
+		return;
+	}
+
+	static size_t datasize = (sizeof(int32) + sizeof(float) * 9 + sizeof(uint8) + sizeof(uint32));
+	if (s.length() <= 0 || s.length() != datasize)
+	{
+		ERROR_MSG(fmt::format("Baseapp::onUpdateDataFromClientOnParent: invalid data, size({} != {}), srcEntityID={}.\n",
+			datasize, s.length(), srcEntityID));
+
+		s.done();
+		return;
+	}
+
+	KBEngine::Proxy* e = static_cast<KBEngine::Proxy*>
+		(KBEngine::Baseapp::getSingleton().findEntity(srcEntityID));
+
+	if (e == NULL || e->cellEntityCall() == NULL)
+	{
+		ERROR_MSG(fmt::format("Baseapp::onUpdateDataFromClientOnParent: {} {} no cell.\n",
+			(e == NULL ? "unknown" : e->scriptName()), srcEntityID));
+
+		s.done();
+		return;
+	}
+
+	Network::Bundle* pBundle = Network::Bundle::createPoolObject();
+	(*pBundle).newMessage(CellappInterface::onUpdateDataFromClientOnParent);
+	(*pBundle) << srcEntityID;
+	(*pBundle).append(s);
+
+	e->sendToCellapp(pBundle);
+	s.done();
+}
+
 //------------------------------------------------------------------------------------- 
 void Baseapp::onUpdateDataFromClientForControlledEntity(Network::Channel* pChannel, KBEngine::MemoryStream& s)
 {
@@ -4523,6 +4576,54 @@ void Baseapp::onUpdateDataFromClientForControlledEntity(Network::Channel* pChann
 	e->sendToCellapp(pBundle);
 	s.done();
 }
+
+//------------------------------------------------------------------------------------- 
+void Baseapp::onUpdateDataFromClientForControlledEntityOnParent(Network::Channel* pChannel, KBEngine::MemoryStream& s)
+{
+	if (shuttingdown_ != SHUTDOWN_STATE_STOP)
+	{
+		s.done();
+		return;
+	}
+
+	ENTITY_ID srcEntityID = pChannel->proxyID();
+	if (srcEntityID <= 0)
+	{
+		s.done();
+		return;
+	}
+
+	static size_t datasize = (sizeof(int32) * 2 + sizeof(float) * 9 + sizeof(uint8) + sizeof(uint32));
+	if (s.length() <= 0 || s.length() != datasize)
+	{
+		ERROR_MSG(fmt::format("Baseapp::onUpdateDataFromClientForControlledEntityOnParent: invalid data, size({} != {}), srcEntityID={}.\n",
+			datasize, s.length(), srcEntityID));
+
+		s.done();
+		return;
+	}
+
+	KBEngine::Proxy* e = static_cast<KBEngine::Proxy*>
+		(KBEngine::Baseapp::getSingleton().findEntity(srcEntityID));
+
+	if (e == NULL || e->cellEntityCall() == NULL)
+	{
+		ERROR_MSG(fmt::format("Baseapp::onUpdateDataFromClientForControlledEntityOnParent: {} {} has no cell.\n",
+			(e == NULL ? "unknown" : e->scriptName()), srcEntityID));
+
+		s.done();
+		return;
+	}
+
+	Network::Bundle* pBundle = Network::Bundle::ObjPool().createObject();
+	(*pBundle).newMessage(CellappInterface::onUpdateDataFromClientForControlledEntityOnParent);
+	(*pBundle) << srcEntityID;
+	(*pBundle).append(s);
+
+	e->sendToCellapp(pBundle);
+	s.done();
+}
+
 
 //-------------------------------------------------------------------------------------
 void Baseapp::onBackupEntityCellData(Network::Channel* pChannel, KBEngine::MemoryStream& s)
