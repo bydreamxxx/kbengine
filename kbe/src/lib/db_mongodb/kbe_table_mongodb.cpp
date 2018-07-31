@@ -134,6 +134,11 @@ namespace KBEngine {
 		return r;
 	}
 
+	bool KBEEntityLogTableMongodb::eraseBaseappEntityLog(DBInterface * pdbi, COMPONENT_ID componentID)
+	{
+		return true;
+	}
+
 	KBEEntityLogTableMongodb::KBEEntityLogTableMongodb(EntityTables* pEntityTables) :
 		KBEEntityLogTable(pEntityTables)
 	{
