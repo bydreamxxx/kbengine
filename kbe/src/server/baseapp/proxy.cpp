@@ -72,7 +72,7 @@ PyObject* Proxy::pyDisconnect()
 	Network::Channel* pChannel = Baseapp::getSingleton().networkInterface().findChannel(addr_);
 	if (pChannel && !pChannel->isDestroyed())
 	{
-		pChannel->condemn();
+		pChannel->condemn("");
 	}
 
 	S_Return;
@@ -91,7 +91,7 @@ void Proxy::kick()
 		//pBundle->send(Baseapp::getSingleton().networkInterface(), pChannel);
 		this->sendToClient(ClientInterface::onKicked, pBundle);
 		this->sendToClient();
-		pChannel->condemn();
+		pChannel->condemn("");
 	}
 }
 
@@ -150,7 +150,20 @@ void Proxy::initClientCellPropertys()
 	MemoryStream* s = MemoryStream::createPoolObject();
 
 	// celldata获取客户端感兴趣的数据初始化客户端 如:ALL_CLIENTS
-	addCellDataToStream(CLIENT_TYPE, ED_FLAG_ALL_CLIENTS|ED_FLAG_CELL_PUBLIC_AND_OWN|ED_FLAG_OWN_CLIENT, s, true);
+	try
+	{
+		addCellDataToStream(CLIENT_TYPE, ED_FLAG_ALL_CLIENTS|ED_FLAG_CELL_PUBLIC_AND_OWN|ED_FLAG_OWN_CLIENT, s, true);
+	}
+	catch (MemoryStreamWriteOverflow & err)
+	{
+		ERROR_MSG(fmt::format("{}::initClientCellPropertys({}): {}\n",
+			scriptName(), id(), err.what()));
+
+		MemoryStream::reclaimPoolObject(s);
+		Network::Bundle::reclaimPoolObject(pBundle);
+		return;
+	}
+
 	(*pBundle).append(*s);
 	MemoryStream::reclaimPoolObject(s);
 	//clientEntityCall()->sendCall((*pBundle));
