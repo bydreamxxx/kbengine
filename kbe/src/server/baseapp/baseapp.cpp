@@ -2390,7 +2390,21 @@ void Baseapp::createCellEntityInNewSpace(Entity* pEntity, PyObject* pyCellappInd
 	(*pBundle) << hasClient;
 
 	MemoryStream* s = MemoryStream::createPoolObject();
-	pEntity->addCellDataToStream(ED_FLAG_ALL, s);
+
+	try
+	{
+		pEntity->addCellDataToStream(ED_FLAG_ALL, s);
+	}
+	catch (MemoryStreamWriteOverflow & err)
+	{
+		ERROR_MSG(fmt::format("{}::createCellEntityInNewSpace({}): {}\n",
+			pEntity->scriptName(), pEntity->id(), err.what()));
+
+		MemoryStream::reclaimPoolObject(s);
+		Network::Bundle::reclaimPoolObject(pBundle);
+		return;
+	}
+
 	(*pBundle).append(*s);
 	MemoryStream::reclaimPoolObject(s);
 	
@@ -2434,7 +2448,21 @@ void Baseapp::restoreSpaceInCell(Entity* pEntity)
 	(*pBundle) << hasClient;
 
 	MemoryStream* s = MemoryStream::createPoolObject();
-	pEntity->addCellDataToStream(ED_FLAG_ALL, s);
+
+	try
+	{
+		pEntity->addCellDataToStream(ED_FLAG_ALL, s);
+	}
+	catch (MemoryStreamWriteOverflow & err)
+	{
+		ERROR_MSG(fmt::format("{}::restoreSpaceInCell({}): {}\n",
+			pEntity->scriptName(), pEntity->id(), err.what()));
+
+		MemoryStream::reclaimPoolObject(s);
+		Network::Bundle::reclaimPoolObject(pBundle);
+		return;
+	}
+
 	(*pBundle).append(*s);
 	MemoryStream::reclaimPoolObject(s);
 	
@@ -2950,7 +2978,21 @@ void Baseapp::createCellEntity(EntityCallAbstract* createToCellEntityCall, Entit
 	(*pBundle) << pEntity->inRestore();
 
 	MemoryStream* s = MemoryStream::createPoolObject();
-	pEntity->addCellDataToStream(ED_FLAG_ALL, s);
+
+	try
+	{
+		pEntity->addCellDataToStream(ED_FLAG_ALL, s);
+	}
+	catch (MemoryStreamWriteOverflow & err)
+	{
+		ERROR_MSG(fmt::format("{}::createCellEntity({}): {}\n",
+			pEntity->scriptName(), pEntity->id(), err.what()));
+
+		MemoryStream::reclaimPoolObject(s);
+		Network::Bundle::reclaimPoolObject(pBundle);
+		return;
+	}
+
 	(*pBundle).append(*s);
 	MemoryStream::reclaimPoolObject(s);
 	
@@ -3866,7 +3908,7 @@ void Baseapp::logoutBaseapp(Network::Channel* pChannel, uint64 key, ENTITY_ID en
 
 	if (pChannel && !pChannel->isDestroyed())
 	{
-		pChannel->condemn();
+		pChannel->condemn("");
 	}
 }
 
@@ -3906,7 +3948,7 @@ void Baseapp::reloginBaseapp(Network::Channel* pChannel, std::string& accountNam
 		if(pMBChannel)
 		{
 			pMBChannel->proxyID(0);
-			pMBChannel->condemn();
+			pMBChannel->condemn("");
 		}
 
 		entityClientEntityCall->addr(pChannel->addr());
@@ -3955,7 +3997,7 @@ void Baseapp::kickChannel(Network::Channel* pChannel, SERVER_ERROR_CODE failedco
 	pChannel->send(pBundle);
 
 	pChannel->proxyID(0);
-	pChannel->condemn();
+	pChannel->condemn("");
 }
 
 //-------------------------------------------------------------------------------------
@@ -4422,7 +4464,7 @@ void Baseapp::onRemoteCallCellMethodFromClient(Network::Channel* pChannel, KBEng
 		ERROR_MSG(fmt::format("Baseapp::onRemoteCallCellMethodFromClient: pChannel does not bind proxy! addr={}\n",
 			pChannel->c_str()));
 				
-		pChannel->condemn();
+		pChannel->condemn("Baseapp::onRemoteCallCellMethodFromClient: pChannel does not bind proxy!");
 		s.done();
 		return;
 	}
@@ -4468,7 +4510,7 @@ void Baseapp::onUpdateDataFromClient(Network::Channel* pChannel, KBEngine::Memor
 		ERROR_MSG(fmt::format("Baseapp::onUpdateDataFromClient: pChannel does not bind proxy! addr={}\n",
 			pChannel->c_str()));
 				
-		pChannel->condemn();
+		pChannel->condemn("Baseapp::onUpdateDataFromClient: pChannel does not bind proxy!");
 		s.done();
 		return;
 	}

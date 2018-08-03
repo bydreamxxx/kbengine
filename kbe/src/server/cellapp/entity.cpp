@@ -1099,7 +1099,21 @@ void Entity::backupCellData()
 		if(isDirty())
 		{
 			MemoryStream* s = MemoryStream::createPoolObject();
-			addCellDataToStream(ENTITY_CELL_DATA_FLAGS, s);
+
+			try
+			{
+				addCellDataToStream(ENTITY_CELL_DATA_FLAGS, s);
+			}
+			catch (MemoryStreamWriteOverflow & err)
+			{
+				ERROR_MSG(fmt::format("{}::backupCellData({}): {}\n",
+					scriptName(), id(), err.what()));
+
+				MemoryStream::reclaimPoolObject(s);
+				Network::Bundle::reclaimPoolObject(pBundle);
+				return;
+			}
+
 			(*pBundle).append(s);
 			MemoryStream::reclaimPoolObject(s);
 		}
@@ -3644,7 +3658,20 @@ void Entity::onTeleportRefEntityCall(EntityCall* nearbyMBRef, Position3D& pos, D
 	(*pBundle) << g_componentID;
 
 	MemoryStream* s = MemoryStream::createPoolObject();
-	changeToGhost(nearbyMBRef->componentID(), *s);
+
+	try
+	{
+		changeToGhost(nearbyMBRef->componentID(), *s);
+	}
+	catch (MemoryStreamWriteOverflow & err)
+	{
+		ERROR_MSG(fmt::format("{}::onTeleportRefEntityCall({}): {}\n",
+			scriptName(), id(), err.what()));
+
+		MemoryStream::reclaimPoolObject(s);
+		Network::Bundle::reclaimPoolObject(pBundle);
+		return;
+	}
 
 	(*pBundle).append(s);
 	MemoryStream::reclaimPoolObject(s);
