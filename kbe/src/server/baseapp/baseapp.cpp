@@ -4563,7 +4563,7 @@ void Baseapp::onUpdateDataFromClientOnParent(Network::Channel* pChannel, KBEngin
 		ERROR_MSG(fmt::format("Baseapp::onUpdateDataFromClientOnParent: pChannel does not bind proxy! addr={}\n",
 			pChannel->c_str()));
 
-		pChannel->condemn();
+		pChannel->condemn("Baseapp::onUpdateDataFromClient: pChannel does not bind proxy!");
 		s.done();
 		return;
 	}
