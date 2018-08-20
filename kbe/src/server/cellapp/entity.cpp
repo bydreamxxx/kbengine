@@ -1869,6 +1869,8 @@ void Entity::onPyPositionChanged()
 	if(this->isDestroyed())
 		return;
 
+	isOnGround_ = false;
+
 	syncPositionWorldToLocal();
 
 	static ENTITY_PROPERTY_UID posuid = 0;
