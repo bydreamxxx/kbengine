@@ -445,14 +445,42 @@ void KBEngineApp::Client_onHelloCB(MemoryStream& stream)
 {
 	stream >> serverVersion_;
 	stream >> serverScriptVersion_;
-	stream >> serverProtocolMD5_;
-	stream >> serverEntitydefMD5_;
+
+	FString serverProtocolMD5;
+	stream >> serverProtocolMD5;
+
+	FString serverEntitydefMD5;
+	stream >> serverEntitydefMD5;
 
 	int32 ctype;
 	stream >> ctype;
 
 	INFO_MSG("KBEngineApp::Client_onHelloCB(): verInfo(%s), scriptVersion(%s), srvProtocolMD5(%s), srvEntitydefMD5(%s), ctype(%d)!", 
 		*serverVersion_, *serverScriptVersion_, *serverProtocolMD5_, *serverEntitydefMD5_, ctype);
+
+	/*
+	if(serverProtocolMD5_ != serverProtocolMD5)
+	{
+		ERROR_MSG("KBEngineApp::Client_onHelloCB():  digest not match! serverProtocolMD5=%s(server: %s)", *serverProtocolMD5_, *serverProtocolMD5);
+
+		UKBEventData_onVersionNotMatch* pEventData = NewObject<UKBEventData_onVersionNotMatch>();
+		pEventData->clientVersion = clientVersion_;
+		pEventData->serverVersion = serverVersion_;
+		KBENGINE_EVENT_FIRE("onVersionNotMatch", pEventData);
+		return;
+	}
+	*/
+
+	if(serverEntitydefMD5_ != serverEntitydefMD5)
+	{
+		ERROR_MSG("KBEngineApp::Client_onHelloCB():  digest not match! serverEntitydefMD5=%s(server: %s)", *serverEntitydefMD5_, *serverEntitydefMD5);
+
+		UKBEventData_onVersionNotMatch* pEventData = NewObject<UKBEventData_onVersionNotMatch>();
+		pEventData->clientVersion = clientVersion_;
+		pEventData->serverVersion = serverVersion_;
+		KBENGINE_EVENT_FIRE("onVersionNotMatch", pEventData);
+		return;
+	}
 
 	onServerDigest();
 
@@ -558,10 +586,10 @@ bool KBEngineApp::login(const FString& username, const FString& password, const 
 	return true;
 }
 
-void KBEngineApp::logout()
+bool KBEngineApp::logout()
 {
 	if (currserver_ != TEXT("baseapp"))
-		return;
+		return false;
 
 	INFO_MSG("KBEngineApp::logout()");
 	Bundle* pBundle = Bundle::createObject();
@@ -569,6 +597,7 @@ void KBEngineApp::logout()
 	(*pBundle) << entity_uuid_;
 	(*pBundle) << entity_id_;
 	pBundle->send(pNetworkInterface_);
+	return true;
 }
 
 void KBEngineApp::login_loginapp(bool noconnect)
