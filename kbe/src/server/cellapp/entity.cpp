@@ -1883,7 +1883,7 @@ void Entity::onPyPositionChanged()
 	if(this->isDestroyed())
 		return;
 
-	isOnGround_ = true;
+	isOnGround_ = false;
 
 	syncPositionWorldToLocal();
 
