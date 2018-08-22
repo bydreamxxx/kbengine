@@ -48,6 +48,7 @@ public:
 
 protected:
 	Position3D realDestPos_;
+	float realDistance;
 	int destPosIdx_;
 	VECTOR_POS3D_PTR paths_;
 
