@@ -94,7 +94,7 @@ void Witness::createFromStream(KBEngine::MemoryStream& s)
 	
 	for(uint32 i=0; i<size; ++i)
 	{
-		EntityRef* pEntityRef = EntityRef::createPoolObject();
+		EntityRef* pEntityRef = EntityRef::createPoolObject(OBJECTPOOL_POINT);
 		pEntityRef->createFromStream(s);
 		viewEntities_.push_back(pEntityRef);
 		viewEntities_map_[pEntityRef->id()] = pEntityRef;
@@ -138,11 +138,11 @@ void Witness::onAttach(Entity* pEntity)
 	lastBaseDir_.yaw(-FLT_MAX);
 
 	// 通知客户端enterworld
-	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
+	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 	
 	ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onUpdatePropertys, updatePropertys);
-	MemoryStream* s1 = MemoryStream::createPoolObject();
+	MemoryStream* s1 = MemoryStream::createPoolObject(OBJECTPOOL_POINT);
 	(*pSendBundle) << pEntity_->id();
 	pEntity_->addPositionAndDirectionToStream(*s1, true);
 	(*pSendBundle).append(*s1);
@@ -179,7 +179,7 @@ void Witness::detach(Entity* pEntity)
 			pChannel->send();
 
 			// 通知客户端leaveworld
-			Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
+			Network::Bundle* pSendBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 			NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 
 			ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityLeaveWorld, entityLeaveWorld);
@@ -234,9 +234,9 @@ ObjectPool<Witness>& Witness::ObjPool()
 }
 
 //-------------------------------------------------------------------------------------
-Witness* Witness::createPoolObject()
+Witness* Witness::createPoolObject(const std::string& logPoint)
 {
-	return _g_objPool.createObject();
+	return _g_objPool.createObject(logPoint);
 }
 
 //-------------------------------------------------------------------------------------
@@ -255,9 +255,9 @@ void Witness::destroyObjPool()
 }
 
 //-------------------------------------------------------------------------------------
-Witness::SmartPoolObjectPtr Witness::createSmartPoolObj()
+Witness::SmartPoolObjectPtr Witness::createSmartPoolObj(const std::string& logPoint)
 {
-	return SmartPoolObjectPtr(new SmartPoolObject<Witness>(ObjPool().createObject(), _g_objPool));
+	return SmartPoolObjectPtr(new SmartPoolObject<Witness>(ObjPool().createObject(logPoint), _g_objPool));
 }
 
 //-------------------------------------------------------------------------------------
@@ -397,7 +397,7 @@ void Witness::onEnterView(ViewTrigger* pViewTrigger, Entity* pEntity)
 	//DEBUG_MSG(fmt::format("Witness::onEnterView: {} entity={}\n", 
 	//	pEntity_->id(), pEntity->id()));
 	
-	EntityRef* pEntityRef = EntityRef::createPoolObject();
+	EntityRef* pEntityRef = EntityRef::createPoolObject(OBJECTPOOL_POINT);
 	pEntityRef->pEntity(pEntity);
 	pEntityRef->flags(pEntityRef->flags() | ENTITYREF_FLAG_ENTER_CLIENT_PENDING);
 	viewEntities_.push_back(pEntityRef);
@@ -469,7 +469,7 @@ void Witness::resetViewEntities()
 //-------------------------------------------------------------------------------------
 void Witness::onEnterSpace(SpaceMemory* pSpace)
 {
-	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
+	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 
 	// 通知位置强制改变
@@ -502,7 +502,7 @@ void Witness::onLeaveSpace(SpaceMemory* pSpace)
 {
 	uninstallViewTrigger();
 
-	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject();
+	Network::Bundle* pSendBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 	NETWORK_ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pEntity_->id(), (*pSendBundle));
 
 	ENTITY_MESSAGE_FORWARD_CLIENT_BEGIN(pSendBundle, ClientInterface::onEntityLeaveSpace, entityLeaveSpace);
@@ -770,7 +770,7 @@ bool Witness::update()
 				
 				pEntityRef->removeflags(ENTITYREF_FLAG_ENTER_CLIENT_PENDING);
 
-				MemoryStream* s1 = MemoryStream::createPoolObject();
+				MemoryStream* s1 = MemoryStream::createPoolObject(OBJECTPOOL_POINT);
 				otherEntity->addPositionAndDirectionToStream(*s1, true);			
 				otherEntity->addClientDataToStream(s1, true);
 				

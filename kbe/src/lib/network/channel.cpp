@@ -36,9 +36,9 @@ ObjectPool<Channel>& Channel::ObjPool()
 }
 
 //-------------------------------------------------------------------------------------
-Channel* Channel::createPoolObject()
+Channel* Channel::createPoolObject(const std::string& logPoint)
 {
-	return _g_objPool.createObject();
+	return _g_objPool.createObject(logPoint);
 }
 
 //-------------------------------------------------------------------------------------
@@ -71,9 +71,9 @@ size_t Channel::getPoolObjectBytes()
 }
 
 //-------------------------------------------------------------------------------------
-Channel::SmartPoolObjectPtr Channel::createSmartPoolObj()
+Channel::SmartPoolObjectPtr Channel::createSmartPoolObj(const std::string& logPoint)
 {
-	return SmartPoolObjectPtr(new SmartPoolObject<Channel>(ObjPool().createObject(), _g_objPool));
+	return SmartPoolObjectPtr(new SmartPoolObject<Channel>(ObjPool().createObject(logPoint), _g_objPool));
 }
 
 //-------------------------------------------------------------------------------------
@@ -413,7 +413,7 @@ int Channel::kcp_output(const char *buf, int len, ikcpcb *kcp, void *user)
 {
 	Channel* pChannel = (Channel*)user;
 
-	if (pChannel->isCondemn())
+	if (pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
 		return -1;
 
 	return ((KCPPacketSender*)pChannel->pPacketSender())->kcp_output(buf, len, kcp, pChannel);
@@ -625,7 +625,7 @@ const char * Channel::c_str() const
 		pEndPoint_->addr().writeToString(tdodgyString, MAX_BUF);
 
 	kbe_snprintf(dodgyString, MAX_BUF, "%s/%d/%d/%d", tdodgyString, id_, 
-		this->isCondemn(), this->isDestroyed());
+		this->condemn(), this->isDestroyed());
 
 	return dodgyString;
 }
@@ -683,12 +683,12 @@ void Channel::sendto(bool reliable, Bundle* pBundle)
 		return;
 	}
 
-	if (isCondemn())
+	if (condemn() > 0)
 	{
 		//WARNING_MSG(fmt::format("Channel::sendto: error, reason={}, from {}.\n", reasonToString(REASON_CHANNEL_CONDEMN), 
 		//	c_str()));
 
-		this->clearBundle();
+		// this->clearBundle();
 
 		if (pBundle)
 			Network::Bundle::reclaimPoolObject(pBundle);
@@ -709,7 +709,7 @@ void Channel::sendto(bool reliable, Bundle* pBundle)
 
 	if (pPacketSender_ == NULL)
 	{
-		pPacketSender_ = KCPPacketSender::createPoolObject();
+		pPacketSender_ = KCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
 		pPacketSender_->pEndPoint(pEndPoint_);
 		pPacketSender_->pNetworkInterface(pNetworkInterface_);
 	}
@@ -718,7 +718,7 @@ void Channel::sendto(bool reliable, Bundle* pBundle)
 		if (pPacketSender_->type() != PacketSender::UDP_PACKET_SENDER)
 		{
 			TCPPacketSender::reclaimPoolObject((TCPPacketSender*)pPacketSender_);
-			pPacketSender_ = KCPPacketSender::createPoolObject();
+			pPacketSender_ = KCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
 			pPacketSender_->pEndPoint(pEndPoint_);
 			pPacketSender_->pNetworkInterface(pNetworkInterface_);
 		}
@@ -750,12 +750,12 @@ void Channel::send(Bundle* pBundle)
 		return;
 	}
 
-	if (isCondemn())
+	if (condemn() > 0)
 	{
 		//WARNING_MSG(fmt::format("Channel::send: error, reason={}, from {}.\n", reasonToString(REASON_CHANNEL_CONDEMN), 
 		//	c_str()));
 
-		this->clearBundle();
+		// this->clearBundle();
 
 		if (pBundle)
 			Network::Bundle::reclaimPoolObject(pBundle);
@@ -778,7 +778,7 @@ void Channel::send(Bundle* pBundle)
 	{
 		if (pPacketSender_ == NULL)
 		{
-			pPacketSender_ = TCPPacketSender::createPoolObject();
+			pPacketSender_ = TCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
 			pPacketSender_->pEndPoint(pEndPoint_);
 			pPacketSender_->pNetworkInterface(pNetworkInterface_);
 		}
@@ -787,7 +787,7 @@ void Channel::send(Bundle* pBundle)
 			if (pPacketSender_->type() != PacketSender::TCP_PACKET_SENDER)
 			{
 				KCPPacketSender::reclaimPoolObject((KCPPacketSender*)pPacketSender_);
-				pPacketSender_ = TCPPacketSender::createPoolObject();
+				pPacketSender_ = TCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
 				pPacketSender_->pEndPoint(pEndPoint_);
 				pPacketSender_->pNetworkInterface(pNetworkInterface_);
 			}
@@ -796,7 +796,7 @@ void Channel::send(Bundle* pBundle)
 		pPacketSender_->processSend(this, 0);
 
 		// 如果不能立即发送到系统缓冲区，那么交给poller处理
-		if (bundles_.size() > 0 && !isCondemn() && !isDestroyed())
+		if (bundles_.size() > 0 && condemn() == 0 && !isDestroyed())
 		{
 			flags_ |= FLAG_SENDING;
 			pNetworkInterface_->dispatcher().registerWriteFileDescriptor(*pEndPoint_, pPacketSender_);
@@ -878,6 +878,17 @@ void Channel::stopSend()
 	flags_ &= ~FLAG_SENDING;
 
 	pNetworkInterface_->dispatcher().deregisterWriteFileDescriptor(*pEndPoint_);
+}
+
+//-------------------------------------------------------------------------------------
+bool Channel::sending() const 
+{
+	if (pKCP())
+	{
+		return ikcp_waitsnd(pKCP()) > 0;
+	}
+
+	return (flags_ & FLAG_SENDING) > 0; 
 }
 
 //-------------------------------------------------------------------------------------
@@ -1004,14 +1015,12 @@ void Channel::addReceiveWindow(Packet* pPacket)
 }
 
 //-------------------------------------------------------------------------------------
-void Channel::condemn(const std::string& reason)
-{ 
-	if(isCondemn())
-		return;
+void Channel::condemn(const std::string& reason, bool waitSendCompletedDestroy)
+{
+	if (condemnReason_.size() == 0)
+		condemnReason_ = reason;
 
-	condemnReason_ = reason;
-	flags_ |= FLAG_CONDEMN; 
-	//WARNING_MSG(fmt::format("Channel::condemn[{:p}]: channel({}).\n", (void*)this, this->c_str())); 
+	flags_ |= (waitSendCompletedDestroy ? FLAG_CONDEMN_AND_WAIT_DESTROY : FLAG_CONDEMN);
 }
 
 //-------------------------------------------------------------------------------------
@@ -1064,7 +1073,7 @@ bool Channel::handshake(Packet* pPacket)
 			}
 			else
 			{
-				UDPPacket* pHelloAckUDPPacket = UDPPacket::createPoolObject();
+				UDPPacket* pHelloAckUDPPacket = UDPPacket::createPoolObject(OBJECTPOOL_POINT);
 				(*pHelloAckUDPPacket) << Network::UDP_HELLO_ACK << KBEVersion::versionString() << (uint32)id();
 				pEndPoint()->sendto(pHelloAckUDPPacket->data(), pHelloAckUDPPacket->length());
 				UDPPacket::reclaimPoolObject(pHelloAckUDPPacket);
@@ -1117,7 +1126,7 @@ void Channel::processPackets(KBEngine::Network::MessageHandlers* pMsgHandlers, P
 		return;
 	}
 
-	if(this->isCondemn())
+	if(this->condemn() > 0)
 	{
 		ERROR_MSG(fmt::format("Channel::processPackets({}): channel[{:p}] is condemn.\n", 
 			this->c_str(), (void*)this));
@@ -1200,7 +1209,7 @@ Bundle* Channel::createSendBundle()
 		}
 	}
 	
-	Bundle* pBundle = Bundle::createPoolObject();
+	Bundle* pBundle = Bundle::createPoolObject(OBJECTPOOL_POINT);
 	pBundle->pChannel(this);
 	return pBundle;
 }

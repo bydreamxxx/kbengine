@@ -29,9 +29,9 @@ ObjectPool<UDPPacketSender>& UDPPacketSender::ObjPool()
 }
 
 //-------------------------------------------------------------------------------------
-UDPPacketSender* UDPPacketSender::createPoolObject()
+UDPPacketSender* UDPPacketSender::createPoolObject(const std::string& logPoint)
 {
-	return _g_objPool.createObject();
+	return _g_objPool.createObject(logPoint);
 }
 
 //-------------------------------------------------------------------------------------
@@ -43,6 +43,7 @@ void UDPPacketSender::reclaimPoolObject(UDPPacketSender* obj)
 //-------------------------------------------------------------------------------------
 void UDPPacketSender::onReclaimObject()
 {
+	sendfailCount_ = 0;
 }
 
 //-------------------------------------------------------------------------------------
@@ -55,15 +56,16 @@ void UDPPacketSender::destroyObjPool()
 }
 
 //-------------------------------------------------------------------------------------
-UDPPacketSender::SmartPoolObjectPtr UDPPacketSender::createSmartPoolObj()
+UDPPacketSender::SmartPoolObjectPtr UDPPacketSender::createSmartPoolObj(const std::string& logPoint)
 {
-	return SmartPoolObjectPtr(new SmartPoolObject<UDPPacketSender>(ObjPool().createObject(), _g_objPool));
+	return SmartPoolObjectPtr(new SmartPoolObject<UDPPacketSender>(ObjPool().createObject(logPoint), _g_objPool));
 }
 
 //-------------------------------------------------------------------------------------
 UDPPacketSender::UDPPacketSender(EndPoint & endpoint,
 	   NetworkInterface & networkInterface	) :
-	PacketSender(endpoint, networkInterface)
+	PacketSender(endpoint, networkInterface),
+	sendfailCount_(0)
 {
 }
 
@@ -95,12 +97,11 @@ bool UDPPacketSender::processSend(Channel* pChannel, int userarg)
 {
 	KBE_ASSERT(pChannel != NULL);
 
-	if (pChannel->isCondemn())
+	if (pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
 	{
 		return false;
 	}
 
-	uint8 sendfailCount = 0;
 	Channel::Bundles& bundles = pChannel->bundles();
 	Reason reason = REASON_SUCCESS;
 
@@ -123,7 +124,7 @@ bool UDPPacketSender::processSend(Channel* pChannel, int userarg)
 		{
 			pakcets.clear();
 			Network::Bundle::reclaimPoolObject((*iter));
-			sendfailCount = 0;
+			sendfailCount_ = 0;
 		}
 		else
 		{
@@ -139,17 +140,17 @@ bool UDPPacketSender::processSend(Channel* pChannel, int userarg)
 				*/
 
 				// 连续超过10次则通知出错
-				if (++sendfailCount >= 10 && pChannel->isExternal())
+				if (++sendfailCount_ >= 10 && pChannel->isExternal())
 				{
 					onGetError(pChannel, "UDPPacketSender::processSend: sendfailCount >= 10");
 
 					this->dispatcher().errorReporter().reportException(reason, pEndpoint_->addr(),
-						fmt::format("UDPPacketSender::processSend(external, sendfailCount({}) >= 10)", (int)sendfailCount).c_str());
+						fmt::format("UDPPacketSender::processSend(external, sendfailCount({}) >= 10)", (int)sendfailCount_).c_str());
 				}
 				else
 				{
 					this->dispatcher().errorReporter().reportException(reason, pEndpoint_->addr(),
-						fmt::format("UDPPacketSender::processSend(internal, {})", (int)sendfailCount).c_str());
+						fmt::format("UDPPacketSender::processSend(internal, {})", (int)sendfailCount_).c_str());
 				}
 			}
 			else
@@ -190,7 +191,7 @@ bool UDPPacketSender::processSend(Channel* pChannel, int userarg)
 //-------------------------------------------------------------------------------------
 Reason UDPPacketSender::processFilterPacket(Channel* pChannel, Packet * pPacket, int userarg)
 {
-	if(pChannel->isCondemn())
+	if (pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
 	{
 		return REASON_CHANNEL_CONDEMN;
 	}
