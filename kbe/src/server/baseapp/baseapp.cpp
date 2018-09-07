@@ -4703,7 +4703,7 @@ void Baseapp::onUpdateDataFromClientForControlledEntityOnParent(Network::Channel
 		return;
 	}
 
-	Network::Bundle* pBundle = Network::Bundle::ObjPool().createObject();
+	Network::Bundle* pBundle = Network::Bundle::ObjPool().createObject(OBJECTPOOL_POINT);
 	(*pBundle).newMessage(CellappInterface::onUpdateDataFromClientForControlledEntityOnParent);
 	(*pBundle) << srcEntityID;
 	(*pBundle).append(s);

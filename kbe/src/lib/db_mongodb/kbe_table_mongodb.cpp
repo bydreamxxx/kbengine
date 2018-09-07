@@ -39,7 +39,7 @@ namespace KBEngine {
 		BSON_APPEND_UTF8(&options, "ip", ip);
 		BSON_APPEND_INT32(&options, "port", port);
 		BSON_APPEND_INT64(&options, "componentID", componentID);
-		BSON_APPEND_INT64(&options, "logger", 0); //暂时赋予默认值
+		BSON_APPEND_INT64(&options, "serverGroupID", 0); //暂时赋予默认值
 
 		DBInterfaceMongodb *pdbiMongodb = static_cast<DBInterfaceMongodb *>(pdbi);
 		pdbiMongodb->insertCollection("kbe_entitylog", MONGOC_INSERT_NONE, &options, NULL);
@@ -62,7 +62,7 @@ namespace KBEngine {
 
 		entitylog.dbid = dbid;
 		entitylog.componentID = 0;
-		entitylog.logger = 0;
+		entitylog.serverGroupID = 0;
 		entitylog.entityID = 0;
 		entitylog.ip[0] = '\0';
 		entitylog.port = 0;
@@ -110,9 +110,9 @@ namespace KBEngine {
 			entitylog.componentID = bson_iter_int64(&iter);
 		}
 
-		if (bson_iter_find(&iter, "logger"))
+		if (bson_iter_find(&iter, "serverGroupID"))
 		{
-			entitylog.logger = bson_iter_int64(&iter);
+			entitylog.serverGroupID = bson_iter_int64(&iter);
 		}
 
 		mongoc_cursor_destroy(cursor);
