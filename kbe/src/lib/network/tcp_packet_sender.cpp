@@ -47,9 +47,9 @@ ObjectPool<TCPPacketSender>& TCPPacketSender::ObjPool()
 }
 
 //-------------------------------------------------------------------------------------
-TCPPacketSender* TCPPacketSender::createPoolObject()
+TCPPacketSender* TCPPacketSender::createPoolObject(const std::string& logPoint)
 {
-	return _g_objPool.createObject();
+	return _g_objPool.createObject(logPoint);
 }
 
 //-------------------------------------------------------------------------------------
@@ -74,9 +74,9 @@ void TCPPacketSender::destroyObjPool()
 }
 
 //-------------------------------------------------------------------------------------
-TCPPacketSender::SmartPoolObjectPtr TCPPacketSender::createSmartPoolObj()
+TCPPacketSender::SmartPoolObjectPtr TCPPacketSender::createSmartPoolObj(const std::string& logPoint)
 {
-	return SmartPoolObjectPtr(new SmartPoolObject<TCPPacketSender>(ObjPool().createObject(), _g_objPool));
+	return SmartPoolObjectPtr(new SmartPoolObject<TCPPacketSender>(ObjPool().createObject(logPoint), _g_objPool));
 }
 
 //-------------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ bool TCPPacketSender::processSend(Channel* pChannel)
 
 	KBE_ASSERT(pChannel != NULL);
 	
-	if(pChannel->isCondemn())
+	if(pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
 	{
 		return false;
 	}
@@ -211,7 +211,7 @@ bool TCPPacketSender::processSend(Channel* pChannel)
 //-------------------------------------------------------------------------------------
 Reason TCPPacketSender::processFilterPacket(Channel* pChannel, Packet * pPacket)
 {
-	if(pChannel->isCondemn())
+	if(pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
 	{
 		return REASON_CHANNEL_CONDEMN;
 	}
