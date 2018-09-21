@@ -7,7 +7,7 @@ mongodb:
 	@chmod -R 755 .
 	@rm -rf install
 	@mkdir install
-	./configure --prefix=$(CURDIR)/install --enable-shared=no --enable-static=yes
+	./configure --prefix=$(CURDIR)/install --enable-shared=no --enable-static=yes --enable-sasl=no
 	@make
 	@make install
 	@cp ./install/lib/libbson-1.0.a  ../../../libs/libbson-1.0.a
