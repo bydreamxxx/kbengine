@@ -55,7 +55,17 @@
 			// Mini-Client
 			CLIENT_TYPE_MINI				= 7,
 		};
-		
+
+        //加密通信类型
+        public enum NETWORK_ENCRYPT_TYPE
+        {
+            //无加密
+            ENCRYPT_TYPE_NONE = 0,
+
+            //Blowfish
+            ENCRYPT_TYPE_BLOWFISH = 1,
+        };
+
         public string username = "kbengine";
         public string password = "123456";
 		
@@ -116,8 +126,11 @@
         private float _updatePlayerToServerPeroid = 100.0f;
 		private const int _1MS_TO_100NS = 10000;
 
-		// 玩家当前所在空间的id， 以及空间对应的资源
-		public UInt32 spaceID = 0;
+        //加密过滤器
+        private EncryptionFilter _filter = null;
+
+        // 玩家当前所在空间的id， 以及空间对应的资源
+        public UInt32 spaceID = 0;
 		public string spaceResPath = "";
 		public bool isLoadedGeometry = false;
 		
@@ -130,6 +143,7 @@
 				throw new Exception("Only one instance of KBEngineApp!");
 			
 			app = this;
+			Event.outEventsImmediately = !args.isMultiThreads;
 			
 			initialize(args);
         }
@@ -161,19 +175,20 @@
 		
 		void initNetwork()
 		{
+			_filter = null;
 			Messages.init();
         	_networkInterface = new NetworkInterface();
 		}
 		
 		void installEvents()
 		{
-			Event.registerIn("createAccount", this, "createAccount");
-			Event.registerIn("login", this, "login");
-			Event.registerIn("logout", this, "logout");
-			Event.registerIn("reloginBaseapp", this, "reloginBaseapp");
-			Event.registerIn("resetPassword", this, "resetPassword");
-			Event.registerIn("bindAccountEmail", this, "bindAccountEmail");
-			Event.registerIn("newPassword", this, "newPassword");
+			Event.registerIn(EventInTypes.createAccount, this, "createAccount");
+			Event.registerIn(EventInTypes.login, this, "login");
+			Event.registerIn(EventInTypes.logout, this, "logout");
+			Event.registerIn(EventInTypes.reloginBaseapp, this, "reloginBaseapp");
+			Event.registerIn(EventInTypes.resetPassword, this, "resetPassword");
+			Event.registerIn(EventInTypes.bindAccountEmail, this, "bindAccountEmail");
+			Event.registerIn(EventInTypes.newPassword, this, "newPassword");
 			
 			// 内部事件
 			Event.registerIn("_closeNetwork", this, "_closeNetwork");
@@ -253,6 +268,7 @@
 			if (_networkInterface != null)
 				_networkInterface.reset();
 
+			_filter = null;
 			_networkInterface = new NetworkInterface();
 			
 			_spacedatas.Clear();
@@ -370,8 +386,17 @@
 				bundle.newMessage(Messages.messages["Loginapp_hello"]);
 			else
 				bundle.newMessage(Messages.messages["Baseapp_hello"]);
-			
-			bundle.writeString(clientVersion);
+
+			_filter = null;
+
+            if (_args.networkEncryptType == NETWORK_ENCRYPT_TYPE.ENCRYPT_TYPE_BLOWFISH)
+            {
+                _filter = new BlowfishFilter();
+                _encryptedKey = ((BlowfishFilter)_filter).key();
+                _networkInterface.setFilter(null);
+            }
+
+            bundle.writeString(clientVersion);
 			bundle.writeString(clientScriptVersion);
 			bundle.writeBlob(_encryptedKey);
 			bundle.send(_networkInterface);
@@ -400,7 +425,7 @@
 				if(serverProtocolMD5 != currentServerProtocolMD5)
 				{
 					Dbg.ERROR_MSG("Client_onHelloCB: digest not match! serverProtocolMD5=" + serverProtocolMD5 + "(server: " + currentServerProtocolMD5 + ")");
-					Event.fireAll("onVersionNotMatch", new object[] { clientVersion, serverVersion });
+					Event.fireAll(EventOutTypes.onVersionNotMatch, clientVersion, serverVersion);
 					return;
 				}
 				*/
@@ -408,12 +433,19 @@
 				if (serverEntitydefMD5 != currentServerEntitydefMD5)
 				{
 					Dbg.ERROR_MSG("Client_onHelloCB: digest not match! serverEntitydefMD5=" + serverEntitydefMD5 + "(server: " + currentServerEntitydefMD5 + ")");
-					Event.fireAll("onVersionNotMatch", new object[] { clientVersion, serverVersion });
+					Event.fireAll(EventOutTypes.onVersionNotMatch", clientVersion, serverVersion);
 					return;
 				}
 			}
+			
+			 if (_args.networkEncryptType == NETWORK_ENCRYPT_TYPE.ENCRYPT_TYPE_BLOWFISH)
+            {
+                _networkInterface.setFilter(_filter);
+				_filter = null;
+            }
 
-			onServerDigest();
+
+            onServerDigest();
 			
 			if(currserver == "baseapp")
 			{
@@ -457,7 +489,7 @@
 			serverVersion = stream.readString();
 			
 			Dbg.ERROR_MSG("Client_onVersionNotMatch: verInfo=" + clientVersion + "(server: " + serverVersion + ")");
-			Event.fireAll("onVersionNotMatch", new object[]{clientVersion, serverVersion});
+			Event.fireAll(EventOutTypes.onVersionNotMatch, clientVersion, serverVersion);
 		}
 
 		/*
@@ -468,7 +500,7 @@
 			serverScriptVersion = stream.readString();
 			
 			Dbg.ERROR_MSG("Client_onScriptVersionNotMatch: verInfo=" + clientScriptVersion + "(server: " + serverScriptVersion + ")");
-			Event.fireAll("onScriptVersionNotMatch", new object[]{clientScriptVersion, serverScriptVersion});
+			Event.fireAll(EventOutTypes.onScriptVersionNotMatch, clientScriptVersion, serverScriptVersion);
 		}
 		
 		/*
@@ -477,7 +509,7 @@
 		public void Client_onKicked(UInt16 failedcode)
 		{
 			Dbg.DEBUG_MSG("Client_onKicked: failedcode=" + failedcode);
-			Event.fireAll("onKicked", new object[]{failedcode});
+			Event.fireAll(EventOutTypes.onKicked, failedcode);
 		}
 		
 		/*
@@ -546,7 +578,7 @@
 		{  
 			if(noconnect)
 			{
-				Event.fireOut("onLoginBaseapp", new object[]{});
+				Event.fireOut(EventOutTypes.onLoginBaseapp);
 				
 				_networkInterface.reset();
 				_networkInterface = new NetworkInterface();
@@ -598,7 +630,7 @@
 			if(_networkInterface.valid())
 				return;
 
-			Event.fireAll("onReloginBaseapp", new object[]{});
+			Event.fireAll(EventOutTypes.onReloginBaseapp);
 			_networkInterface.connectTo(baseappIP, baseappPort, onReConnectTo_baseapp_callback, null);
 		}
 
@@ -823,7 +855,7 @@
 			UInt16 failedcode = stream.readUint16();
 			_serverdatas = stream.readBlob();
 			Dbg.ERROR_MSG("KBEngine::Client_onLoginFailed: failedcode(" + failedcode + "), datas(" + _serverdatas.Length + ")!");
-			Event.fireAll("onLoginFailed", new object[]{failedcode});
+			Event.fireAll(EventOutTypes.onLoginFailed, failedcode);
 		}
 		
 		/*
@@ -835,11 +867,11 @@
 			username = accountName;
 			baseappIP = stream.readString();
 			baseappPort = stream.readUint16();
+			_serverdatas = stream.readBlob();
 			
 			Dbg.DEBUG_MSG("KBEngine::Client_onLoginSuccessfully: accountName(" + accountName + "), addr(" + 
 					baseappIP + ":" + baseappPort + "), datas(" + _serverdatas.Length + ")!");
-			
-			_serverdatas = stream.readBlob();
+		
 			login_baseapp(true);
 		}
 		
@@ -849,7 +881,7 @@
 		public void Client_onLoginBaseappFailed(UInt16 failedcode)
 		{
 			Dbg.ERROR_MSG("KBEngine::Client_onLoginBaseappFailed: failedcode(" + failedcode + ")!");
-			Event.fireAll("onLoginBaseappFailed", new object[]{failedcode});
+			Event.fireAll(EventOutTypes.onLoginBaseappFailed, failedcode);
 		}
 
 		/*
@@ -858,7 +890,7 @@
 		public void Client_onReloginBaseappFailed(UInt16 failedcode)
 		{
 			Dbg.ERROR_MSG("KBEngine::Client_onReloginBaseappFailed: failedcode(" + failedcode + ")!");
-			Event.fireAll("onReloginBaseappFailed", new object[]{failedcode});
+			Event.fireAll(EventOutTypes.onReloginBaseappFailed, failedcode);
 		}
 		
 		/*
@@ -868,7 +900,7 @@
 		{
 			entity_uuid = stream.readUint64();
 			Dbg.DEBUG_MSG("KBEngine::Client_onReloginBaseappSuccessfully: name(" + username + ")!");
-			Event.fireAll("onReloginBaseappSuccessfully", new object[]{});
+			Event.fireAll(EventOutTypes.onReloginBaseappSuccessfully);
 		}
 
 		/*
@@ -1216,7 +1248,7 @@
 			else
 			{
 				if(_controlledEntities.Remove(entity))
-					Event.fireOut("onLoseControlledEntity", new object[]{entity});
+					Event.fireOut(EventOutTypes.onLoseControlledEntity, entity);
 
 				entities.Remove(eid);
 				entity.onDestroy();
@@ -1275,7 +1307,7 @@
 			UInt16 retcode = stream.readUint16();
 			byte[] datas = stream.readBlob();
 			
-			Event.fireOut("onCreateAccountResult", new object[]{retcode, datas});
+			Event.fireOut(EventOutTypes.onCreateAccountResult, retcode, datas);
 			
 			if(retcode != 0)
 			{
@@ -1319,7 +1351,7 @@
 			try
 			{
 				entity.onControlled(isCont);
-				Event.fireOut("onControlled", new object[]{entity, isCont});
+				Event.fireOut(EventOutTypes.onControlled, entity, isCont);
 			}
 			catch (Exception e)
 			{
@@ -1447,7 +1479,7 @@
 			isLoadedGeometry = true;
 			spaceID = uspaceID;
 			spaceResPath = respath;
-			Event.fireOut("addSpaceGeometryMapping", new object[]{spaceResPath});
+			Event.fireOut(EventOutTypes.addSpaceGeometryMapping, spaceResPath);
 		}
 
 		public void clearSpace(bool isall)
@@ -1524,7 +1556,7 @@
 			if(key == "_mapping")
 				addSpaceGeometryMapping(spaceID, value);
 			
-			Event.fireOut("onSetSpaceData", new object[]{spaceID, key, value});
+			Event.fireOut(EventOutTypes.onSetSpaceData, spaceID, key, value);
 		}
 
 		/*
@@ -1534,7 +1566,7 @@
 		{
 			Dbg.DEBUG_MSG("KBEngine::Client_delSpaceData: spaceID(" + spaceID + "), key(" + key + ")");
 			_spacedatas.Remove(key);
-			Event.fireOut("onDelSpaceData", new object[]{spaceID, key});
+			Event.fireOut(EventOutTypes.onDelSpaceData, spaceID, key);
 		}
 		
 		public string getSpaceData(string key)
@@ -1573,7 +1605,7 @@
 			}
 
 			if(_controlledEntities.Remove(entity))
-				Event.fireOut("onLoseControlledEntity", new object[]{entity});
+				Event.fireOut(EventOutTypes.onLoseControlledEntity, entity);
 
 			entities.Remove(eid);
 			entity.onDestroy();
@@ -1592,7 +1624,7 @@
 			if (entity != null && entity.isControlled)
 			{
 				entity.position.Set(_entityServerPos.x, _entityServerPos.y, _entityServerPos.z);
-				Event.fireOut("updatePosition", new object[]{entity});
+				Event.fireOut(EventOutTypes.updatePosition, entity);
 				entity.onUpdateVolatileData();
 			}
 		}
@@ -1607,7 +1639,7 @@
 			{
 				entity.position.x = _entityServerPos.x;
 				entity.position.z = _entityServerPos.z;
-				Event.fireOut("updatePosition", new object[]{entity});
+				Event.fireOut(EventOutTypes.updatePosition, entity);
 				entity.onUpdateVolatileData();
 			}
 		}
@@ -1623,7 +1655,7 @@
 			if (entity != null && entity.isControlled)
 			{
 				entity.direction.Set(roll, pitch, yaw);
-				Event.fireOut("set_direction", new object[]{entity});
+				Event.fireOut(EventOutTypes.set_direction, entity);
 				entity.onUpdateVolatileData();
 			}
 		}
@@ -1969,14 +2001,14 @@
 			bool done = false;
 			if(changeDirection == true)
 			{
-				Event.fireOut("set_direction", new object[]{entity});
+				Event.fireOut(EventOutTypes.set_direction, entity);
 				done = true;
 			}
 			
-	            bool positionChanged = x != KBEMath.KBE_FLT_MAX || y != KBEMath.KBE_FLT_MAX || z != KBEMath.KBE_FLT_MAX;
-	            if (x == KBEMath.KBE_FLT_MAX) x = 0.0f;
-	            if (y == KBEMath.KBE_FLT_MAX) y = 0.0f;
-	            if (z == KBEMath.KBE_FLT_MAX) z = 0.0f;
+			bool positionChanged = x != KBEMath.KBE_FLT_MAX || y != KBEMath.KBE_FLT_MAX || z != KBEMath.KBE_FLT_MAX;
+			if (x == KBEMath.KBE_FLT_MAX) x = 0.0f;
+			if (y == KBEMath.KBE_FLT_MAX) y = 0.0f;
+			if (z == KBEMath.KBE_FLT_MAX) z = 0.0f;
             
 			if(positionChanged)
 			{
@@ -1984,7 +2016,7 @@
 				
 				entity.position = pos;
 				done = true;
-				Event.fireOut("updatePosition", new object[]{entity});
+				Event.fireOut(EventOutTypes.updatePosition, entity);
 			}
 			
 			if(done)
