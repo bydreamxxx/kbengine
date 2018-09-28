@@ -974,6 +974,7 @@ void ClientObjectBase::onEntityLeaveWorld(Network::Channel * pChannel, ENTITY_ID
 	// 如果不是玩家
 	if(entityID_ != eid)
 	{
+		controlledEntities_.remove(entity);
 		destroyEntity(eid, false);
 		pEntityIDAliasIDList_.erase(std::remove(pEntityIDAliasIDList_.begin(), pEntityIDAliasIDList_.end(), eid), pEntityIDAliasIDList_.end());
 	}
@@ -1075,6 +1076,7 @@ void ClientObjectBase::onEntityDestroyed(Network::Channel * pChannel, ENTITY_ID 
 		entity->onLeaveWorld();
 	}
 
+	controlledEntities_.remove(entity);
 	destroyEntity(eid, false);
 }
 
@@ -1225,7 +1227,9 @@ void ClientObjectBase::updatePlayerToServer()
     for (; itr != controlledEntities_.end(); itr++)
     {
         client::Entity *entity = *itr;
-        
+		if (entity->isDestroyed())
+			return;
+
         Position3D &temppos = entity->position();
         Direction3D &tempdir = entity->direction();
         Position3D &tempClientPos = entity->clientPos();
@@ -1921,6 +1925,7 @@ void ClientObjectBase::addSpaceGeometryMapping(SPACE_ID spaceID, const std::stri
 //-------------------------------------------------------------------------------------
 void ClientObjectBase::clearSpace(bool isAll)
 {
+	controlledEntities_.clear();
 	if(!isAll)
 	{
 		Entities<client::Entity>::ENTITYS_MAP::iterator iter = pEntities_->getEntities().begin();
