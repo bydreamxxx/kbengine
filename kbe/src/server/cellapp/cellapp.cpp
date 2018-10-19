@@ -458,7 +458,7 @@ PyObject* Cellapp::__py_createEntity(PyObject* self, PyObject* args)
 	if(!PyArg_ParseTuple(args, "s|I|O|O|O", &entityType, &spaceID, &position, &direction, &params))
 	{
 		PyErr_Format(PyExc_TypeError, 
-			"KBEngine::createEntity: args is error! args[scriptName, spaceID, position, direction, states].");
+			"KBEngine::createEntity: args error! args[scriptName, spaceID, position, direction, states].");
 		PyErr_PrintEx(0);
 		return 0;
 	}
@@ -536,7 +536,7 @@ PyObject* Cellapp::__py_executeRawDatabaseCommand(PyObject* self, PyObject* args
 
 	if(ret == -1)
 	{
-		PyErr_Format(PyExc_TypeError, "KBEngine::executeRawDatabaseCommand: args is error!");
+		PyErr_Format(PyExc_TypeError, "KBEngine::executeRawDatabaseCommand: args error!");
 		PyErr_PrintEx(0);
 		S_Return;
 	}
@@ -569,7 +569,7 @@ void Cellapp::executeRawDatabaseCommand(const char* datas, uint32 size, PyObject
 {
 	if(datas == NULL)
 	{
-		ERROR_MSG("KBEngine::executeRawDatabaseCommand: execute is error!\n");
+		ERROR_MSG("KBEngine::executeRawDatabaseCommand: execute error!\n");
 		return;
 	}
 
@@ -1232,7 +1232,7 @@ void Cellapp::_onCreateCellEntityFromBaseapp(std::string& entityType, ENTITY_ID 
 		return;
 	}
 
-	KBE_ASSERT(false && "Cellapp::onCreateCellEntityFromBaseapp: is error!\n");
+	KBE_ASSERT(false && "Cellapp::onCreateCellEntityFromBaseapp: error!\n");
 }
 
 //-------------------------------------------------------------------------------------
@@ -1354,7 +1354,7 @@ void Cellapp::onEntityCall(Network::Channel* pChannel, KBEngine::MemoryStream& s
 			break;
 		default:
 			{
-				ERROR_MSG(fmt::format("Cellapp::onEntityCall: entityCallType {} is error! must a cellType. entityID={}.\n",
+				ERROR_MSG(fmt::format("Cellapp::onEntityCall: entityCallType {} error! must a cellType. entityID={}.\n",
 					calltype, eid));
 			}
 	};
@@ -1792,7 +1792,7 @@ void Cellapp::lookApp(Network::Channel* pChannel)
 	if(pChannel->isExternal())
 		return;
 
-	DEBUG_MSG(fmt::format("Cellapp::lookApp: {}\n", pChannel->c_str()));
+	//DEBUG_MSG(fmt::format("Cellapp::lookApp: {}\n", pChannel->c_str()));
 
 	Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 	
@@ -1823,7 +1823,7 @@ PyObject* Cellapp::__py_reloadScript(PyObject* self, PyObject* args)
 	{
 		if(PyArg_ParseTuple(args, "b", &fullReload) == -1)
 		{
-			PyErr_Format(PyExc_TypeError, "KBEngine::reloadScript(fullReload): args is error!");
+			PyErr_Format(PyExc_TypeError, "KBEngine::reloadScript(fullReload): args error!");
 			PyErr_PrintEx(0);
 			return 0;
 		}
@@ -2210,7 +2210,7 @@ PyObject* Cellapp::__py_raycast(PyObject* self, PyObject* args)
 	{
 		if(PyArg_ParseTuple(args, "IOO", &spaceID, &pyStartPos, &pyEndPos) == -1)
 		{
-			PyErr_Format(PyExc_TypeError, "Cellapp::raycast: args is error!");
+			PyErr_Format(PyExc_TypeError, "Cellapp::raycast: args error!");
 			PyErr_PrintEx(0);
 			return 0;
 		}
@@ -2219,7 +2219,7 @@ PyObject* Cellapp::__py_raycast(PyObject* self, PyObject* args)
 	{
 		if(PyArg_ParseTuple(args, "IiOO", &spaceID, &layer, &pyStartPos, &pyEndPos) == -1)
 		{
-			PyErr_Format(PyExc_TypeError, "Cellapp::raycast: args is error!");
+			PyErr_Format(PyExc_TypeError, "Cellapp::raycast: args error!");
 			PyErr_PrintEx(0);
 			return 0;
 		}
@@ -2235,7 +2235,7 @@ PyObject* Cellapp::__py_raycast(PyObject* self, PyObject* args)
 	}
 	else
 	{
-		PyErr_Format(PyExc_TypeError, "Cellapp::raycast: args is error!");
+		PyErr_Format(PyExc_TypeError, "Cellapp::raycast: args error!");
 		PyErr_PrintEx(0);
 		return 0;
 	}
@@ -2560,7 +2560,7 @@ PyObject* Cellapp::__py_setFlags(PyObject* self, PyObject* args)
 
 	if(PyArg_ParseTuple(args, "I", &flags) == -1)
 	{
-		PyErr_Format(PyExc_TypeError, "KBEngine::setFlags: args is error!");
+		PyErr_Format(PyExc_TypeError, "KBEngine::setFlags: args error!");
 		PyErr_PrintEx(0);
 		return NULL;
 	}

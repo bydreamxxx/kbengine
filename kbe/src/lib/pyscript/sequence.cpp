@@ -177,7 +177,8 @@ PyObject* Sequence::seq_repeat(PyObject* self, Py_ssize_t n)
 PyObject* Sequence::seq_item(PyObject* self, Py_ssize_t index)
 {
 	Sequence* seq = static_cast<Sequence*>(self);
-	std::vector<PyObject*>& values = seq->getValues();	
+	std::vector<PyObject*>& values = seq->getValues();
+
 	if (uint32(index) < values.size())
 	{
 		PyObject* pyobj = values[index];
@@ -197,8 +198,10 @@ PyObject* Sequence::seq_subscript(PyObject* self, PyObject* item)
 		i = PyNumber_AsSsize_t(item, PyExc_IndexError);
 		if (i == -1 && PyErr_Occurred())
 			return NULL;
-		if (i < 0)
-			i += PyList_GET_SIZE(self);
+		if (i < 0) {
+			Sequence* seq = static_cast<Sequence*>(self);
+			i += seq->length();
+		}
 		return seq_item(self, i);
 	}
 	else if (PySlice_Check(item)) {
@@ -281,7 +284,7 @@ int Sequence::seq_ass_item(PyObject* self, Py_ssize_t index, PyObject* value)
 		}
 		else
 		{
-			PyErr_SetString(PyExc_IndexError, "Sequence set to type is error!");
+			PyErr_SetString(PyExc_IndexError, "Sequence set to type error!");
 			PyErr_PrintEx(0);
 			return -1;
 		}
