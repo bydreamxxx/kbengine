@@ -1,0 +1,16 @@
+
+1. 工程说明
+此工程从webconsole升级而来，原来的工程只能运行于django1.6.11或者django1.8.9。
+python3.6.4+django2.0.8测试通过，详细文档请参看webconsole目录下的文档。
+
+2. 使用说明
+修改sync_db.bat、sync_db.sh、run_server.bat、run_server.sh，使其正确指向你所使用的python的路径。
+
+第一次运行需要初始化数据库：
+windows下运行sync_db.bat命令；
+linux下运行sync_db.sh命令。
+
+启动服务器：
+windows下运行run_server.bat命令；
+linux下运行run_server.sh命令。
+
