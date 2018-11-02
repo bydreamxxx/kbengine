@@ -199,41 +199,139 @@ int NavMeshHandle::findRandomPointAroundCircle(int layer, uint16 flags, const Po
 		ERROR_MSG(fmt::format("NavMeshHandle::findRandomPointAroundCircle({1}): Could not find any nearby poly's ({0})\n", startRef, resPath));
 		return NAV_ERROR_NEARESTPOLY;
 	}
-	
-	Position3D currpos;
-	bool done = false;
-	int itry = 0;
 
-	while (itry++ < 3 && points.size() == 0)
+
+	//Get square(inner square of radius) across polygon.
+	const float squareSize = (float)(1.414*maxRadius);
+	float squareVerts[12] = {
+		spos[0] - squareSize / 2, spos[1], spos[2] + squareSize / 2,\
+		spos[0] + squareSize / 2, spos[1], spos[2] + squareSize / 2,\
+		spos[0] + squareSize / 2, spos[1], spos[2] - squareSize / 2,\
+		spos[0] - squareSize / 2, spos[1], spos[2] - squareSize / 2,\
+	};
+
+	static const int maxResult = 32;
+	dtPolyRef polyRefs[maxResult];
+	dtPolyRef parentPolyRefs[maxResult];
+	int polyCount = 0;
+	float cost[maxResult];
+	navmeshQuery->findPolysAroundShape(startRef, squareVerts, 4, &filter, polyRefs, parentPolyRefs, cost, &polyCount, maxResult);
+	if (polyCount == 0)
 	{
-		max_points -= points.size();
+		return (int)points.size();
+	}
 
-		for (uint32 i = 0; i < max_points; i++)
+	//Get all overlap polygon area.
+	dtPolyRef* allPolyRefs = new dtPolyRef[polyCount];
+	float* allPolyVerts = new float[(DT_VERTS_PER_POLYGON + 4) * 3 * polyCount];
+	int* allPolyVertsCount = new int[polyCount];
+	float* allPolyAreas = new float[polyCount];
+	int n = 0;
+
+	for (int i = 0; i < polyCount; i++)
+	{
+		const dtMeshTile* tile = 0;
+		const dtPoly* poly = 0;
+		dtPolyRef ref = polyRefs[i];
+		navmeshQuery->getAttachedNavMesh()->getTileAndPolyByRefUnsafe(ref, &tile, &poly);
+
+		if (poly->getType() != DT_POLYTYPE_GROUND) continue;
+
+		// Get overLap polygon.
+		float polyVerts[3 * DT_VERTS_PER_POLYGON];
+		for (int j = 0; j < poly->vertCount; ++j)
 		{
-			float pt[3];
-			dtPolyRef ref;
-			dtStatus status = navmeshQuery->findRandomPointAroundCircle(startRef, spos, maxRadius, &filter, frand, &ref, pt);
+			const float* v = &tile->verts[poly->verts[j] * 3];
+			dtVcopy(&polyVerts[j * 3], v);
+		}
 
-			if (dtStatusSucceed(status))
+		float overlapPolyVerts[(DT_VERTS_PER_POLYGON + 4) * 3];
+		int nOverlapPolyVerts;
+		getOverlapPolyPoly2D(squareVerts, 4, polyVerts, poly->vertCount, overlapPolyVerts, &nOverlapPolyVerts);
+		if (nOverlapPolyVerts <= 0) continue;
+
+		// Caculate area of overLap polygon.
+		float polyArea = 0.0f;
+		for (int j = 2; j < nOverlapPolyVerts; ++j)
+		{
+			const float* va = &overlapPolyVerts[0];
+			const float* vb = &overlapPolyVerts[(j - 1) * 3];
+			const float* vc = &overlapPolyVerts[j * 3];
+			polyArea += dtTriArea2D(va, vb, vc);	//Vertices must sorted as clockwise, otherwise the area will be negative number.The result value is double of triangle area.
+		}
+		allPolyRefs[n] = ref;
+		allPolyAreas[n] = polyArea;
+		allPolyVertsCount[n] = nOverlapPolyVerts;
+
+		int startIndex = (DT_VERTS_PER_POLYGON + 4) * 3 * n;
+		for (int j = 0; j < nOverlapPolyVerts; ++j)
+		{
+			allPolyVerts[startIndex + j * 3] = overlapPolyVerts[j * 3];
+			allPolyVerts[startIndex + j * 3 + 1] = overlapPolyVerts[j * 3 + 1];
+			allPolyVerts[startIndex + j * 3 + 2] = overlapPolyVerts[j * 3 + 2];
+		}
+
+		n++;
+	}
+
+	if (n == 0)
+	{
+		delete[] allPolyRefs;
+		delete[] allPolyVerts;
+		delete[] allPolyVertsCount;
+		delete[] allPolyAreas;
+		return (int)points.size();
+	}
+
+	//Random N point
+	Position3D currpos;
+	for (uint32 i = 0; i < max_points; i++)
+	{
+		float pt[3];
+		dtPolyRef randomRef = INVALID_NAVMESH_POLYREF;
+		float allAreaSum = 0.0f;
+		for (int j = 0; j < n; j++)
+		{
+			allAreaSum += allPolyAreas[j];
+			const float u = frand();
+			if (u*allAreaSum <= allPolyAreas[j])
 			{
-				done = true;
-				currpos.x = pt[0];
-				currpos.y = pt[1];
-				currpos.z = pt[2];
+				// Randomly pick point on polygon.
+				float areas[DT_VERTS_PER_POLYGON + 4];
+				const float s = frand();
+				const float t = frand();
+				int startIndex = (DT_VERTS_PER_POLYGON + 4) * 3 * j;
+				dtRandomPointInConvexPoly(&allPolyVerts[startIndex], allPolyVertsCount[j], areas, s, t, pt);
 
-				Position3D v = centerPos - currpos;
-				float dist_len = KBEVec3Length(&v);
-				if (dist_len > maxRadius)
-					continue;
-
-				points.push_back(currpos);
+				float h = 0.0f;
+				dtStatus status = navmeshQuery->getPolyHeight(allPolyRefs[j], pt, &h);
+				if (dtStatusFailed(status))
+				{
+					delete[] allPolyRefs;
+					delete[] allPolyVerts;
+					delete[] allPolyVertsCount;
+					delete[] allPolyAreas;
+					return status;
+				}
+				pt[1] = h;
+				randomRef = allPolyRefs[j];
 			}
 		}
 
-		if (!done)
-			break;
+		if (randomRef)
+		{
+			currpos.x = pt[0];
+			currpos.y = pt[1];
+			currpos.z = pt[2];
+
+			points.push_back(currpos);
+		}
 	}
 
+	delete[] allPolyRefs;
+	delete[] allPolyVerts;
+	delete[] allPolyVertsCount;
+	delete[] allPolyAreas;
 	return (int)points.size();
 }
 
@@ -361,7 +459,7 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 
 			if (find) continue; //ignore repeat h
 
-			hitPointVec.push_back(Position3D(center[0], h, center[2]);
+			hitPointVec.push_back(Position3D(center[0], h, center[2]));
 		}
 	}
 
