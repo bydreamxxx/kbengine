@@ -13,25 +13,42 @@ KBEngine is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
- 
+
 You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef KBE_SERVER_ASSETS_H
+#define KBE_SERVER_ASSETS_H
 
-namespace KBEngine {
-namespace script{
+#include "common/common.h"
+#include "helper/debug_helper.h"
+#include "network/message_handler.h"
 
-INLINE void ScriptStdOutErrHook::setHookBuffer(std::string* buffer){ 
-	pBuffer_ = buffer; 
-	buffer_ = ""; 
+namespace KBEngine{
+
+class ServerAssets
+{
+public:
+	ServerAssets();
+	virtual ~ServerAssets();
+
+	virtual bool good() const;
+
+	virtual bool create(const std::string& path);
+
+	static ServerAssets* createServerAssets(const std::string& type);
+
+	virtual std::string name() const {
+		return "python_assets";
+	}
+
+	virtual bool copyAssetsSourceToPath(const std::string& path);
+
+protected:
+	std::string basepath_;
+
 };
 
-INLINE void ScriptStdOutErrHook::setPrint(bool v)
-{
-	isPrint_ = v;
 }
-
-}
-}
-
+#endif

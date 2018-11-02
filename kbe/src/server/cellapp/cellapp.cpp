@@ -41,6 +41,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "navigation/DetourNavMesh.h"
 #include "loadnavmesh_threadtasks.h"
 #include "client_lib/client_interface.h"
+#include "common/sha1.h"
 
 #include "../../server/baseappmgr/baseappmgr_interface.h"
 #include "../../server/cellappmgr/cellappmgr_interface.h"
@@ -544,11 +545,7 @@ PyObject* Cellapp::__py_executeRawDatabaseCommand(PyObject* self, PyObject* args
 	std::string dbInterfaceName = "default";
 	if (pyDBInterfaceName)
 	{
-		wchar_t* PyUnicode_AsWideCharStringRet0 = PyUnicode_AsWideCharString(pyDBInterfaceName, NULL);
-		char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
-		dbInterfaceName = ccattr;
-		PyMem_Free(PyUnicode_AsWideCharStringRet0);
-		free(ccattr);
+		dbInterfaceName = PyUnicode_AsUTF8AndSize(pyDBInterfaceName, NULL);
 		
 		if (!g_kbeSrvConfig.dbInterface(dbInterfaceName))
 		{
@@ -944,6 +941,12 @@ void Cellapp::onCreateCellEntityInNewSpaceFromBaseapp(Network::Channel* pChannel
 			return;
 		}
 
+		KBE_SHA1 sha;
+		uint32 digest[5];
+		sha.Input(s.data(), s.length());
+		sha.Result(digest);
+		e->setDirty((uint32*)&digest[0]);
+
 		space->addEntity(e);
 		e->spaceID(space->id());
 		e->initializeEntity(cellData);
@@ -1042,6 +1045,12 @@ void Cellapp::onRestoreSpaceInCellFromBaseapp(Network::Channel* pChannel, KBEngi
 			return;
 		}
 		
+		KBE_SHA1 sha;
+		uint32 digest[5];
+		sha.Input(s.data(), s.length());
+		sha.Result(digest);
+		e->setDirty((uint32*)&digest[0]);
+
 		e->spaceID(space->id());
 		e->createNamespace(cellData);
 		Py_XDECREF(cellData);
@@ -1179,6 +1188,12 @@ void Cellapp::_onCreateCellEntityFromBaseapp(std::string& entityType, ENTITY_ID 
 		EntityCall* entitycall = new EntityCall(e->pScriptModule(), NULL, componentID, entityID, ENTITYCALL_TYPE_BASE);
 		e->baseEntityCall(entitycall);
 		
+		KBE_SHA1 sha;
+		uint32 digest[5];
+		sha.Input(pCellData->data(), pCellData->length());
+		sha.Result(digest);
+		e->setDirty((uint32*)&digest[0]);
+
 		cellData = e->createCellDataFromStream(pCellData);
 		e->createNamespace(cellData);
 

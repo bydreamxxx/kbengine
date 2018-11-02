@@ -101,7 +101,7 @@ PyObject* PyUrl::__py_urlopen(PyObject* self, PyObject* args)
 	else if (argCount == 3)
 	{
 		PyObject* pyobj = NULL;
-		ret = PyArg_ParseTuple(args, "s|O|O", &surl, &pyCallback, pyobj);
+		ret = PyArg_ParseTuple(args, "s|O|O", &surl, &pyCallback, &pyobj);
 
 		// 检查是headers还是post data
 		if (PyDict_Check(pyobj))
@@ -118,17 +118,7 @@ PyObject* PyUrl::__py_urlopen(PyObject* self, PyObject* args)
 					return NULL;
 				}
 
-				wchar_t* PyUnicode_AsWideCharStringRet = PyUnicode_AsWideCharString(key, NULL);
-				char* ckey = strutil::wchar2char(PyUnicode_AsWideCharStringRet);
-				PyMem_Free(PyUnicode_AsWideCharStringRet);
-
-				PyUnicode_AsWideCharStringRet = PyUnicode_AsWideCharString(value, NULL);
-				char* cval = strutil::wchar2char(PyUnicode_AsWideCharStringRet);
-				PyMem_Free(PyUnicode_AsWideCharStringRet);
-
-				map_headers[ckey] = cval;
-				free(ckey);
-				free(cval);
+				map_headers[PyUnicode_AsUTF8AndSize(key, NULL)] = PyUnicode_AsUTF8AndSize(value, NULL);
 			}
 		}
 		else if (PyBytes_Check(pyobj))
@@ -141,7 +131,7 @@ PyObject* PyUrl::__py_urlopen(PyObject* self, PyObject* args)
 		}
 		else
 		{
-			PyErr_Format(PyExc_AssertionError, "KBEngine::urlopen: args3 is not postData_bytes or callback!");
+			PyErr_Format(PyExc_AssertionError, "KBEngine::urlopen: args3 is not postData(bytes) or callback(method)!");
 			PyErr_PrintEx(0);
 			return NULL;
 		}
@@ -150,7 +140,7 @@ PyObject* PyUrl::__py_urlopen(PyObject* self, PyObject* args)
 	{
 		PyObject* pypost = NULL;
 		PyObject* pyheaders = NULL;
-		ret = PyArg_ParseTuple(args, "s|O|O|O", &surl, &pyCallback, pypost, pyheaders);
+		ret = PyArg_ParseTuple(args, "s|O|O|O", &surl, &pyCallback, &pypost, &pyheaders);
 
 		// 检查是headers还是post data
 		if (PyDict_Check(pyheaders))
@@ -167,17 +157,7 @@ PyObject* PyUrl::__py_urlopen(PyObject* self, PyObject* args)
 					return NULL;
 				}
 
-				wchar_t* PyUnicode_AsWideCharStringRet = PyUnicode_AsWideCharString(key, NULL);
-				char* ckey = strutil::wchar2char(PyUnicode_AsWideCharStringRet);
-				PyMem_Free(PyUnicode_AsWideCharStringRet);
-
-				PyUnicode_AsWideCharStringRet = PyUnicode_AsWideCharString(value, NULL);
-				char* cval = strutil::wchar2char(PyUnicode_AsWideCharStringRet);
-				PyMem_Free(PyUnicode_AsWideCharStringRet);
-
-				map_headers[ckey] = cval;
-				free(ckey);
-				free(cval);
+				map_headers[PyUnicode_AsUTF8AndSize(key, NULL)] = PyUnicode_AsUTF8AndSize(value, NULL);
 			}
 		}
 		else
@@ -232,15 +212,22 @@ PyObject* PyUrl::__py_urlopen(PyObject* self, PyObject* args)
 
 	if (map_headers.size() > 0)
 	{
-		pRequest->setHeader(map_headers);
+		Network::Http::Request::Status result = pRequest->setHeader(map_headers);
+		if (Network::Http::Request::OK != result)
+			return PyLong_FromLong(result);
 	}
 
 	if (postDataLength > 0 && postData)
 	{
-		pRequest->setPostData(postData, postDataLength);
+		Network::Http::Request::Status result = pRequest->setPostData(postData, postDataLength);
+		if (Network::Http::Request::OK != result)
+			return PyLong_FromLong(result);
 	}
 
-	pRequest->setURL(surl);
+	Network::Http::Request::Status result = pRequest->setURL(surl);
+	if (Network::Http::Request::OK != result)
+		return PyLong_FromLong(result);
+
 	return PyLong_FromLong(Network::Http::perform(pRequest));
 }
 

@@ -33,6 +33,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "sync_entitystreamtemplate_handler.h"
 #include "common/timestamp.h"
 #include "common/kbeversion.h"
+#include "common/sha1.h"
 #include "network/common.h"
 #include "network/tcp_packet.h"
 #include "network/udp_packet.h"
@@ -1016,7 +1017,6 @@ PyObject* Baseapp::__py_createEntityFromDBID(PyObject* self, PyObject* args)
 {
 	int argCount = (int)PyTuple_Size(args);
 	PyObject* pyCallback = NULL;
-	wchar_t* wEntityType = NULL;
 	char* entityType = NULL;
 	int ret = -1;
 	DBID dbid = 0;
@@ -1059,11 +1059,7 @@ PyObject* Baseapp::__py_createEntityFromDBID(PyObject* self, PyObject* args)
 
 	if (pyDBInterfaceName)
 	{
-		wchar_t* PyUnicode_AsWideCharStringRet0 = PyUnicode_AsWideCharString(pyDBInterfaceName, NULL);
-		char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
-		dbInterfaceName = ccattr;
-		PyMem_Free(PyUnicode_AsWideCharStringRet0);
-		free(ccattr);
+		dbInterfaceName = PyUnicode_AsUTF8AndSize(pyDBInterfaceName, NULL);
 
 		DBInterfaceInfo* pDBInterfaceInfo = g_kbeSrvConfig.dbInterface(dbInterfaceName);
 		if (pDBInterfaceInfo->isPure)
@@ -1088,13 +1084,8 @@ PyObject* Baseapp::__py_createEntityFromDBID(PyObject* self, PyObject* args)
 
 	if(pyEntityType)
 	{
-		wEntityType = PyUnicode_AsWideCharString(pyEntityType, NULL);	
-		if(wEntityType)
-		{
-			entityType = strutil::wchar2char(wEntityType);									
-			PyMem_Free(wEntityType);
-		}
-		else
+		entityType = PyUnicode_AsUTF8AndSize(pyEntityType, NULL);
+		if (!entityType)
 		{
 			SCRIPT_ERROR_CHECK();
 		}
@@ -1106,10 +1097,6 @@ PyObject* Baseapp::__py_createEntityFromDBID(PyObject* self, PyObject* args)
 			(entityType ? entityType : "NULL"));
 
 		PyErr_PrintEx(0);
-
-		if(entityType)
-			free(entityType);
-
 		return NULL;
 	}
 
@@ -1117,7 +1104,6 @@ PyObject* Baseapp::__py_createEntityFromDBID(PyObject* self, PyObject* args)
 	{
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityFromDBID: entityType(%s) error!", entityType);
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
@@ -1125,7 +1111,6 @@ PyObject* Baseapp::__py_createEntityFromDBID(PyObject* self, PyObject* args)
 	{
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityFromDBID: dbid error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
@@ -1135,13 +1120,10 @@ PyObject* Baseapp::__py_createEntityFromDBID(PyObject* self, PyObject* args)
 
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityFromDBID: callback error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
 	Baseapp::getSingleton().createEntityFromDBID(entityType, dbid, pyCallback, dbInterfaceName);
-
-	free(entityType);
 	S_Return;
 }
 
@@ -1313,6 +1295,12 @@ void Baseapp::onCreateEntityFromDBIDCallback(Network::Channel* pChannel, KBEngin
 		static_cast<Entity*>(e)->dbid(dbInterfaceIndex, dbid);
 		static_cast<Entity*>(e)->initializeEntity(pyDict);
 		Py_DECREF(pyDict);
+
+		KBE_SHA1 sha;
+		uint32 digest[5];
+		sha.Input(s.data(), s.length());
+		sha.Result(digest);
+		static_cast<Entity*>(e)->setDirty((uint32*)&digest[0]);
 	}
 	else
 	{
@@ -1363,7 +1351,6 @@ PyObject* Baseapp::__py_createEntityAnywhereFromDBID(PyObject* self, PyObject* a
 {
 	int argCount = (int)PyTuple_Size(args);
 	PyObject* pyCallback = NULL;
-	wchar_t* wEntityType = NULL;
 	char* entityType = NULL;
 	int ret = -1;
 	DBID dbid = 0;
@@ -1406,11 +1393,7 @@ PyObject* Baseapp::__py_createEntityAnywhereFromDBID(PyObject* self, PyObject* a
 
 	if (pyDBInterfaceName)
 	{
-		wchar_t* PyUnicode_AsWideCharStringRet0 = PyUnicode_AsWideCharString(pyDBInterfaceName, NULL);
-		char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
-		dbInterfaceName = ccattr;
-		PyMem_Free(PyUnicode_AsWideCharStringRet0);
-		free(ccattr);
+		dbInterfaceName = PyUnicode_AsUTF8AndSize(pyDBInterfaceName, NULL);
 
 		DBInterfaceInfo* pDBInterfaceInfo = g_kbeSrvConfig.dbInterface(dbInterfaceName);
 		if (pDBInterfaceInfo->isPure)
@@ -1435,13 +1418,8 @@ PyObject* Baseapp::__py_createEntityAnywhereFromDBID(PyObject* self, PyObject* a
 
 	if(pyEntityType)
 	{
-		wEntityType = PyUnicode_AsWideCharString(pyEntityType, NULL);		
-		if(wEntityType)
-		{
-			entityType = strutil::wchar2char(wEntityType);									
-			PyMem_Free(wEntityType);	
-		}
-		else
+		entityType = PyUnicode_AsUTF8AndSize(pyEntityType, NULL);
+		if (!entityType)
 		{
 			SCRIPT_ERROR_CHECK();
 		}
@@ -1453,10 +1431,6 @@ PyObject* Baseapp::__py_createEntityAnywhereFromDBID(PyObject* self, PyObject* a
 			(entityType ? entityType : "NULL"));
 
 		PyErr_PrintEx(0);
-
-		if(entityType)
-			free(entityType);
-
 		return NULL;
 	}
 
@@ -1464,7 +1438,6 @@ PyObject* Baseapp::__py_createEntityAnywhereFromDBID(PyObject* self, PyObject* a
 	{
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityAnywhereFromDBID: entityType error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
@@ -1472,7 +1445,6 @@ PyObject* Baseapp::__py_createEntityAnywhereFromDBID(PyObject* self, PyObject* a
 	{
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityAnywhereFromDBID: dbid error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
@@ -1482,13 +1454,10 @@ PyObject* Baseapp::__py_createEntityAnywhereFromDBID(PyObject* self, PyObject* a
 
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityAnywhereFromDBID: callback error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
 	Baseapp::getSingleton().createEntityAnywhereFromDBID(entityType, dbid, pyCallback, dbInterfaceName);
-
-	free(entityType);
 	S_Return;
 }
 
@@ -1768,6 +1737,12 @@ void Baseapp::createEntityAnywhereFromDBIDOtherBaseapp(Network::Channel* pChanne
 		static_cast<Entity*>(e)->dbid(dbInterfaceIndex, dbid);
 		static_cast<Entity*>(e)->initializeEntity(pyDict);
 		Py_DECREF(pyDict);
+
+		KBE_SHA1 sha;
+		uint32 digest[5];
+		sha.Input(s.data(), s.length());
+		sha.Result(digest);
+		static_cast<Entity*>(e)->setDirty((uint32*)&digest[0]);
 	}
 	else
 	{
@@ -1885,7 +1860,6 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 {
 	int argCount = (int)PyTuple_Size(args);
 	PyObject* pyCallback = NULL, *pyEntityCall = NULL;
-	wchar_t* wEntityType = NULL;
 	char* entityType = NULL;
 	int ret = -1;
 	DBID dbid = 0;
@@ -1928,11 +1902,7 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 
 	if (pyDBInterfaceName)
 	{
-		wchar_t* PyUnicode_AsWideCharStringRet0 = PyUnicode_AsWideCharString(pyDBInterfaceName, NULL);
-		char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
-		dbInterfaceName = ccattr;
-		PyMem_Free(PyUnicode_AsWideCharStringRet0);
-		free(ccattr);
+		dbInterfaceName = PyUnicode_AsUTF8AndSize(pyDBInterfaceName, NULL);
 
 		DBInterfaceInfo* pDBInterfaceInfo = g_kbeSrvConfig.dbInterface(dbInterfaceName);
 		if (pDBInterfaceInfo->isPure)
@@ -1957,13 +1927,8 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 
 	if(pyEntityType)
 	{
-		wEntityType = PyUnicode_AsWideCharString(pyEntityType, NULL);		
-		if(wEntityType)
-		{
-			entityType = strutil::wchar2char(wEntityType);									
-			PyMem_Free(wEntityType);	
-		}
-		else
+		entityType = PyUnicode_AsUTF8AndSize(pyEntityType, NULL);
+		if (!entityType)
 		{
 			SCRIPT_ERROR_CHECK();
 		}
@@ -1975,10 +1940,6 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 			(entityType ? entityType : "NULL"));
 
 		PyErr_PrintEx(0);
-
-		if(entityType)
-			free(entityType);
-
 		return NULL;
 	}
 
@@ -1986,7 +1947,6 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 	{
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityRemotelyFromDBID: entityType error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
@@ -1994,7 +1954,6 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 	{
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityRemotelyFromDBID: dbid error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
@@ -2004,7 +1963,6 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 
 		PyErr_Format(PyExc_AssertionError, "Baseapp::createEntityRemotelyFromDBID: callback error!");
 		PyErr_PrintEx(0);
-		free(entityType);
 		return NULL;
 	}
 
@@ -2028,8 +1986,6 @@ PyObject* Baseapp::__py_createEntityRemotelyFromDBID(PyObject* self, PyObject* a
 	}
 
 	Baseapp::getSingleton().createEntityRemotelyFromDBID(entityType, dbid, baseEntityCall->componentID(), pyCallback, dbInterfaceName);
-
-	free(entityType);
 	S_Return;
 }
 
@@ -2260,6 +2216,12 @@ void Baseapp::createEntityRemotelyFromDBIDOtherBaseapp(Network::Channel* pChanne
 		static_cast<Entity*>(e)->dbid(dbInterfaceIndex, dbid);
 		static_cast<Entity*>(e)->initializeEntity(pyDict);
 		Py_DECREF(pyDict);
+
+		KBE_SHA1 sha;
+		uint32 digest[5];
+		sha.Input(s.data(), s.length());
+		sha.Result(digest);
+		static_cast<Entity*>(e)->setDirty((uint32*)&digest[0]);
 	}
 	else
 	{
@@ -3155,11 +3117,7 @@ PyObject* Baseapp::__py_executeRawDatabaseCommand(PyObject* self, PyObject* args
 	std::string dbInterfaceName = "default";
 	if (pyDBInterfaceName)
 	{
-		wchar_t* PyUnicode_AsWideCharStringRet0 = PyUnicode_AsWideCharString(pyDBInterfaceName, NULL);
-		char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
-		dbInterfaceName = ccattr;
-		PyMem_Free(PyUnicode_AsWideCharStringRet0);
-		free(ccattr);
+		dbInterfaceName = PyUnicode_AsUTF8AndSize(pyDBInterfaceName, NULL);
 		
 		if (!g_kbeSrvConfig.dbInterface(dbInterfaceName))
 		{
@@ -4098,6 +4056,12 @@ void Baseapp::onQueryAccountCBFromDbmgr(Network::Channel* pChannel, KBEngine::Me
 	pEntity->initializeEntity(pyDict);
 	Py_DECREF(pyDict);
 
+	KBE_SHA1 sha;
+	uint32 digest[5];
+	sha.Input(s.data(), s.length());
+	sha.Result(digest);
+	pEntity->setDirty((uint32*)&digest[0]);
+
 	if(pClientChannel != NULL)
 	{
 		// 创建entity的客户端entitycall
@@ -4726,8 +4690,8 @@ void Baseapp::onBackupEntityCellData(Network::Channel* pChannel, KBEngine::Memor
 
 	if(pEntity)
 	{
-		INFO_MSG(fmt::format("Baseapp::onBackupEntityCellData: {}({}), {} bytes.\n",
-			pEntity->scriptName(), entityID, s.length()));
+		//INFO_MSG(fmt::format("Baseapp::onBackupEntityCellData: {}({}), {} bytes.\n",
+		//	pEntity->scriptName(), entityID, s.length()));
 
 		pEntity->onBackupCellData(pChannel, s);
 	}
@@ -5202,11 +5166,7 @@ PyObject* Baseapp::__py_deleteEntityByDBID(PyObject* self, PyObject* args)
 			return NULL;
 		}
 
-		wchar_t* PyUnicode_AsWideCharStringRet0 = PyUnicode_AsWideCharString(pyDBInterfaceName, NULL);
-		char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
-		dbInterfaceName = ccattr;
-		PyMem_Free(PyUnicode_AsWideCharStringRet0);
-		free(ccattr);
+		dbInterfaceName = PyUnicode_AsUTF8AndSize(pyDBInterfaceName, NULL);
 	}
 
 	ScriptDefModule* sm = EntityDef::findScriptModule(entityType);
@@ -5379,11 +5339,7 @@ PyObject* Baseapp::__py_lookUpEntityByDBID(PyObject* self, PyObject* args)
 			return NULL;
 		}
 
-		wchar_t* PyUnicode_AsWideCharStringRet0 = PyUnicode_AsWideCharString(pyDBInterfaceName, NULL);
-		char* ccattr = strutil::wchar2char(PyUnicode_AsWideCharStringRet0);
-		dbInterfaceName = ccattr;
-		PyMem_Free(PyUnicode_AsWideCharStringRet0);
-		free(ccattr);
+		dbInterfaceName = PyUnicode_AsUTF8AndSize(pyDBInterfaceName, NULL);
 	}
 	else
 	{
@@ -5543,12 +5499,7 @@ void Baseapp::reqAccountBindEmail(Network::Channel* pChannel, ENTITY_ID entityID
 		return;
 	}
 
-	wchar_t* wname = PyUnicode_AsWideCharString(py__ACCOUNT_NAME__, NULL);					
-	char* name = strutil::wchar2char(wname);									
-	PyMem_Free(wname);
-	
-	std::string accountName = name;
-	free(name);
+	std::string accountName = PyUnicode_AsUTF8AndSize(py__ACCOUNT_NAME__, NULL);
 
 	Py_DECREF(py__ACCOUNT_NAME__);
 
@@ -5689,12 +5640,7 @@ void Baseapp::reqAccountNewPassword(Network::Channel* pChannel, ENTITY_ID entity
 		return;
 	}
 
-	wchar_t* wname = PyUnicode_AsWideCharString(py__ACCOUNT_NAME__, NULL);					
-	char* name = strutil::wchar2char(wname);									
-	PyMem_Free(wname);
-	
-	std::string accountName = name;
-	free(name);
+	std::string accountName = PyUnicode_AsUTF8AndSize(py__ACCOUNT_NAME__, NULL);
 
 	Py_DECREF(py__ACCOUNT_NAME__);
 
