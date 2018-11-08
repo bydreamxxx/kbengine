@@ -41,6 +41,7 @@ all install clean full:
 	cd common && $(MAKE) $@
 	cd db_redis && $(MAKE) $@
 	cd db_mysql && $(MAKE) $@
+	cd db_mongodb && $(MAKE) $@
 	cd db_interface && $(MAKE) $@
 	cd entitydef && $(MAKE) $@
 	cd math && $(MAKE) $@
