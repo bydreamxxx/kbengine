@@ -45,6 +45,11 @@ public:
 		static void processInEvents() {}
 		static void processOutEvents() {}
 
+		static void pause();
+		static void resume();
+
+		static void removeFiredEvent(void* objPtr, const FString& eventName = TEXT(""), const FString& funcName = TEXT(""));
+
 protected:
 	struct EventObj
 	{
@@ -53,7 +58,16 @@ protected:
 		void* objPtr;
 	};
 
+	struct FiredEvent
+	{
+		EventObj evt;
+		FString eventName;
+		UKBEventData* args;
+	};
+
 	static TMap<FString, TArray<EventObj>> events_;
+	static TArray<FiredEvent*> firedEvents_;
+	static bool isPause_;
 };
 
 
@@ -66,13 +80,20 @@ protected:
 	KBEvent::registerEvent(EVENT_NAME, FUNC_NAME, EVENT_FUNC, (void*)this);
 
 // 注销这个对象某个事件
-#define KBENGINE_DEREGISTER_EVENT(EVENT_NAME) KBEvent::deregister((void*)this, EVENT_NAME, FUNC_NAME);
+#define KBENGINE_DEREGISTER_EVENT_BY_FUNCNAME(EVENT_NAME, FUNC_NAME) KBEvent::deregister((void*)this, EVENT_NAME, FUNC_NAME);
+#define KBENGINE_DEREGISTER_EVENT(EVENT_NAME) KBEvent::deregister((void*)this, EVENT_NAME, TEXT(""));
 
 // 注销这个对象所有的事件
 #define KBENGINE_DEREGISTER_ALL_EVENT()	KBEvent::deregister((void*)this);
 
 // fire event
 #define KBENGINE_EVENT_FIRE(EVENT_NAME, EVENT_DATA) KBEvent::fire(EVENT_NAME, EVENT_DATA);
+
+// 暂停事件
+#define KBENGINE_EVENT_PAUSE() KBEvent::pause();
+
+// 恢复事件
+#define KBENGINE_EVENT_RESUME() KBEvent::resume();
 
 UCLASS(Blueprintable, BlueprintType)
 class KBENGINEPLUGINS_API UKBEventData_Baseapp_importClientMessages : public UKBEventData

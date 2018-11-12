@@ -62,9 +62,11 @@ KBEngine.Class.extend = function(props) {
 	return newClass;
 };
 
-// 如果ArrayBuffer没有transfer()的方法, 则为ArrayBuffer添加transfer()方法
-//该方法回一个新的ArrayBuffer， 其内容取自oldBuffer的数据，并且根据 newByteLength 的大小来对数据进行截取
-//参考:https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transfer
+/*
+	如果ArrayBuffer没有transfer()的方法, 则为ArrayBuffer添加transfer()方法
+	该方法回一个新的ArrayBuffer， 其内容取自oldBuffer的数据，并且根据 newByteLength 的大小来对数据进行截取
+	参考:https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transfer
+ */
 if(!ArrayBuffer.transfer) {
     ArrayBuffer.transfer = function (source, length) {
         source = Object(source);
@@ -285,8 +287,9 @@ KBEngine.EventInfo = function(classinst, callbackfn)
 	this.classinst = classinst;
 }
 
-KBEngine.EventObj = function(evtInfo, ars)
+KBEngine.EventObj = function(evtName, evtInfo, ars)
 {
+	this.evtName = evtName;
 	this.evtInfo = evtInfo;
 	this.ars = ars;
 }
@@ -316,29 +319,69 @@ KBEngine.Event = function()
 		var info = new KBEngine.EventInfo(classinst, callbackfn);
 		evtlst.push(info);
 	}
-	
-	this.deregister = function(evtName, classinst)
+
+	this.deregisterAll = function(classinst)
 	{
 		for(var itemkey in this._events)
 		{
-			var evtlst = this._events[itemkey];
-			while(true)
+			this.deregister(itemkey, classinst);
+		}
+	}
+	
+	this.deregister = function(evtName, classinst)
+	{
+		var evtlst = this._events[evtName];
+
+		if(evtlst == undefined)
+		{
+			return;
+		}
+
+		while(true)
+		{
+			var found = false;
+			for(var i=0; i<evtlst.length; i++)
 			{
-				var found = false;
-				for(var i=0; i<evtlst.length; i++)
+				var info = evtlst[i];
+				if(info.classinst == classinst)
 				{
-					var info = evtlst[i];
-					if(info.classinst == classinst)
-					{
-						evtlst.splice(i, 1);
-						found = true;
-						break;
-					}
-				}
-				
-				if(!found)
+					evtlst.splice(i, 1);
+					found = true;
 					break;
+				}
 			}
+			
+			if(!found)
+				break;
+		}
+
+		this.removeFiredEvent(evtName, classinst);
+	}
+
+	this.removeAllFiredEvent = function(classinst)
+	{
+		this.removeFiredEvent("", classinst);
+	}
+
+	this.removeFiredEvent = function(evtName, classinst)
+	{
+		var fireEvents = this._fireEvents;
+		while(true)
+		{
+			var found = false;
+			for(var i=0; i<fireEvents.length; i++)
+			{
+				var evt = fireEvents[i];
+				if((evtName == "" || evt.evtName == evtName) && evt.evtInfo.classinst == classinst)
+				{
+					fireEvents.splice(i, 1);
+					found = true;
+					break;
+				}
+			}
+
+			if(!found)
+				break;
 		}
 	}
 	
@@ -379,7 +422,7 @@ KBEngine.Event = function()
 			}
 			else
 			{
-				var eobj = new KBEngine.EventObj(info, ars);
+				var eobj = new KBEngine.EventObj(evtName, info, ars);
 				this._fireEvents.push(eobj);
 			}
 		}
@@ -2973,7 +3016,8 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 			}
 			else
 			{
-				app.mergeFragmentMessage(stream);
+				if(app.mergeFragmentMessage(stream))
+					break;
 			}
 		}
 	}  
@@ -2999,12 +3043,12 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		if(!(stream instanceof KBEngine.MemoryStream))
 		{
 			KBEngine.ERROR_MSG("mergeFragmentMessage(): stream must be MemoryStream instances!");
-			return;
+			return false;
 		}
 
 		var opsize = stream.length();
 		if(opsize == 0)
-			return 0;
+			return false;
 
 		var app = KBEngine.app;
 		var fragmentStream = app.fragmentStream;
@@ -3040,12 +3084,14 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 			stream.rpos += app.fragmentDatasRemain;
 			app.fragmentDatasFlag = FragmentDataTypes.FRAGMENT_DATA_UNKNOW;
 			app.fragmentDatasRemain = 0;
+			return false;
 		}
 		else
 		{
 			fragmentStream.append(stream, stream.rpos, opsize);
 			app.fragmentDatasRemain -= opsize;
 			stream.done();
+			return true;
 		}
 	}
 
@@ -3326,7 +3372,7 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 	{
 		KBEngine.app.createDataTypeFromStreams(stream, true);
 		
-		while(!stream.readEOF())
+		while(stream.length() > 0)
 		{
 			var scriptmodule_name = stream.readString();
 			var scriptUtype = stream.readUint16();
