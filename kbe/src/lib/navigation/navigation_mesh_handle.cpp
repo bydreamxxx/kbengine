@@ -420,11 +420,12 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 
 	float startY = position.y + startDeviationY;
 	float endY = position.y + endDeviationY;
-	const float extents[3] = { 2.f, 4.f, 2.f };
+	float rangeY = fabs(startY - endY) / 2.0;
+	const float extents[3] = { 2.f, rangeY, 2.f };
 
 	float center[3];
 	center[0] = position.x;
-	center[1] = position.y;
+	center[1] = startY > endY ? (endY + rangeY) : (startY + rangeY);
 	center[2] = position.z;
 
 	dtQueryFilter filter;
@@ -451,7 +452,7 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 			std::vector<Position3D>::iterator iter = hitPointVec.begin();
 			for (; iter != hitPointVec.end(); iter++)
 			{
-				if ((h - iter->y) < 1e-2)
+				if (fabs(h - iter->y) < 1e-2)
 				{
 					find = true;
 				}
@@ -835,11 +836,12 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 
 	float startY = (position.y + startDeviationY) * UNIT_CONVERSION;
 	float endY = (position.y + endDeviationY) * UNIT_CONVERSION;
-	const float extents[3] = { 200.f, 400.f, 200.f };
+	float rangeY = fabs(startY - endY) / 2.0;
+	const float extents[3] = { 200.f, rangeY, 200.f };
 
 	float center[3];
 	center[0] = position.z * UNIT_CONVERSION * -1;
-	center[1] = position.y * UNIT_CONVERSION;
+	center[1] = startY > endY ? (endY + rangeY) : (startY + rangeY);
 	center[2] = position.x * UNIT_CONVERSION * -1;
 
 	dtQueryFilter filter;
@@ -866,7 +868,7 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 			std::vector<Position3D>::iterator iter = hitPointVec.begin();
 			for (; iter != hitPointVec.end(); iter++)
 			{
-				if ((h / UNIT_CONVERSION - iter->y) < 1e-2) 
+				if (fabs(h / UNIT_CONVERSION - iter->y) < 1e-2) 
 				{
 					find = true;
 				}
