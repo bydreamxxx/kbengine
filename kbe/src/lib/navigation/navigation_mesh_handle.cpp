@@ -387,7 +387,15 @@ int NavMeshHandle::raycast(int layer, uint16 flags, const Position3D& start, con
 	if (t > 1)
 	{
 		// no hit
-		return NAV_ERROR;
+		hitPoint[0] = epos[0];
+		hitPoint[1] = epos[1];
+		hitPoint[2] = epos[2];
+		if (npolys)
+		{
+			float h = 0;
+			navmeshQuery->getPolyHeight(polys[npolys - 1], hitPoint, &h);
+			hitPoint[1] = h;
+		}
 	}
 	else
 	{
@@ -803,7 +811,15 @@ int NavMeshHandle::raycast(int layer, uint16 flags, const Position3D& start, con
 	if (t > 1)
 	{
 		// no hit
-		return NAV_ERROR;
+		hitPoint[0] = epos[0];
+		hitPoint[1] = epos[1];
+		hitPoint[2] = epos[2];
+		if (npolys)
+		{
+			float h = 0;
+			navmeshQuery->getPolyHeight(polys[npolys - 1], hitPoint, &h);
+			hitPoint[1] = h;
+		}
 	}
 	else
 	{
