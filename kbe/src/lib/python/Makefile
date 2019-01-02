@@ -5,7 +5,7 @@ CONFIG_ARGS =
 
 config.status:
 	@chmod -R 755 .
-	./configure
+	./configure --with-openssl=$(KBE_ROOT)/kbe/src/lib/dependencies/openssl
 	@make
 
 .PHONY: clean
