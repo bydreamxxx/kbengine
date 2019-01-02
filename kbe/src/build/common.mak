@@ -148,10 +148,7 @@ KBE_INCLUDES += -I $(KBE_ROOT)/kbe/src/lib/dependencies/curl/include
 # CPPFLAGS += -save-temps
 
 LDLIBS += $(addprefix -l, $(MY_LIBS))
-LDLIBS += -lm
-LDLIBS += -lfmt
 LDLIBS += -lcurl
-LDLIBS += -lz
 
 ifndef DISABLE_WATCHERS
 CPPFLAGS += -DENABLE_WATCHERS
@@ -249,13 +246,6 @@ LDLIBS += -ltmxparser
 CPPFLAGS += -DUSE_TMXPARSER
 endif
 
-ZLIB_DIR = $(KBE_ROOT)/kbe/src/lib/dependencies/zlib
-KBE_INCLUDES += -I$(ZLIB_DIR)
-ifeq ($(USE_ZLIB),1)
-LDLIBS += -lzlib
-CPPFLAGS += -DUSE_ZLIB
-endif
-
 JEMALLOC_DIR = $(KBE_ROOT)/kbe/src/lib/dependencies/jemalloc
 KBE_INCLUDES += -I$(JEMALLOC_DIR)/include
 #ifeq ($(USE_JEMALLOC),1)
@@ -264,6 +254,9 @@ CPPFLAGS += -DUSE_JEMALLOC
 #endif
 
 LDLIBS += -ltinyxml
+LDLIBS += -lm
+LDLIBS += -lfmt
+LDLIBS += -lz
 
 ifneq (,$(findstring 64,$(KBE_CONFIG)))
 	x86_64=1

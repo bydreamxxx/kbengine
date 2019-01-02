@@ -3783,7 +3783,7 @@ void Baseapp::loginBaseapp(Network::Channel* pChannel,
 		Py_INCREF(pEntity);
 
 		// 通知脚本异常登录请求有脚本决定是否允许这个通道强制登录
-		int32 ret = pEntity->onLogOnAttempt(pChannel->addr().ipAsString(),
+		int32 ret = pEntity->onLogOnAttempt(pChannel->addr().ipAsString(), 
 			ntohs(pChannel->addr().port), password.c_str());
 
 		if (pEntity->isDestroyed())
@@ -3794,25 +3794,25 @@ void Baseapp::loginBaseapp(Network::Channel* pChannel,
 			return;
 		}
 
-		switch (ret)
+		switch(ret)
 		{
 		case LOG_ON_ACCEPT:
-			if (pEntity->clientEntityCall() != NULL)
+			if(pEntity->clientEntityCall() != NULL)
 			{
 				// 通告在别处登录
 				Network::Channel* pOldClientChannel = pEntity->clientEntityCall()->getChannel();
-				if (pOldClientChannel != NULL)
+				if(pOldClientChannel != NULL)
 				{
 					INFO_MSG(fmt::format("Baseapp::loginBaseapp: script LOG_ON_ACCEPT. oldClientChannel={}\n",
 						pOldClientChannel->c_str()));
-
+					
 					kickChannel(pOldClientChannel, SERVER_ERR_ACCOUNT_LOGIN_ANOTHER);
 				}
 				else
 				{
 					INFO_MSG("Baseapp::loginBaseapp: script LOG_ON_ACCEPT.\n");
 				}
-
+				
 				pEntity->clientEntityCall()->addr(pChannel->addr());
 				pEntity->addr(pChannel->addr());
 				pEntity->setClientType(ptinfos->ctype);
@@ -3823,7 +3823,7 @@ void Baseapp::loginBaseapp(Network::Channel* pChannel,
 			else
 			{
 				// 创建entity的客户端entitycall
-				EntityCall* entityClientEntityCall = new EntityCall(pEntity->pScriptModule(),
+				EntityCall* entityClientEntityCall = new EntityCall(pEntity->pScriptModule(), 
 					&pChannel->addr(), 0, pEntity->id(), ENTITYCALL_TYPE_CLIENT);
 
 				pEntity->clientEntityCall(entityClientEntityCall);
@@ -4088,6 +4088,12 @@ void Baseapp::onQueryAccountCBFromDbmgr(Network::Channel* pChannel, KBEngine::Me
 		accountName, pEntity->rndUUID(), pEntity->id(), flags, deadline));
 
 	SAFE_RELEASE(ptinfos);
+
+	if (!pClientChannel)
+	{
+		pEntity->onClientDeath();
+	}
+
 	Py_DECREF(pEntity);
 }
 
