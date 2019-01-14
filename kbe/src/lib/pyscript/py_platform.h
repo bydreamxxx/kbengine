@@ -18,31 +18,32 @@ You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KBE_SCRIPT_COPY_H
-#define KBE_SCRIPT_COPY_H
+#ifndef KBE_PY_PLATFORM_H
+#define KBE_PY_PLATFORM_H
 
 #include "common/common.h"
 #include "scriptobject.h"
 
 namespace KBEngine{ namespace script{
 
-class Copy
+class PyPlatform
 {						
 public:	
-	/** 代理 copy.copy */
-	static PyObject* copy(PyObject* pyobj);
-	static PyObject* deepcopy(PyObject* pyobj);
-
-	/** 初始化copy */
 	static bool initialize(void);
 	static void finalise(void);
 
+	static bool rmdir(const std::string& path);
+	static bool rmdir(const std::wstring& path);
+
+	static bool pathExists(const std::string& path);
+	static bool pathExists(const std::wstring& path);
+
 private:
-	static PyObject* copyMethod_;
-	static PyObject* deepcopyMethod_;
-	static bool	isInit;										// 是否已经被初始化
+	static bool	isInit;
+	
 } ;
 
 }
 }
-#endif // KBE_SCRIPT_COPY_H
+
+#endif // KBE_PY_PLATFORM_H

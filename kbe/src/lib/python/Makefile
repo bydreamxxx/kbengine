@@ -6,6 +6,9 @@ CONFIG_ARGS = --with-openssl=$(KBE_ROOT)/kbe/src/lib/dependencies/openssl
 ifeq ($(pythonbuild), release)
 	CONFIG_ARGS += --enable-optimizations 
 else
+ifneq (,$(findstring 64,$(KBE_CONFIG)))
+	CONFIG_ARGS += --enable-optimizations 
+endif
 endif
 
 config.status:
@@ -22,14 +25,12 @@ clean::
 # KBE modifys:
 # 1: PCbuild vcxprojs to KBE-vcxproj
 
-# 2: Modules/zlibmodule.c added 
-#	#if defined( __WIN32__ ) || defined( WIN32 ) || defined( _WIN32 )
-#	#define ZLIB_WINAPI
-#	#endif
-
-# 3: configure
+# 2: configure
 # OPENSSL_LDFLAGS="-L${KBE_ROOT}/kbe/src/libs"
 
-# 4:Modules/Setup.dist
+# 3:Modules/Setup.dist
 
-# 5:DEFS="BASEMODLIBS=$BASELIBS\\\\$NL$DEFS"
+# 4: setup.py
+#       system_lib_dirs = ['/lib64', '/usr/lib64', '/lib', '/usr/lib', '$(KBE_ROOT)/kbe/src/libs']
+#       system_include_dirs = ['/usr/include', '$(KBE_ROOT)/kbe/src/lib/dependencies/zlib']
+

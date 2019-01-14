@@ -18,31 +18,28 @@ You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KBE_SCRIPT_COPY_H
-#define KBE_SCRIPT_COPY_H
+#ifndef KBE_SCRIPT_COMPRESSION_H
+#define KBE_SCRIPT_COMPRESSION_H
 
 #include "common/common.h"
 #include "scriptobject.h"
 
 namespace KBEngine{ namespace script{
 
-class Copy
+class PyCompression
 {						
 public:	
-	/** 代理 copy.copy */
-	static PyObject* copy(PyObject* pyobj);
-	static PyObject* deepcopy(PyObject* pyobj);
+	static bool zipCompressDirectory(const std::string& sourceDir, const std::string& outfile);
+	static bool tarCompressDirectory(const std::string& sourceDir, const std::string& outfile);
 
-	/** 初始化copy */
+	/** 初始化 */
 	static bool initialize(void);
 	static void finalise(void);
 
 private:
-	static PyObject* copyMethod_;
-	static PyObject* deepcopyMethod_;
 	static bool	isInit;										// 是否已经被初始化
 } ;
 
 }
 }
-#endif // KBE_SCRIPT_COPY_H
+#endif // KBE_SCRIPT_COMPRESSION_H
