@@ -4047,32 +4047,6 @@ void Baseapp::onQueryAccountCBFromDbmgr(Network::Channel* pChannel, KBEngine::Me
 	}
 
 	Network::Channel* pClientChannel = this->networkInterface().findChannel(ptinfos->addr);
-	if (pClientChannel == NULL)
-	{
-		//擦除entityLog
-		ScriptDefModule* pModule = EntityDef::findScriptModule(g_serverConfig.getDBMgr().dbAccountEntityScriptType);
-
-		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
-		(*pBundle).newMessage(DbmgrInterface::onEntityOffline);
-		(*pBundle) << dbid;
-		(*pBundle) << pModule->getUType();
-		(*pBundle) << dbInterfaceIndex;
-
-		Network::Channel* pChannel = Components::getSingleton().getDbmgrChannel();
-		if (pChannel == NULL)
-		{
-			ERROR_MSG("Baseapp::charge: not found dbmgr!\n");
-			Network::Bundle::reclaimPoolObject(pBundle);
-			return;
-		}
-		pChannel->send(pBundle);
-
-		INFO_MSG(fmt::format("Baseapp::onQueryAccountCBFromDbmgr: Client channel({}) is null, user={}.\n",
-			ptinfos->addr, accountName.c_str()));
-
-		s.done();
-		return;
-	}
 
 	if (!success)
 	{
@@ -4124,24 +4098,27 @@ void Baseapp::onQueryAccountCBFromDbmgr(Network::Channel* pChannel, KBEngine::Me
 	pEntity->initializeEntity(pyDict);
 	Py_DECREF(pyDict);
 
-	// 创建entity的客户端entitycall
-	EntityCall* entityClientEntityCall = new EntityCall(pEntity->pScriptModule(),
-		&pClientChannel->addr(), 0, pEntity->id(), ENTITYCALL_TYPE_CLIENT);
+	if(pClientChannel != NULL)
+	{
+		// 创建entity的客户端entitycall
+		EntityCall* entityClientEntityCall = new EntityCall(pEntity->pScriptModule(), 
+			&pClientChannel->addr(), 0, pEntity->id(), ENTITYCALL_TYPE_CLIENT);
 
-	pEntity->clientEntityCall(entityClientEntityCall);
-	pEntity->addr(pClientChannel->addr());
+		pEntity->clientEntityCall(entityClientEntityCall);
+		pEntity->addr(pClientChannel->addr());
 
-	createClientProxies(pEntity);
+		createClientProxies(pEntity);
+		
+		/*
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		(*pBundle).newMessage(DbmgrInterface::onAccountOnline);
 
-	/*
-	Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
-	(*pBundle).newMessage(DbmgrInterface::onAccountOnline);
+		DbmgrInterface::onAccountOnlineArgs3::staticAddToBundle((*pBundle), accountName, 
+			componentID_, pEntity->id());
 
-	DbmgrInterface::onAccountOnlineArgs3::staticAddToBundle((*pBundle), accountName,
-	componentID_, pEntity->id());
-
-	pChannel->send(pBundle);
-	*/
+		pChannel->send(pBundle);
+		*/
+	}
 
 	INFO_MSG(fmt::format("Baseapp::onQueryAccountCBFromDbmgr: user={}, uuid={}, entityID={}, flags={}, deadline={}.\n",
 		accountName, pEntity->rndUUID(), pEntity->id(), flags, deadline));
