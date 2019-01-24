@@ -229,20 +229,21 @@ void Proxy::onClientDeath(void)
 	{
 		ERROR_MSG(fmt::format("{}::onClientDeath: {}, channel is null!\n", 
 			this->scriptName(), this->id()));
+	}
+	else 
+	{
+		SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 
-		return;
+		DEBUG_MSG(fmt::format("{}::onClientDeath: {}.\n",
+			this->scriptName(), this->id()));
+
+		Py_DECREF(clientEntityCall());
+		clientEntityCall(NULL);
+		addr(Network::Address::NONE);
+
+		clientEnabled_ = false;
 	}
 
-	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
-
-	DEBUG_MSG(fmt::format("{}::onClientDeath: {}.\n", 
-		this->scriptName(), this->id()));
-
-	Py_DECREF(clientEntityCall());
-	clientEntityCall(NULL);
-	addr(Network::Address::NONE);
-
-	clientEnabled_ = false;
 	SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onClientDeath"), false);
 }
 
