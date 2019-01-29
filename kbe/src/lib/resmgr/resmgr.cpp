@@ -510,35 +510,63 @@ std::string Resmgr::getPyUserScriptsPath()
 
 	if(path == "")
 	{
-		std::string entities_xml = "entities.xml";
-		path = matchRes(entities_xml);
-
-		if(path == entities_xml)
-		{
-			entities_xml = "scripts/" + entities_xml;
-			path = matchRes(entities_xml);
-			entities_xml = "entities.xml";
-		}
-
-
-		std::vector<std::string> tmpvec;
-		KBEngine::strutil::kbe_splits(path, entities_xml, tmpvec);
-		if(tmpvec.size() > 1)
-		{
-			path = tmpvec[0];
-		}
-		else
-		{
-			if(respaths_.size() > 2)
-				path = respaths_[2];
-			else if(respaths_.size() > 1)
-				path = respaths_[1];
-			else if(respaths_.size() > 0)
-				path = respaths_[0];
-		}
+		path = getPyUserResPath();
+		strutil::kbe_replace(path, "/res", "/scripts");
+		strutil::kbe_replace(path, "\\res", "/scripts");
 	}
 
 	return path;
+}
+
+//-------------------------------------------------------------------------------------
+std::string Resmgr::getPyUserComponentScriptsPath(COMPONENT_TYPE componentType)
+{
+	if (componentType == UNKNOWN_COMPONENT_TYPE)
+	{
+		static std::string path = "";
+
+		if (path == "")
+		{
+			path = getPyUserScriptsPath();
+
+			if (g_componentType == CELLAPP_TYPE)
+				path += "cell/";
+			else if (g_componentType == BASEAPP_TYPE)
+				path += "base/";
+			else if (g_componentType == BOTS_TYPE)
+				path += "bots/";
+			else if (g_componentType == CLIENT_TYPE)
+				path += "client/";
+			else
+				KBE_ASSERT(false);
+		}
+
+		return path;
+	}
+	else
+	{
+		std::string path = "";
+
+		if (path == "")
+		{
+			path = getPyUserScriptsPath();
+
+			if (componentType == CELLAPP_TYPE)
+				path += "cell/";
+			else if (componentType == BASEAPP_TYPE)
+				path += "base/";
+			else if (componentType == BOTS_TYPE)
+				path += "bots/";
+			else if (componentType == CLIENT_TYPE)
+				path += "client/";
+			else
+				KBE_ASSERT(false);
+		}
+
+		return path;
+	}
+
+	return "";
 }
 
 //-------------------------------------------------------------------------------------
