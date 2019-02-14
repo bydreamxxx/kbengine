@@ -194,7 +194,7 @@ public:
 	void resetViewEntities();
 
 	/** 取得相对位置 */
-	void relativePosition(Position3D& out, Entity* otherEntity);
+	void relativePosition(Position3D& out, Entity* otherEntity, bool isOptimized = true );
 
 private:
 	/**
