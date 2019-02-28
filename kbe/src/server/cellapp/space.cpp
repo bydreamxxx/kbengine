@@ -72,7 +72,7 @@ Space::~Space()
 	
 	this->coordinateSystem_.releaseNodes();
 	
-	pNavHandle_.clear();
+	//pNavHandle_.clear();
 
 	SAFE_RELEASE(pCell_);	
 
