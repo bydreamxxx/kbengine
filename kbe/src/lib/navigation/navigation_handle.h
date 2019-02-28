@@ -30,7 +30,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 namespace KBEngine{
 
 
-class NavigationHandle : public RefCountable
+class NavigationHandle
 {
 public:
 	static const int NAV_ERROR = -1;
@@ -71,7 +71,8 @@ public:
 	std::string resPath;
 };
 
-typedef SmartPointer<NavigationHandle> NavigationHandlePtr;
+//typedef SmartPointer<NavigationHandle> NavigationHandlePtr;
+typedef NavigationHandle* NavigationHandlePtr;
 
 }
 #endif // KBE_NAVIGATEHANDLE_H

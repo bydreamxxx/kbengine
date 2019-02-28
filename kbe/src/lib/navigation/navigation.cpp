@@ -46,6 +46,13 @@ Navigation::~Navigation()
 void Navigation::finalise()
 {
 	KBEngine::thread::ThreadGuard tg(&mutex_);
+	
+	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.begin();
+	for (; iter != navhandles_.end(); iter++)
+	{
+		SAFE_RELEASE(iter->second);
+	}
+	
 	navhandles_.clear();
 }
 
@@ -56,7 +63,8 @@ bool Navigation::removeNavigation(std::string resPath)
 	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(resPath);
 	if(navhandles_.find(resPath) != navhandles_.end())
 	{
-		iter->second->decRef();
+		//iter->second->decRef();
+		SAFE_RELEASE(iter->second);
 		navhandles_.erase(iter);
 
 		DEBUG_MSG(fmt::format("Navigation::removeNavigation: ({}) is destroyed!\n", resPath));
@@ -83,7 +91,7 @@ NavigationHandlePtr Navigation::findNavigation(std::string resPath)
 		else if (iter->second->type() == NavigationHandle::NAV_TILE)
 		{
 			// 由于tile需要做碰撞， 每一个space都需要一份新的数据， 我们这里采用拷贝的方式来增加构造速度
-			NavTileHandle* pNavTileHandle = new NavTileHandle(*(KBEngine::NavTileHandle*)iter->second.get());
+			NavTileHandle* pNavTileHandle = new NavTileHandle(*(KBEngine::NavTileHandle*)iter->second);	// 注意，NAV_TILE寻路方式使用findNavigation需要自己释放内存
 			DEBUG_MSG(fmt::format("Navigation::findNavigation: copy NavTileHandle({:p})!\n", (void*)pNavTileHandle));
 			return NavigationHandlePtr(pNavTileHandle);
 		}
