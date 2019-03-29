@@ -458,6 +458,11 @@
 			<networkprofile> false </networkprofile>
 		</profiles>
 		
+		<!-- listen监听队列最大值
+		    (listen: Maximum listen queue)
+		 -->
+		<SOMAXCONN> 128 </SOMAXCONN>
+		
 		<!-- 负载平衡滤波器指标值
 			（Load balancing Smoothing Bias value） 
 		-->
