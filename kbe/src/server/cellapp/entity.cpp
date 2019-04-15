@@ -3591,6 +3591,7 @@ void Entity::teleportRefEntityCall(EntityCall* nearbyMBRef, Position3D& pos, Dir
 		PyErr_PrintEx(0);
 
 		onTeleportFailure();
+		return;
 	}
 	
 	if (!nearbyMBRef->isCellReal())
