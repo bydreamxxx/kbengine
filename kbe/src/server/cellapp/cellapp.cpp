@@ -1140,7 +1140,18 @@ void Cellapp::_onCreateCellEntityFromBaseapp(std::string& entityType, ENTITY_ID 
 	// base部分在向这个space创建entity
 	if(pCreateToEntity == NULL)
 	{
-		ERROR_MSG("Cellapp::_onCreateCellEntityFromBaseapp: not fount spaceEntity. may have been destroyed!\n");
+		ERROR_MSG("Cellapp::_onCreateCellEntityFromBaseapp: not fount createToEntity. may have been destroyed!\n");
+
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		pBundle->newMessage(BaseappInterface::onCreateCellFailure);
+		BaseappInterface::onCreateCellFailureArgs1::staticAddToBundle(*pBundle, entityID);
+		cinfos->pChannel->send(pBundle);
+		return;
+	}
+
+	if (!pCreateToEntity->isReal())
+	{
+		ERROR_MSG("Cellapp::_onCreateCellEntityFromBaseapp: createToEntity is ghost!\n");
 
 		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 		pBundle->newMessage(BaseappInterface::onCreateCellFailure);
