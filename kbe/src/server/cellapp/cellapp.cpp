@@ -196,6 +196,7 @@ bool Cellapp::installPyModules()
 	APPEND_SCRIPT_MODULE_METHOD(getScript().getModule(),		address,						__py_address,											METH_VARARGS,			0);
 	APPEND_SCRIPT_MODULE_METHOD(getScript().getModule(),		raycast,						__py_raycast,											METH_VARARGS,			0);
 	APPEND_SCRIPT_MODULE_METHOD(getScript().getModule(),		collideVertical,				__py_collideVertical,									METH_VARARGS,			0);
+	APPEND_SCRIPT_MODULE_METHOD(getScript().getModule(),		navmeshRaycast,					__py_navmeshRaycast,									METH_VARARGS,			0);
 	APPEND_SCRIPT_MODULE_METHOD(getScript().getModule(),		loadGeometryMapping,			__py_LoadGeometryMapping,			METH_VARARGS,			0);
 	APPEND_SCRIPT_MODULE_METHOD(getScript().getModule(),		navigatePathPoints,				__py_navigatePathPoints,			METH_VARARGS,			0);
 	APPEND_SCRIPT_MODULE_METHOD(getScript().getModule(), 		setAppFlags,					__py_setFlags,											METH_VARARGS,			0);
@@ -2161,6 +2162,21 @@ int Cellapp::collideVertical(SPACE_ID spaceID, int layer, uint16 flags, const Po
 	return pSpace->pNavHandle()->collideVertical(layer, flags, position, startDeviationY, endDeviationY, hitPos);
 }
 
+int Cellapp::navmeshRaycast(std::string path, int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPos)
+{
+	NavigationHandlePtr pNavHandle = Navigation::getSingleton().findNavigation(path);
+
+	if (!pNavHandle)
+	{
+		WARNING_MSG(fmt::format("Cellapp::navmeshRaycast():  path({}), not found navhandle!\n",
+			path));
+
+		return false;
+	}
+
+	return pNavHandle->raycast(layer, flags, start, end, hitPos);
+}
+
 bool Cellapp::navigatePathPoints(std::vector<Position3D>& outPaths, std::string path, Position3D& position, Position3D& destination, float maxSearchDistance, int8 layer, uint16 flags)
 {
 	NavigationHandlePtr pNavHandle = Navigation::getSingleton().findNavigation(path);
@@ -2372,6 +2388,106 @@ PyObject* Cellapp::__py_collideVertical(PyObject* self, PyObject* args)
 
 	script::ScriptVector3::convertPyObjectToVector3(position, pyPos);
 	if (Cellapp::getSingleton().collideVertical(spaceID, layer, flags, position, startDeviationY, endDeviationY, hitPosVec) <= 0)
+	{
+		S_Return;
+	}
+
+	int idx = 0;
+	PyObject* pyHitpos = PyTuple_New(hitPosVec.size());
+	for (std::vector<Position3D>::iterator iter = hitPosVec.begin(); iter != hitPosVec.end(); ++iter)
+	{
+		PyObject* pyHitposItem = PyTuple_New(3);
+		PyTuple_SetItem(pyHitposItem, 0, ::PyFloat_FromDouble((*iter).x));
+		PyTuple_SetItem(pyHitposItem, 1, ::PyFloat_FromDouble((*iter).y));
+		PyTuple_SetItem(pyHitposItem, 2, ::PyFloat_FromDouble((*iter).z));
+
+		PyTuple_SetItem(pyHitpos, idx++, pyHitposItem);
+	}
+
+	return pyHitpos;
+}
+
+PyObject* Cellapp::__py_navmeshRaycast(PyObject* self, PyObject* args)
+{
+	uint16 currargsSize = (uint16)PyTuple_Size(args);
+
+	int layer = 0;
+	uint16 flags = 0xffff;
+
+	char* path = NULL;
+	PyObject* pyStartPos = NULL;
+	PyObject* pyEndPos = NULL;
+
+	if (currargsSize == 3)
+	{
+		if (PyArg_ParseTuple(args, "sOO", &path, &pyStartPos, &pyEndPos) == -1)
+		{
+			PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args is error!");
+			PyErr_PrintEx(0);
+			return 0;
+		}
+	}
+	else if (currargsSize == 4)
+	{
+		if (PyArg_ParseTuple(args, "siOO", &path, &layer, &pyStartPos, &pyEndPos) == -1)
+		{
+			PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args is error!");
+			PyErr_PrintEx(0);
+			return 0;
+		}
+	}
+	else if (currargsSize == 5)
+	{
+		if (PyArg_ParseTuple(args, "siHOO", &path, &layer, &flags, &pyStartPos, &pyEndPos) == -1)
+		{
+			PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args is error!");
+			PyErr_PrintEx(0);
+			return 0;
+		}
+	}
+	else
+	{
+		PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args is error!");
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	if (!PySequence_Check(pyStartPos))
+	{
+		PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args1(startPos) not is PySequence!");
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	if (!PySequence_Check(pyEndPos))
+	{
+		PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args2(endPos) not is PySequence!");
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	if (PySequence_Size(pyStartPos) != 3)
+	{
+		PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args1(startPos) invalid!");
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	if (PySequence_Size(pyEndPos) != 3)
+	{
+		PyErr_Format(PyExc_TypeError, "Cellapp::navmeshRaycast: args2(endPos) invalid!");
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	Position3D startPos;
+	Position3D endPos;
+	std::vector<Position3D> hitPosVec;
+	//float hitPos[3];
+
+	script::ScriptVector3::convertPyObjectToVector3(startPos, pyStartPos);
+	script::ScriptVector3::convertPyObjectToVector3(endPos, pyEndPos);
+	if (Cellapp::getSingleton().navmeshRaycast(path, layer, flags, startPos, endPos, hitPosVec) <= 0)
 	{
 		S_Return;
 	}
