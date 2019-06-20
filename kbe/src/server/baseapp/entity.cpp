@@ -526,7 +526,7 @@ PyObject* Entity::__py_pyDestroyEntity(PyObject* self, PyObject* args, PyObject 
 {
 	Entity* pobj = static_cast<Entity*>(self);
 
-	if(pobj->initing())
+	if (pobj->initing() || pobj->scriptIniting())
 	{
 		PyErr_Format(PyExc_AssertionError,
 			"%s::destroy(): %d initing, reject the request!\n",	

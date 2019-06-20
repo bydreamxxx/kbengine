@@ -283,6 +283,7 @@ namespace KBEngine{
 #define ENTITY_FLAGS_INITING			0x00000002
 #define ENTITY_FLAGS_TELEPORT_START		0x00000004
 #define ENTITY_FLAGS_TELEPORT_STOP		0x00000008
+#define ENTITY_FLAGS_SCRIPT_INITING		0x00000010
 
 #define ENTITY_HEADER(CLASS)																				\
 protected:																									\
@@ -296,10 +297,12 @@ protected:																									\
 	uint32											flags_;													\
 public:																										\
 	bool initing() const{ return hasFlags(ENTITY_FLAGS_INITING); }											\
+	bool scriptIniting() const{ return hasFlags(ENTITY_FLAGS_SCRIPT_INITING); }								\
 																											\
 	void initializeScript()																					\
 	{																										\
 		removeFlags(ENTITY_FLAGS_INITING);																	\
+		addFlags(ENTITY_FLAGS_SCRIPT_INITING);																\
 		SCOPED_PROFILE(SCRIPTCALL_PROFILE);																	\
 		if(PyObject_HasAttrString(this, "__init__"))														\
 		{																									\
@@ -310,6 +313,7 @@ public:																										\
 			else																							\
 				SCRIPT_ERROR_CHECK();																		\
 		}																									\
+		removeFlags(ENTITY_FLAGS_SCRIPT_INITING);															\
 	}																										\
 																											\
 	void initializeEntity(PyObject* dictData)																\
