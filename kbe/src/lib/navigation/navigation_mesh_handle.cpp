@@ -326,6 +326,7 @@ int NavMeshHandle::findRandomPointAroundCircle(int layer, uint16 flags, const Po
 
 			points.push_back(currpos);
 		}
+
 	}
 
 	delete[] allPolyRefs;
@@ -1183,6 +1184,22 @@ bool NavMeshHandle::_create(int layer, const std::string& resPath, const std::st
 }
 
 //-------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
+inline float calAtan(float* srcPoint, float* point)
+{
+	return atan2(point[2] - srcPoint[2], point[0] - srcPoint[0]);
+}
+
+inline void swapPoint(float* a, float* b) 
+{
+	float tmp[3] = { a[0],a[1],a[2] };
+	a[0] = b[0];
+	a[1] = b[1];
+	a[2] = b[2];
+	b[0] = tmp[0];
+	b[1] = tmp[1];
+	b[2] = tmp[2];
+}
 
 void NavMeshHandle::getOverlapPolyPoly2D(const float* polyVertsA, const int nPolyVertsA, const float* polyVertsB, const int nPolyVertsB, float* intsectPt, int* intsectPtCount)
 {
@@ -1250,22 +1267,8 @@ void NavMeshHandle::getOverlapPolyPoly2D(const float* polyVertsA, const int nPol
 	}
 
 }
-//-------------------------------------------------------------------------------------
-inline float calAtan(float* srcPoint, float* point)
-{
-	return atan2(point[2] - srcPoint[2], point[0] - srcPoint[0]);
-}
 
-inline void swapPoint(float* a, float* b) 
-{
-	float tmp[3] = { a[0],a[1],a[2] };
-	a[0] = b[0];
-	a[1] = b[1];
-	a[2] = b[2];
-	b[0] = tmp[0];
-	b[1] = tmp[1];
-	b[2] = tmp[2];
-}
+
 
 void NavMeshHandle::clockwiseSortPoints(float* verts, const int nVerts)
 {

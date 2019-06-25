@@ -462,7 +462,6 @@ void KBEngineApp::updatePlayerToServer()
 			pBundle->send(pNetworkInterface_);
 		}
 	}
-
 }
 
 void KBEngineApp::Client_onAppActiveTickCB()
@@ -728,6 +727,7 @@ void KBEngineApp::Client_onLoginFailed(MemoryStream& stream)
 	UKBEventData_onLoginFailed* pEventData = NewObject<UKBEventData_onLoginFailed>();
 	pEventData->failedcode = failedcode;
 	pEventData->errorStr = serverErr(failedcode);
+	pEventData->serverdatas = serverdatas_;
 	KBENGINE_EVENT_FIRE(KBEventTypes::onLoginFailed, pEventData);
 }
 
@@ -1329,7 +1329,6 @@ void KBEngineApp::newPassword(const FString& old_password, const FString& new_pa
 	Bundle* pBundle = Bundle::createObject();
 	pBundle->newMessage(Messages::messages[TEXT("Baseapp_reqAccountNewPassword"]));
 	(*pBundle) << entity_id_;
-	(*pBundle) << password_;
 	(*pBundle) << old_password;
 	(*pBundle) << new_password;
 	pBundle->send(pNetworkInterface_);
@@ -2322,19 +2321,19 @@ void KBEngineApp::_updateVolatileData(ENTITY_ID entityID, float x, float y, floa
 	if (roll != KBE_FLT_MAX)
 	{
 		changeDirection = true;
-		entity.direction.X = int82angle((int8)roll, false);
+		entity.direction.X = isOptimized ? int82angle((int8)roll, false) : roll;
 	}
 
 	if (pitch != KBE_FLT_MAX)
 	{
 		changeDirection = true;
-		entity.direction.Y = int82angle((int8)pitch, false);
+		entity.direction.Y = isOptimized ? int82angle((int8)pitch, false) : pitch;
 	}
 
 	if (yaw != KBE_FLT_MAX)
 	{
 		changeDirection = true;
-		entity.direction.Z = int82angle((int8)yaw, false);
+		entity.direction.Z = isOptimized ? int82angle((int8)yaw, false) : yaw;
 	}
 
 	bool done = false;
@@ -2348,10 +2347,10 @@ void KBEngineApp::_updateVolatileData(ENTITY_ID entityID, float x, float y, floa
 		done = true;
 	}
 
-        bool positionChanged = x != KBE_FLT_MAX || y != KBE_FLT_MAX || z != KBE_FLT_MAX;
-        if (x == KBE_FLT_MAX) x = 0.0f;
-        if (y == KBE_FLT_MAX) y = 0.0f;
-        if (z == KBE_FLT_MAX) z = 0.0f;
+	bool positionChanged = x != KBE_FLT_MAX || y != KBE_FLT_MAX || z != KBE_FLT_MAX;
+	if (x == KBE_FLT_MAX) x = isOptimized ? 0.0f : entity.position.X;
+	if (y == KBE_FLT_MAX) y = isOptimized ? 0.0f : entity.position.Y;
+	if (z == KBE_FLT_MAX) z = isOptimized ? 0.0f : entity.position.Z;
 	            
 	if (positionChanged)
 	{

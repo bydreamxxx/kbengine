@@ -837,7 +837,7 @@ KBEngine.MemoryStream = function(size_or_buffer)
 		buf.set(new Uint8Array(stream.buffer, offset, size), 0);
 		this.wpos += size;
 	}
-	
+
 	//---------------------------------------------------------------------------------
 	this.readSkip = function(v)
 	{
@@ -910,7 +910,7 @@ KBEngine.MemoryStream.createObject = function()
 {
 	if(KBEngine.MemoryStream._objects == undefined)
 		KBEngine.MemoryStream._objects = [];
-
+  
 	return KBEngine.MemoryStream._objects.length > 0 ? KBEngine.MemoryStream._objects.pop() : new KBEngine.MemoryStream(KBEngine.PACKET_MAX_SIZE_TCP);
 }
 
@@ -2969,7 +2969,7 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 	// 服务端分配的baseapp地址
 	this.baseappIP = "";
 	this.baseappPort = 0;
-	
+
 	this.currMsgID = 0;
 	this.currMsgCount = 0;
 	this.currMsgLen = 0;
@@ -3230,6 +3230,7 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 				if(app.fragmentStream != null && app.fragmentStream.length() >= app.currMsgLen)
 				{
 					msgHandler.handleMessage(app.fragmentStream);
+					app.fragmentStream.reclaimObject();
 					app.fragmentStream = null;
 				}
 				else if(stream.length() < app.currMsgLen && stream.length() > 0)
@@ -3249,7 +3250,6 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 
 				app.currMsgID = 0;
 				app.currMsgLen = 0;
-				app.fragmentStream = null;
 			}
 			else
 			{
@@ -3272,7 +3272,13 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		
 		app.fragmentDatasRemain = datasize - opsize;
 		app.fragmentDatasFlag = FragmentDataType;
-		app.fragmentStream = stream;
+
+		if(opsize > 0)
+		{
+			KBEngine.app.fragmentStream = KBEngine.MemoryStream.createObject();
+			KBEngine.app.fragmentStream.append(stream, stream.rpos, opsize);
+			stream.done();
+		}
 	}
 
 	this.mergeFragmentMessage = function(stream)
@@ -3295,22 +3301,20 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		{
 			var FragmentDataTypes = KBEngine.FragmentDataTypes;
 			fragmentStream.append(stream, stream.rpos, app.fragmentDatasRemain);
+			stream.rpos += app.fragmentDatasRemain;
 
 			switch(app.fragmentDatasFlag)
 			{
 				case FragmentDataTypes.FRAGMENT_DATA_MESSAGE_ID:
 					app.currMsgID = fragmentStream.readUint16();
-					app.fragmentStream = null;
 					break;
 
 				case FragmentDataTypes.FRAGMENT_DATA_MESSAGE_LENGTH:
 					app.currMsgLen = fragmentStream.readUint16();
-					app.fragmentStream = null;
 					break;
 
 				case FragmentDataTypes.FRAGMENT_DATA_MESSAGE_LENGTH1:
 					app.currMsgLen = fragmentStream.readUint32();
-					app.fragmentStream = null;
 					break;
 
 				case FragmentDataTypes.FRAGMENT_DATA_MESSAGE_BODY:
@@ -3318,7 +3322,6 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 					break;
 			}
 
-			stream.rpos += app.fragmentDatasRemain;
 			app.fragmentDatasFlag = FragmentDataTypes.FRAGMENT_DATA_UNKNOW;
 			app.fragmentDatasRemain = 0;
 			return false;
@@ -3450,7 +3453,7 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		var fileDatas = stream.readBlob()
 		KBEngine.Event.fire("onImportClientSDK", remainingFiles, fileName, fileSize, fileDatas);
 	}
-	
+
 	this.onOpenLoginapp_login = function()
 	{  
 		KBEngine.INFO_MSG("KBEngineApp::onOpenLoginapp_login: successfully!");
@@ -4167,7 +4170,7 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		var failedcode = args.readUint16();
 		KBEngine.app.serverdatas = args.readBlob();
 		KBEngine.ERROR_MSG("KBEngineApp::Client_onLoginFailed: failedcode=" + failedcode + "(" + KBEngine.app.serverErrs[failedcode].name + "), datas(" + KBEngine.app.serverdatas.length + ")!");
-		KBEngine.Event.fire(KBEngine.EventTypes.onLoginFailed, failedcode);
+		KBEngine.Event.fire(KBEngine.EventTypes.onLoginFailed, failedcode, KBEngine.app.serverdatas);
 	}
 	
 	this.Client_onLoginSuccessfully = function(args)
@@ -4847,12 +4850,34 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		KBEngine.app.entityServerPos.x = x;
 		KBEngine.app.entityServerPos.y = y;
 		KBEngine.app.entityServerPos.z = z;
+
+        var entity = KBEngine.app.player();
+        if(entity != undefined && entity.isControlled)
+        {
+			entity.position.x = KBEngine.app.entityServerPos.x;
+			entity.position.y = KBEngine.app.entityServerPos.y;
+			entity.position.z = KBEngine.app.entityServerPos.z;
+
+			KBEngine.Event.fire(KBEngine.EventTypes.updatePosition, entity);
+			entity.onUpdateVolatileData();
+        }
 	}
 	
 	this.Client_onUpdateBasePosXZ = function(x, z)
 	{
 		KBEngine.app.entityServerPos.x = x;
 		KBEngine.app.entityServerPos.z = z;
+
+        var entity = KBEngine.app.player();
+        if(entity != undefined && entity.isControlled)
+        {
+			entity.position.x = KBEngine.app.entityServerPos.x;
+			entity.position.y = KBEngine.app.entityServerPos.y;
+			entity.position.z = KBEngine.app.entityServerPos.z;
+
+			KBEngine.Event.fire(KBEngine.EventTypes.updatePosition, entity);
+			entity.onUpdateVolatileData();
+        }
 	}
 	
 	this.Client_onUpdateData = function(stream)
@@ -5451,19 +5476,19 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		if(roll != KBEngine.KBE_FLT_MAX)
 		{
 			changeDirection = true;
-			entity.direction.x = KBEngine.int82angle(roll, false);
+			entity.direction.x = isOptimized ? KBEngine.int82angle(roll, false) : roll;
 		}
 
 		if(pitch != KBEngine.KBE_FLT_MAX)
 		{
 			changeDirection = true;
-			entity.direction.y = KBEngine.int82angle(pitch, false);
+			entity.direction.y = isOptimized ? KBEngine.int82angle(pitch, false) : pitch;
 		}
 		
 		if(yaw != KBEngine.KBE_FLT_MAX)
 		{
 			changeDirection = true;
-			entity.direction.z = KBEngine.int82angle(yaw, false);
+			entity.direction.z = isOptimized ? KBEngine.int82angle(yaw, false) : yaw;
 		}
 		
 		var done = false;
@@ -5477,9 +5502,9 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 		if(x != KBEngine.KBE_FLT_MAX || y != KBEngine.KBE_FLT_MAX || z != KBEngine.KBE_FLT_MAX)
 			positionChanged = true;
 
-		if (x == KBEngine.KBE_FLT_MAX) x = 0.0;
-		if (y == KBEngine.KBE_FLT_MAX) y = 0.0;
-		if (z == KBEngine.KBE_FLT_MAX) z = 0.0;
+		if (x == KBEngine.KBE_FLT_MAX) x = isOptimized ? 0.0 : entity.position.x;
+		if (y == KBEngine.KBE_FLT_MAX) y = isOptimized ? 0.0 : entity.position.y;
+		if (z == KBEngine.KBE_FLT_MAX) z = isOptimized ? 0.0 : entity.position.z;
         
 		if(positionChanged)
 		{
@@ -5495,7 +5520,6 @@ KBEngine.KBEngineApp = function(kbengineArgs)
 				entity.position.y = y;
 				entity.position.z = z;
 			}
-			
 			
 			done = true;
 			KBEngine.Event.fire(KBEngine.EventTypes.updatePosition, entity);

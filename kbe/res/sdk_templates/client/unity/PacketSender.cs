@@ -8,7 +8,6 @@
 	using System.Text;
 	using System.Text.RegularExpressions;
 	using System.Threading;
-	using System.Runtime.Remoting.Messaging;
 
 	using MessageID = System.UInt16;
 	using MessageLength = System.UInt16;
@@ -25,6 +24,8 @@
 
 		int _wpos = 0;				// 写入的数据位置
 		int _spos = 0;				// 发送完毕的数据位置
+		
+		object _sendingObj = new object();
 		Boolean _sending = false;
 		
 		private NetworkInterface _networkInterface = null;
@@ -65,7 +66,7 @@
 			if (dataLength <= 0)
 				return true;
 
-			Monitor.Enter(_sending);
+			Monitor.Enter(_sendingObj);
 			if (!_sending)
 			{
 				if (_wpos == _spos)
@@ -110,13 +111,13 @@
 			if (!_sending)
 			{
 				_sending = true;
-				Monitor.Exit(_sending);
+				Monitor.Exit(_sendingObj);
 
 				_startSend();
 			}
 			else
 			{
-				Monitor.Exit(_sending);
+				Monitor.Exit(_sendingObj);
 			}
 
 			return true;
@@ -126,7 +127,7 @@
 		{
 			// 由于socket用的是非阻塞式，因此在这里不能直接使用socket.send()方法
 			// 必须放到另一个线程中去做
-			_asyncSendMethod.BeginInvoke(_asyncCallback, null);
+			_asyncSendMethod.BeginInvoke(_asyncCallback, _asyncSendMethod);
 		}
 
 		void _asyncSend()
@@ -141,7 +142,7 @@
 
 			while (true)
 			{
-				Monitor.Enter(_sending);
+				Monitor.Enter(_sendingObj);
 
 				int sendSize = _wpos - _spos;
 				int t_spos = _spos % _buffer.Length;
@@ -161,7 +162,7 @@
 					Dbg.ERROR_MSG(string.Format("PacketSender::_asyncSend(): send data error, disconnect from '{0}'! error = '{1}'", socket.RemoteEndPoint, se));
 					Event.fireIn("_closeNetwork", new object[] { _networkInterface });
 
-					Monitor.Exit(_sending);
+					Monitor.Exit(_sendingObj);
 					return;
 				}
 
@@ -171,18 +172,17 @@
 				if (_spos == _wpos)
 				{
 					_sending = false;
-					Monitor.Exit(_sending);
+					Monitor.Exit(_sendingObj);
 					return;
 				}
 
-				Monitor.Exit(_sending);
+				Monitor.Exit(_sendingObj);
 			}
 		}
 		
 		private static void _onSent(IAsyncResult ar)
 		{
-			AsyncResult result = (AsyncResult)ar;
-			AsyncSendMethod caller = (AsyncSendMethod)result.AsyncDelegate;
+			AsyncSendMethod caller = (AsyncSendMethod)ar.AsyncState;
 			caller.EndInvoke(ar);
 		}
 	}
