@@ -991,7 +991,7 @@ void Entity::onBackupCellData(Network::Channel* pChannel, MemoryStream& s)
 	if(isDirty)
 	{		
 		PyObject* cellData = createCellDataFromStream(&s);
-		installCellDataAttr(cellData);
+		installCellDataAttr(cellData, false);
 		Py_DECREF(cellData);
 		setDirty();
 	}
