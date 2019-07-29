@@ -167,7 +167,7 @@ ForwardAnywhere_MessageBuffer::~ForwardAnywhere_MessageBuffer()
 void ForwardAnywhere_MessageBuffer::clear()
 {
 	std::vector<ForwardItem*>::iterator iter = pBundles_.begin();
-	for(; iter != pBundles_.end(); )
+	for(; iter != pBundles_.end(); ++iter)
 	{
 		SAFE_RELEASE((*iter)->pBundle);
 		SAFE_RELEASE((*iter)->pHandler);
