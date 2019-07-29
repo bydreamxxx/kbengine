@@ -171,6 +171,7 @@ void ForwardAnywhere_MessageBuffer::clear()
 	{
 		SAFE_RELEASE((*iter)->pBundle);
 		SAFE_RELEASE((*iter)->pHandler);
+		SAFE_RELEASE((*iter));
 	}
 
 	pBundles_.clear();
