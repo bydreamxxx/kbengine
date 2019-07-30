@@ -2823,6 +2823,7 @@ PyObject* Entity::pyGetRandomPoints(PyObject_ptr pyCenterPos, float maxRadius, u
 	for (; iter != outPoints.end(); ++iter)
 	{
 		script::ScriptVector3 *pos = new script::ScriptVector3(*iter);
+		Py_INCREF(pos);
 		PyList_SET_ITEM(pyList, i++, pos);
 	}
 
