@@ -1637,7 +1637,7 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 
 	if(componentType == CELLAPP_TYPE)
 	{
-		ENGINE_COMPONENT_INFO info = getCellApp();
+		ENGINE_COMPONENT_INFO& info = getCellApp();
 		info.internalAddr = &internalAddr;
 		info.externalAddr = &externalAddr;
 		info.componentID = componentID;
@@ -1672,7 +1672,7 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 	}
 	else if (componentType == BASEAPP_TYPE)
 	{
-		ENGINE_COMPONENT_INFO info = getBaseApp();
+		ENGINE_COMPONENT_INFO& info = getBaseApp();
 		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
 		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
 		info.componentID = componentID;
@@ -1717,7 +1717,7 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 	}
 	else if (componentType == BASEAPPMGR_TYPE)
 	{
-		ENGINE_COMPONENT_INFO info = getBaseAppMgr();
+		ENGINE_COMPONENT_INFO& info = getBaseAppMgr();
 		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
 		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
 		info.componentID = componentID;
@@ -1736,7 +1736,7 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 	}
 	else if (componentType == CELLAPPMGR_TYPE)
 	{
-		ENGINE_COMPONENT_INFO info = getCellAppMgr();
+		ENGINE_COMPONENT_INFO& info = getCellAppMgr();
 		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
 		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
 		info.componentID = componentID;
@@ -1755,7 +1755,7 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 	}
 	else if (componentType == DBMGR_TYPE)
 	{
-		ENGINE_COMPONENT_INFO info = getDBMgr();
+		ENGINE_COMPONENT_INFO& info = getDBMgr();
 		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
 		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
 		info.componentID = componentID;
@@ -1781,7 +1781,7 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 	}
 	else if (componentType == LOGINAPP_TYPE)
 	{
-		ENGINE_COMPONENT_INFO info = getLoginApp();
+		ENGINE_COMPONENT_INFO& info = getLoginApp();
 		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
 		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
 		info.componentID = componentID;
@@ -1814,7 +1814,7 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 	}
 	else if (componentType == MACHINE_TYPE)
 	{
-		ENGINE_COMPONENT_INFO info = getKBMachine();
+		ENGINE_COMPONENT_INFO& info = getKBMachine();
 		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
 		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
 		info.componentID = componentID;
