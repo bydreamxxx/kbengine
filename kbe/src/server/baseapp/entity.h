@@ -110,6 +110,8 @@ public:
 	*/
 	bool installCellDataAttr(PyObject* dictData = NULL, bool installpy = true);
 
+	bool installPyCellData();
+
 	void createCellData(void);
 
 	void destroyCellData(void);
