@@ -212,19 +212,27 @@ bool Entity::installCellDataAttr(PyObject* dictData, bool installpy)
 		}
 	}
 
-	if(installpy)
+	if (installpy)
 	{
-		if(cellDataDict_ == NULL)
-		{
-			cellDataDict_ = PyDict_New();
-		}
-
-		if(PyObject_SetAttrString(this, "cellData", cellDataDict_) == -1)
-		{
-			ERROR_MSG("Entity::installCellDataAttr: set property cellData error!\n");
-			SCRIPT_ERROR_CHECK();
+		if (!installPyCellData())
 			return false;
-		}
+	}
+
+	return true;
+}
+
+bool Entity::installPyCellData()
+{
+	if (cellDataDict_ == NULL)
+	{
+		cellDataDict_ = PyDict_New();
+	}
+
+	if (PyObject_SetAttrString(this, "cellData", cellDataDict_) == -1)
+	{
+		ERROR_MSG("Entity::installCellDataAttr: set property cellData error!\n");
+		SCRIPT_ERROR_CHECK();
+		return false;
 	}
 
 	return true;
@@ -935,6 +943,8 @@ void Entity::onLoseCell(Network::Channel* pChannel, MemoryStream& s)
 	isArchiveing_ = false;
 	isGetingCellData_ = false;
 	createdSpace_ = false;
+
+	installPyCellData();
 	
 	SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onLoseCell"), false);
 }
