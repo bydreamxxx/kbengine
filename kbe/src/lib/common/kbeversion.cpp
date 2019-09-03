@@ -35,7 +35,7 @@ const std::string & versionString()
 	if(g_versionString.size() == 0)
 	{
 		char buf[MAX_BUF];
-		kbe_snprintf(buf, MAX_BUF, "%d.%d.%d", KBE_VERSION_MAJOR, KBE_VERSION_MINOR, KBE_VERSION_PATCH);
+		kbe_snprintf(buf, MAX_BUF, "%d.%d.%d", 1, 3, 9);
 		g_versionString = buf;
 	}
 
