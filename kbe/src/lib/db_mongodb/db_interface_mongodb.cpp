@@ -63,6 +63,7 @@ namespace KBEngine {
 		EntityTables& entityTables = EntityTables::findByInterfaceName(pdbi->name());
 
 		entityTables.addKBETable(new KBEAccountTableMongodb(&entityTables));
+		entityTables.addKBETable(new KBEServerLogTableMongodb(&entityTables));
 		entityTables.addKBETable(new KBEEntityLogTableMongodb(&entityTables));
 		entityTables.addKBETable(new KBEEmailVerificationTableMongodb(&entityTables));
 		return true;
