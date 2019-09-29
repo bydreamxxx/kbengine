@@ -144,6 +144,52 @@ namespace KBEngine {
 	{
 	}
 
+	//-------------------------------------------------------------------------------------
+	bool KBEServerLogTableMongodb::syncToDB(DBInterface* pdbi)
+	{
+		return true;
+	}
+
+	//-------------------------------------------------------------------------------------
+	bool KBEServerLogTableMongodb::updateServer(DBInterface * pdbi)
+	{
+		return true;
+	}
+
+	//-------------------------------------------------------------------------------------
+	bool KBEServerLogTableMongodb::queryServer(DBInterface * pdbi, ServerLog& serverlog)
+	{
+		return true;
+	}
+
+	//-------------------------------------------------------------------------------------
+	std::vector<COMPONENT_ID> KBEServerLogTableMongodb::queryServers(DBInterface * pdbi)
+	{
+		std::vector<COMPONENT_ID> cids;
+
+		return cids;
+	}
+
+	//-------------------------------------------------------------------------------------
+	std::vector<COMPONENT_ID> KBEServerLogTableMongodb::queryTimeOutServers(DBInterface * pdbi)
+	{
+		std::vector<COMPONENT_ID> cids;
+
+		return cids;
+	}
+
+	//-------------------------------------------------------------------------------------
+	bool KBEServerLogTableMongodb::clearServers(DBInterface * pdbi, const std::vector<COMPONENT_ID>& cids)
+	{
+		return true;
+	}
+
+	//-------------------------------------------------------------------------------------
+	KBEServerLogTableMongodb::KBEServerLogTableMongodb(EntityTables* pEntityTables) :
+		KBEServerLogTable(pEntityTables)
+	{
+	}
+
 	bool KBEAccountTableMongodb::syncToDB(DBInterface* pdbi)
 	{
 		//´´½¨±í
