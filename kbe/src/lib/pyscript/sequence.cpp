@@ -132,8 +132,6 @@ PyObject* Sequence::seq_concat(PyObject* self, PyObject* seq)
 	for (int i = 0; i < seqSize1; ++i) 
 	{
 		Py_INCREF(values[i]);
-	{
-		Py_INCREF(values[i]);
 		PyList_SET_ITEM(pyList, i, values[i]);
 	}
 
