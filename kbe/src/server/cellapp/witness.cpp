@@ -175,7 +175,13 @@ void Witness::onAttach(Entity* pEntity)
 	{
 		(*pSendBundle) << pEntity_->isOnGround();
 		if (pEntity_->parent())
+		{
 			(*pSendBundle) << pEntity_->parent()->id();
+			const Position3D& localpos = pEntity_->localPosition();
+			const Direction3D& localdir = pEntity_->localDirection();
+			(*pSendBundle) << localpos.x << localpos.y << localpos.z;
+			(*pSendBundle) << localdir.yaw() << localdir.pitch() << localdir.roll();
+		}
 	}
 
 	ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onEntityEnterWorld, entityEnterWorld);
@@ -805,7 +811,13 @@ bool Witness::update()
 				{
 					(*pSendBundle) << otherEntity->isOnGround();
 					if (otherEntity->parent())
+					{
 						(*pSendBundle) << otherEntity->parent()->id();
+						const Position3D& localpos = otherEntity->localPosition();
+						const Direction3D& localdir = otherEntity->localDirection();
+						(*pSendBundle) << localpos.x << localpos.y << localpos.z;
+						(*pSendBundle) << localdir.yaw() << localdir.pitch() << localdir.roll();
+					}
 				}
 
 				ENTITY_MESSAGE_FORWARD_CLIENT_END(pSendBundle, ClientInterface::onEntityEnterWorld, entityEnterWorld);
