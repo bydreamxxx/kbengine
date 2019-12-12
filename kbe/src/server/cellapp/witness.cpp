@@ -180,7 +180,7 @@ void Witness::onAttach(Entity* pEntity)
 			const Position3D& localpos = pEntity_->localPosition();
 			const Direction3D& localdir = pEntity_->localDirection();
 			(*pSendBundle) << localpos.x << localpos.y << localpos.z;
-			(*pSendBundle) << localdir.yaw() << localdir.pitch() << localdir.roll();
+			(*pSendBundle) << localdir.roll() << localdir.pitch() << localdir.yaw();
 		}
 	}
 
@@ -846,7 +846,7 @@ bool Witness::update()
 						const Position3D& localpos = otherEntity->localPosition();
 						const Direction3D& localdir = otherEntity->localDirection();
 						(*pSendBundle) << localpos.x << localpos.y << localpos.z;
-						(*pSendBundle) << localdir.yaw() << localdir.pitch() << localdir.roll();
+						(*pSendBundle) << localdir.roll() << localdir.pitch() << localdir.yaw();
 					}
 				}
 
