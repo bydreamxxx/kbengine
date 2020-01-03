@@ -72,6 +72,7 @@ SCRIPT_METHOD_DECLARE("cancelController",			pyCancelController,				METH_VARARGS,
 SCRIPT_METHOD_DECLARE("canNavigate",				pycanNavigate,					METH_VARARGS,				0)
 SCRIPT_METHOD_DECLARE("navigatePathPoints",			pyNavigatePathPoints,			METH_VARARGS,				0)
 SCRIPT_METHOD_DECLARE("navigate",					pyNavigate,						METH_VARARGS,				0)
+SCRIPT_METHOD_DECLARE("navigateOnGround",			pyNavigateOnGround,				METH_VARARGS,				0)
 SCRIPT_METHOD_DECLARE("getRandomPoints",			pyGetRandomPoints,				METH_VARARGS,				0)
 SCRIPT_METHOD_DECLARE("moveToPoint",				pyMoveToPoint,					METH_VARARGS,				0)
 SCRIPT_METHOD_DECLARE("moveToEntity",				pyMoveToEntity,					METH_VARARGS,				0)
@@ -2582,6 +2583,60 @@ bool Entity::navigatePathPoints(std::vector<Position3D>& outPaths, const Positio
 }
 
 //-------------------------------------------------------------------------------------
+bool Entity::navigateGroundPathPoints(std::vector<Position3D>& outPaths, const Position3D& destination, float maxSearchDistance, int8 layer, uint16 flags)
+{
+	Space* pSpace = Spaces::findSpace(spaceID());
+	if (pSpace == NULL || !pSpace->isGood())
+	{
+		ERROR_MSG(fmt::format("Entity::navigateGroundPathPoints(): not found space({}), entityID({})!\n",
+			spaceID(), id()));
+
+		return false;
+	}
+
+	NavigationHandlePtr pNavHandle = pSpace->pNavHandle();
+
+	if (!pNavHandle)
+	{
+		WARNING_MSG(fmt::format("Entity::navigateGroundPathPoints(): space({}), entityID({}), not found navhandle!\n",
+			spaceID(), id()));
+
+		return false;
+	}
+
+	if (pNavHandle->findStraightPath(layer, flags, position_, destination, outPaths, true) < 0)
+	{
+		return false;
+	}
+
+	std::vector<Position3D>::iterator iter = outPaths.begin();
+	while (iter != outPaths.end())
+	{
+		Vector3 movement = (*iter) - position_;
+#ifndef DT_UE4
+		if (KBEVec3Length(&movement) <= 0.01)
+#else
+		// 忽略高度，移除平面间相距特别小的点
+		if (sqrtf(movement.x * movement.x + movement.z * movement.z) <= 0.01)
+#endif
+		{
+			iter++;
+			continue;
+		}
+
+		break;
+	}
+
+	// 第一个坐标点是当前位置，因此可以过滤掉
+	if (iter != outPaths.begin())
+	{
+		outPaths.erase(outPaths.begin(), iter);
+	}
+
+	return true;
+}
+
+//-------------------------------------------------------------------------------------
 PyObject* Entity::pyNavigatePathPoints(PyObject_ptr pyDestination, float maxSearchDistance, int8 layer, uint16 flags)
 {
 	Position3D destination;
@@ -2648,6 +2703,33 @@ uint32 Entity::navigate(const Position3D& destination, float velocity, float dis
 }
 
 //-------------------------------------------------------------------------------------
+uint32 Entity::navigateOnGround(const Position3D& destination, float velocity, float distance, float maxMoveDistance, float maxSearchDistance,
+	bool faceMovement, int8 layer, uint16 flags, PyObject* userData)
+{
+	VECTOR_POS3D_PTR paths_ptr(new std::vector<Position3D>());
+	navigateGroundPathPoints(*paths_ptr, destination, maxSearchDistance, layer, flags);
+	if (paths_ptr->size() <= 0)
+	{
+		return 0;
+	}
+
+	stopMove();
+
+	velocity = velocity / g_kbeSrvConfig.gameUpdateHertz();
+
+	KBEShared_ptr<Controller> p(new MoveController(this, NULL));
+
+	new NavigateHandler(p, destination, velocity,
+		distance, faceMovement, maxMoveDistance, paths_ptr, userData);
+
+	bool ret = pControllers_->add(p);
+	KBE_ASSERT(ret);
+
+	pMoveController_ = p;
+	return p->id();
+}
+
+//-------------------------------------------------------------------------------------
 PyObject* Entity::pyNavigate(PyObject_ptr pyDestination, float velocity, float distance, float maxMoveDistance, float maxDistance,
 	int8 faceMovement, int8 layer, uint16 flags, PyObject_ptr userData)
 {
@@ -2687,6 +2769,49 @@ PyObject* Entity::pyNavigate(PyObject_ptr pyDestination, float velocity, float d
 	script::ScriptVector3::convertPyObjectToVector3(destination, pyDestination);
 
 	return PyLong_FromLong(navigate(destination, velocity, distance, maxMoveDistance, 
+		maxDistance, faceMovement > 0, layer, flags, userData));
+}
+
+//-------------------------------------------------------------------------------------
+PyObject* Entity::pyNavigateOnGround(PyObject_ptr pyDestination, float velocity, float distance, float maxMoveDistance, float maxDistance,
+	int8 faceMovement, int8 layer, uint16 flags, PyObject_ptr userData)
+{
+	if (!isReal())
+	{
+		PyErr_Format(PyExc_AssertionError, "%s::navigateOnGround: not is real entity(%d).",
+			scriptName(), id());
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	if (this->isDestroyed())
+	{
+		PyErr_Format(PyExc_AssertionError, "%s::navigateOnGround: %d is destroyed!\n",
+			scriptName(), id());
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	Position3D destination;
+
+	if (!PySequence_Check(pyDestination))
+	{
+		PyErr_Format(PyExc_TypeError, "%s::navigateOnGround: args1(position) not is PySequence!", scriptName());
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	if (PySequence_Size(pyDestination) != 3)
+	{
+		PyErr_Format(PyExc_TypeError, "%s::navigateOnGround: args1(position) invalid!", scriptName());
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	// 将坐标信息提取出来
+	script::ScriptVector3::convertPyObjectToVector3(destination, pyDestination);
+
+	return PyLong_FromLong(navigateOnGround(destination, velocity, distance, maxMoveDistance,
 		maxDistance, faceMovement > 0, layer, flags, userData));
 }
 

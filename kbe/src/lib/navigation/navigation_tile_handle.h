@@ -78,7 +78,7 @@ public:
 
 	virtual ~NavTileHandle();
 
-	int findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths);
+	int findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths, bool allowCrossing = false);
 
 	virtual int findRandomPointAroundCircle(int layer, uint16 flags, const Position3D& centerPos,
 		std::vector<Position3D>& points, uint32 max_points, float maxRadius);

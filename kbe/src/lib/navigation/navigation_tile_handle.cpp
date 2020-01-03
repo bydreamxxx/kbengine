@@ -69,7 +69,7 @@ NavTileHandle::~NavTileHandle()
 }
 
 //-------------------------------------------------------------------------------------
-int NavTileHandle::findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths)
+int NavTileHandle::findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths, bool allowCrossing)
 {
 	setMapLayer(layer);
 	pCurrNavTileHandle = this;

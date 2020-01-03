@@ -64,7 +64,7 @@ NavMeshHandle::~NavMeshHandle()
 
 #ifndef DT_UE4
 //-------------------------------------------------------------------------------------
-int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths)
+int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths, bool allowCrossing)
 {
 	std::map<int, NavmeshLayer>::iterator iter = navmeshLayer.find(layer);
 	if(iter == navmeshLayer.end())
@@ -125,7 +125,14 @@ int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& s
 		if (polys[npolys-1] != endRef)
 			navmeshQuery->closestPointOnPoly(polys[npolys-1], endNearestPt, epos1, 0);
 
-		navmeshQuery->findStraightPath(startNearestPt, epos1, polys, npolys, straightPath, straightPathFlags, straightPathPolys, &nstraightPath, MAX_POLYS);
+		if (allowCrossing)
+		{
+			navmeshQuery->findStraightPath(startNearestPt, epos1, polys, npolys, straightPath, straightPathFlags, straightPathPolys, &nstraightPath, MAX_POLYS, DT_STRAIGHTPATH_ALL_CROSSINGS);
+		}
+		else
+		{
+			navmeshQuery->findStraightPath(startNearestPt, epos1, polys, npolys, straightPath, straightPathFlags, straightPathPolys, &nstraightPath, MAX_POLYS);
+		}
 
 		Position3D currpos;
 		for(int i = 0; i < nstraightPath * 3; )
@@ -486,7 +493,7 @@ int NavMeshHandle::collideVertical(int layer, uint16 flags, const Position3D& po
 #else
 
 //-------------------------------------------------------------------------------------
-int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths)
+int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths, bool allowCrossing)
 {
 	std::map<int, NavmeshLayer>::iterator iter = navmeshLayer.find(layer);
 	if (iter == navmeshLayer.end())
@@ -547,7 +554,14 @@ int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& s
 		if (polys[npolys - 1] != endRef)
 			navmeshQuery->closestPointOnPoly(polys[npolys - 1], endNearestPt, epos1, 0);
 
-		navmeshQuery->findStraightPath(startNearestPt, epos1, polys, npolys, straightPath, straightPathFlags, straightPathPolys, &nstraightPath, MAX_POLYS);
+		if (allowCrossing) 
+		{
+			navmeshQuery->findStraightPath(startNearestPt, epos1, polys, npolys, straightPath, straightPathFlags, straightPathPolys, &nstraightPath, MAX_POLYS, DT_STRAIGHTPATH_ALL_CROSSINGS);
+		}
+		else 
+		{
+			navmeshQuery->findStraightPath(startNearestPt, epos1, polys, npolys, straightPath, straightPathFlags, straightPathPolys, &nstraightPath, MAX_POLYS);
+		}
 
 		Position3D currpos;
 		for (int i = 0; i < nstraightPath * 3;)
@@ -567,6 +581,7 @@ int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& s
 	return pos;
 }
 
+//-------------------------------------------------------------------------------------
 int NavMeshHandle::findRandomPointAroundCircle(int layer, uint16 flags, const Position3D& centerPos,
 	std::vector<Position3D>& points, uint32 max_points, float maxRadius)
 {
