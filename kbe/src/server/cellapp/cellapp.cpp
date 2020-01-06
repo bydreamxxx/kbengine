@@ -2168,7 +2168,7 @@ int Cellapp::navmeshRaycast(std::string path, int layer, uint16 flags, const Pos
 
 	if (!pNavHandle)
 	{
-		WARNING_MSG(fmt::format("Cellapp::navmeshRaycast():  path({}), not found navhandle!\n",
+		ERROR_MSG(fmt::format("Cellapp::navmeshRaycast():  path({}), not found navhandle!\n",
 			path));
 
 		return false;
@@ -2183,7 +2183,7 @@ bool Cellapp::navigatePathPoints(std::vector<Position3D>& outPaths, std::string 
 
 	if (!pNavHandle)
 	{
-		WARNING_MSG(fmt::format("Cellapp::navigatePathPoints():  path({}), not found navhandle!\n",
+		ERROR_MSG(fmt::format("Cellapp::navigatePathPoints():  path({}), not found navhandle!\n",
 			path));
 
 		return false;
