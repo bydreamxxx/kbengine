@@ -1,6 +1,7 @@
 BIN  = centermgr
 SRCS =						\
 	main					\
+	centermgr				
 
 ASMS =
 
