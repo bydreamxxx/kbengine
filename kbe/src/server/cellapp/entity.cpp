@@ -4224,8 +4224,8 @@ void Entity::addToStream(KBEngine::MemoryStream& s)
 
 	addCellDataToStream(ENTITY_CELL_DATA_FLAGS, &s);
 	
-	addMovementHandlerToStream(s);
 	addControllersToStream(s);
+	addMovementHandlerToStream(s);
 	addWitnessToStream(s);
 	addTimersToStream(s);
 
@@ -4285,8 +4285,8 @@ void Entity::createFromStream(KBEngine::MemoryStream& s)
 
 	removeFlags(ENTITY_FLAGS_INITING);
 	
-	createMovementHandlerFromStream(s);
 	createControllersFromStream(s);
+	createMovementHandlerFromStream(s);
 	createWitnessFromStream(s);
 	createTimersFromStream(s);
 
@@ -4326,7 +4326,7 @@ void Entity::addControllersToStream(KBEngine::MemoryStream& s)
 	{
 		s << true;
 
-		// 必须先清理移动相关的Controllers
+		// 必须先清理移动相关的Controllers，因为移动Controllers反序列化相关代码并不完整，不能实现继续移动
 		stopMove();
 
 		pControllers_->addToStream(s);
