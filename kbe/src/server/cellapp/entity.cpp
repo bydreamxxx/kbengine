@@ -2668,7 +2668,6 @@ PyObject* Entity::pyNavigatePathPoints(PyObject_ptr pyDestination, float maxSear
 	for(; iter != outPaths.end(); ++iter)
 	{
 		script::ScriptVector3 *pos = new script::ScriptVector3(*iter);
-		Py_INCREF(pos);
 		PyList_SET_ITEM(pyList, i++, pos);
 	}
 
@@ -2872,7 +2871,6 @@ PyObject* Entity::pyGetRandomPoints(PyObject_ptr pyCenterPos, float maxRadius, u
 	for (; iter != outPoints.end(); ++iter)
 	{
 		script::ScriptVector3 *pos = new script::ScriptVector3(*iter);
-		Py_INCREF(pos);
 		PyList_SET_ITEM(pyList, i++, pos);
 	}
 
@@ -5148,7 +5146,6 @@ PyObject* Entity::pyPositionLocalToWorld(PyObject_ptr pyDestination)
 	positionLocalToWorld(destination, out);
 
 	script::ScriptVector3 *result = new script::ScriptVector3(out);
-	Py_INCREF(result);
 	return result;
 }
 
@@ -5173,7 +5170,6 @@ PyObject* Entity::pyPositionWorldToLocal(PyObject_ptr pyDestination)
 	positionWorldToLocal(destination, out);
 
 	script::ScriptVector3 *result = new script::ScriptVector3(out);
-	Py_INCREF(result);
 	return result;
 }
 
@@ -5198,7 +5194,6 @@ PyObject* Entity::pyDirectionLocalToWorld(PyObject_ptr pyDestination)
 	directionLocalToWorld(destination, out);
 
 	script::ScriptVector3 *result = new script::ScriptVector3(out.dir);
-	Py_INCREF(result);
 	return result;
 }
 
@@ -5223,7 +5218,6 @@ PyObject* Entity::pyDirectionWorldToLocal(PyObject_ptr pyDestination)
 	directionWorldToLocal(destination, out);
 
 	script::ScriptVector3 *result = new script::ScriptVector3(out.dir);
-	Py_INCREF(result);
 	return result;
 }
 

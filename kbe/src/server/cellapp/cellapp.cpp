@@ -2549,7 +2549,6 @@ PyObject* Cellapp::__py_navigatePathPoints(PyObject* self, PyObject* args)
 	for (; iter != outPaths.end(); ++iter)
 	{
 		script::ScriptVector3 *pos = new script::ScriptVector3(*iter);
-		Py_INCREF(pos);
 		PyList_SET_ITEM(pyList, i++, pos);
 	}
 
