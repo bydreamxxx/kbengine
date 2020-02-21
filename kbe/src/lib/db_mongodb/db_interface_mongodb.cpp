@@ -79,8 +79,6 @@ namespace KBEngine {
 		//db_port_ = 27017;
 		if (databaseName != NULL)
 			kbe_snprintf(db_name_, MAX_BUF, "%s", databaseName);
-		else
-			kbe_snprintf(db_name_, MAX_BUF, "%s", "0");
 
 		hasLostConnection_ = false;
 
@@ -336,7 +334,7 @@ namespace KBEngine {
 
 	void DBInterfaceMongodb::throwError()
 	{
-		DBException e(this);
+		mongodb::DBException e(this);
 
 		if (e.isLostConnection())
 		{
@@ -346,9 +344,16 @@ namespace KBEngine {
 		throw e;
 	}
 
+
+	bool DBInterfaceMongodb::isLostConnection(std::exception & e)
+	{
+		mongodb::DBException& dbe = static_cast<mongodb::DBException&>(e);
+		return dbe.isLostConnection();
+	}
+
 	bool DBInterfaceMongodb::processException(std::exception & e)
 	{
-		DBException* dbe = static_cast<DBException*>(&e);
+		mongodb::DBException* dbe = static_cast<mongodb::DBException*>(&e);
 		bool retry = false;
 
 		if (dbe->isLostConnection())
@@ -617,7 +622,10 @@ namespace KBEngine {
 		}
 		
 		bson_destroy(q);
-		bson_destroy(f);
+		if (f)
+		{
+			bson_destroy(f);
+		}
 		mongoc_cursor_destroy(cursor);
 		return flag;
 	}
@@ -666,12 +674,8 @@ namespace KBEngine {
 		}
 
 
-		mongoc_update_flags_t uflags;
-		if (!upsert && !multi)
-		{
-			uflags = MONGOC_UPDATE_NONE;
-		}
-		else if (upsert && !multi)
+		mongoc_update_flags_t uflags = MONGOC_UPDATE_NONE;
+		if (upsert && !multi)
 		{
 			uflags = MONGOC_UPDATE_UPSERT;
 		}

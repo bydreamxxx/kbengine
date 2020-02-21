@@ -39,7 +39,7 @@ namespace KBEngine {
 		BSON_APPEND_UTF8(&options, "ip", ip);
 		BSON_APPEND_INT32(&options, "port", port);
 		BSON_APPEND_INT64(&options, "componentID", componentID);
-		BSON_APPEND_INT64(&options, "serverGroupID", 0); //‘› ±∏≥”Ëƒ¨»œ÷µ
+		BSON_APPEND_INT64(&options, "serverGroupID", (uint64)getUserUID());
 
 		DBInterfaceMongodb *pdbiMongodb = static_cast<DBInterfaceMongodb *>(pdbi);
 		pdbiMongodb->insertCollection("kbe_entitylog", MONGOC_INSERT_NONE, &options, NULL);

@@ -150,6 +150,7 @@ public:
 	/**
 		¥¶¿Ì“Ï≥£
 	*/
+	virtual bool isLostConnection(std::exception & e) = 0;
 	virtual bool processException(std::exception & e) = 0;
 
 	/**

@@ -23,34 +23,36 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "db_interface/db_interface.h"
 
 namespace KBEngine { 
+namespace redis {
 
-//-------------------------------------------------------------------------------------
-DBException::DBException(DBInterface* pdbi) :
-			errStr_(static_cast<DBInterfaceRedis*>(pdbi)->getstrerror()),
-			errNum_(static_cast<DBInterfaceRedis*>(pdbi)->getlasterror())
-{
-}
+	//-------------------------------------------------------------------------------------
+	DBException::DBException(DBInterface* pdbi) :
+		errStr_(static_cast<DBInterfaceRedis*>(pdbi)->getstrerror()),
+		errNum_(static_cast<DBInterfaceRedis*>(pdbi)->getlasterror())
+	{
+	}
 
-//-------------------------------------------------------------------------------------
-DBException::~DBException() throw()
-{
-}
+	//-------------------------------------------------------------------------------------
+	DBException::~DBException() throw()
+	{
+	}
 
-//-------------------------------------------------------------------------------------
-bool DBException::shouldRetry() const
-{
-	return (errNum_== REDIS_ERR_OOM) ||
+	//-------------------------------------------------------------------------------------
+	bool DBException::shouldRetry() const
+	{
+		return (errNum_ == REDIS_ERR_OOM) ||
 			(errNum_ == REDIS_ERR_OTHER);
-}
+	}
 
-//-------------------------------------------------------------------------------------
-bool DBException::isLostConnection() const
-{
-	return (errNum_ == REDIS_ERR_IO) ||
+	//-------------------------------------------------------------------------------------
+	bool DBException::isLostConnection() const
+	{
+		return (errNum_ == REDIS_ERR_IO) ||
 			(errNum_ == REDIS_ERR_EOF);
-}
+	}
 
-//-------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------------------
+}
 }
 
 // db_exception.cpp

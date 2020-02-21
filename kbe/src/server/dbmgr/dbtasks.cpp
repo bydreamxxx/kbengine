@@ -28,8 +28,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "server/serverconfig.h"
 #include "db_interface/db_interface.h"
 #include "db_interface/kbe_tables.h"
-#include "db_mysql/db_exception.h"
-#include "db_mysql/db_interface_mysql.h"
 #include "entitydef/scriptdef_module.h"
 #include "openssl/md5.h"
 
@@ -133,10 +131,9 @@ bool DBTaskExecuteRawDatabaseCommand::db_thread_process()
 	}
 	catch (std::exception & e)
 	{
-		DBException& dbe = static_cast<DBException&>(e);
-		if(dbe.isLostConnection())
+		if (pdbi_->isLostConnection(e))
 		{
-			static_cast<DBInterfaceMysql*>(pdbi_)->processException(e);
+			pdbi_->processException(e);
 			return true;
 		}
 
@@ -181,10 +178,9 @@ bool DBTaskExecuteRawDatabaseCommandByEntity::db_thread_process()
 	}
 	catch (std::exception & e)
 	{
-		DBException& dbe = static_cast<DBException&>(e);
-		if(dbe.isLostConnection())
+		if (pdbi_->isLostConnection(e))
 		{
-			static_cast<DBInterfaceMysql*>(pdbi_)->processException(e);
+			pdbi_->processException(e);
 			return true;
 		}
 
@@ -1795,10 +1791,9 @@ bool DBTaskQueryEntity::db_thread_process()
 		}
 		catch (std::exception & e)
 		{
-			DBException& dbe = static_cast<DBException&>(e);
-			if(dbe.isLostConnection())
+			if (pdbi_->isLostConnection(e))
 			{
-				static_cast<DBInterfaceMysql*>(pdbi_)->processException(e);
+				pdbi_->processException(e);
 				return true;
 			}
 			else
@@ -1815,10 +1810,9 @@ bool DBTaskQueryEntity::db_thread_process()
 			}
 			catch (std::exception & e)
 			{
-				DBException& dbe = static_cast<DBException&>(e);
-				if(dbe.isLostConnection())
+				if (pdbi_->isLostConnection(e))
 				{
-					static_cast<DBInterfaceMysql*>(pdbi_)->processException(e);
+					pdbi_->processException(e);
 					return true;
 				}
 				else

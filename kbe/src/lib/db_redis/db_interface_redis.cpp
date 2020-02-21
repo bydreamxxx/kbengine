@@ -558,7 +558,7 @@ bool DBInterfaceRedis::unlock()
 }
 
 //-------------------------------------------------------------------------------------
-void DBInterfaceRedis::throwError(DBException* pDBException)
+void DBInterfaceRedis::throwError(redis::DBException* pDBException)
 {
 	if (pDBException)
 	{
@@ -566,7 +566,7 @@ void DBInterfaceRedis::throwError(DBException* pDBException)
 	}
 	else
 	{
-		DBException e(this);
+		redis::DBException e(this);
 
 		if (e.isLostConnection())
 		{
@@ -577,10 +577,16 @@ void DBInterfaceRedis::throwError(DBException* pDBException)
 	}
 }
 
+bool DBInterfaceRedis::isLostConnection(std::exception & e)
+{
+	redis::DBException& dbe = static_cast<redis::DBException&>(e);
+	return dbe.isLostConnection();
+}
+
 //-------------------------------------------------------------------------------------
 bool DBInterfaceRedis::processException(std::exception & e)
 {
-	DBException* dbe = static_cast<DBException*>(&e);
+	redis::DBException* dbe = static_cast<redis::DBException*>(&e);
 	bool retry = false;
 
 	if (dbe->isLostConnection())
