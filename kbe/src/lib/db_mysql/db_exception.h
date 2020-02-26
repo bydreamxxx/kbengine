@@ -26,27 +26,31 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 namespace KBEngine { 
 
 class DBInterface;
-class DBException : public std::exception
-{
-public:
-	DBException(DBInterface* pdbi);
-	~DBException() throw();
 
-	virtual const char * what() const throw() { return errStr_.c_str(); }
+namespace mysql {
 
-	bool shouldRetry() const;
-	bool isLostConnection() const;
-
-	void setError(const std::string& errStr, unsigned int errNum)
+	class DBException : public std::exception
 	{
-		errStr_ = errStr;
-		errNum_ = errNum;
-	}
+	public:
+		DBException(DBInterface* pdbi);
+		~DBException() throw();
 
-private:
-	std::string errStr_;
-	unsigned int errNum_;
-};
+		virtual const char * what() const throw() { return errStr_.c_str(); }
+
+		bool shouldRetry() const;
+		bool isLostConnection() const;
+
+		void setError(const std::string& errStr, unsigned int errNum)
+		{
+			errStr_ = errStr;
+			errNum_ = errNum;
+		}
+
+	private:
+		std::string errStr_;
+		unsigned int errNum_;
+	};
+}
 
 }
 

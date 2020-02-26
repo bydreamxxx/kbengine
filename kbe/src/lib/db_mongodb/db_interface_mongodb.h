@@ -135,6 +135,7 @@ namespace KBEngine
 		/**
 		¥¶¿Ì“Ï≥£
 		*/
+		bool isLostConnection(std::exception & e);
 		bool processException(std::exception & e);
 
 		/**

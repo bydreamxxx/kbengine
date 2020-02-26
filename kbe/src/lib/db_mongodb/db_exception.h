@@ -4,7 +4,10 @@
 
 namespace KBEngine {
 
-	class DBInterface;
+class DBInterface; 
+	
+namespace mongodb {
+
 	class DBException : public std::exception
 	{
 	public:
@@ -20,5 +23,6 @@ namespace KBEngine {
 		std::string errStr_;
 		unsigned int errNum_;
 	};
+}
 
 }

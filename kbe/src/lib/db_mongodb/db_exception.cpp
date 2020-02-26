@@ -3,6 +3,7 @@
 #include "db_interface/db_interface.h"
 
 namespace KBEngine {
+namespace mongodb {
 
 	//-------------------------------------------------------------------------------------
 	DBException::DBException(DBInterface* pdbi) :
@@ -33,4 +34,5 @@ namespace KBEngine {
 	}
 
 	//-------------------------------------------------------------------------------------
+}
 }

@@ -63,7 +63,10 @@ struct MYSQL_TABLE_FIELD
 	enum_field_types type;
 };
 
-class DBException;
+namespace mysql
+{
+	class DBException;
+}
 
 /*
 	数据库接口
@@ -128,7 +131,7 @@ public:
 
 	MYSQL* mysql(){ return pMysql_; }
 
-	void throwError(DBException* pDBException);
+	void throwError(mysql::DBException* pDBException);
 
 	my_ulonglong insertID()		{ return mysql_insert_id( pMysql_ ); }
 
@@ -188,6 +191,7 @@ public:
 	/**
 		处理异常
 	*/
+	bool isLostConnection(std::exception & e);
 	bool processException(std::exception & e);
 
 	/**

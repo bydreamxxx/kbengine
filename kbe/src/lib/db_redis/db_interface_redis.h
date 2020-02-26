@@ -39,7 +39,10 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KBEngine { 
 
-class DBException;
+namespace redis
+{
+	class DBException;
+}
 
 /*
 	数据库接口
@@ -151,11 +154,12 @@ public:
 	virtual bool lock();
 	virtual bool unlock();
 
-	void throwError(DBException* pDBException);
+	void throwError(redis::DBException* pDBException);
 	
 	/**
 		处理异常
 	*/
+	virtual bool isLostConnection(std::exception & e);
 	virtual bool processException(std::exception & e);
 	
 protected:

@@ -556,7 +556,7 @@ bool DBInterfaceMysql::write_query_result(MemoryStream * result)
 			mysql_free_result(pResult);
 			result->wpos(wpos);
 
-			DBException e1(NULL);
+			mysql::DBException e1(NULL);
 			e1.setError(fmt::format("DBException: {}, SQL({})", e.what(), lastquery_), 0);
 			throwError(&e1);
 
@@ -706,7 +706,7 @@ bool DBInterfaceMysql::unlock()
 }
 
 //-------------------------------------------------------------------------------------
-void DBInterfaceMysql::throwError(DBException* pDBException)
+void DBInterfaceMysql::throwError(mysql::DBException* pDBException)
 {
 	if (pDBException)
 	{
@@ -714,7 +714,7 @@ void DBInterfaceMysql::throwError(DBException* pDBException)
 	}
 	else
 	{
-		DBException e(this);
+		mysql::DBException e(this);
 
 		if (e.isLostConnection())
 		{
@@ -725,10 +725,16 @@ void DBInterfaceMysql::throwError(DBException* pDBException)
 	}
 }
 
+bool DBInterfaceMysql::isLostConnection(std::exception & e)
+{
+	mysql::DBException& dbe = static_cast<mysql::DBException&>(e);
+	return dbe.isLostConnection();
+}
+
 //-------------------------------------------------------------------------------------
 bool DBInterfaceMysql::processException(std::exception & e)
 {
-	DBException* dbe = static_cast<DBException*>(&e);
+	mysql::DBException* dbe = static_cast<mysql::DBException*>(&e);
 	bool retry = false;
 
 	if (dbe->isLostConnection())

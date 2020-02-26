@@ -208,7 +208,7 @@ bool KBEEntityLogTableMysql::logEntity(DBInterface * pdbi, const char* ip, uint3
 	}
 	catch (std::exception & e)
 	{
-		DBException& dbe = static_cast<DBException&>(e);
+		mysql::DBException& dbe = static_cast<mysql::DBException&>(e);
 		if(dbe.isLostConnection())
 		{
 			if(pdbi->processException(e))
@@ -373,7 +373,7 @@ bool KBEServerLogTableMysql::updateServer(DBInterface * pdbi)
 	}
 	catch (std::exception & e)
 	{
-		DBException& dbe = static_cast<DBException&>(e);
+		mysql::DBException& dbe = static_cast<mysql::DBException&>(e);
 		if(dbe.isLostConnection())
 		{
 			if(pdbi->processException(e))

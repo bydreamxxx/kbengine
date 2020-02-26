@@ -26,22 +26,24 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 namespace KBEngine { 
 
 class DBInterface;
-class DBException : public std::exception
-{
-public:
-	DBException(DBInterface* pdbi);
-	~DBException() throw();
+namespace redis {
 
-	virtual const char * what() const throw() { return errStr_.c_str(); }
+	class DBException : public std::exception
+	{
+	public:
+		DBException(DBInterface* pdbi);
+		~DBException() throw();
 
-	bool shouldRetry() const;
-	bool isLostConnection() const;
+		virtual const char * what() const throw() { return errStr_.c_str(); }
 
-private:
-	std::string errStr_;
-	unsigned int errNum_;
-};
+		bool shouldRetry() const;
+		bool isLostConnection() const;
 
+	private:
+		std::string errStr_;
+		unsigned int errNum_;
+	};
+}
 }
 
 #endif // KBE_DB_EXCEPTION_H
