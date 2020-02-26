@@ -109,9 +109,16 @@ public:
 
 	static PyObject* __pyget_pyGetEntities(PyObject *self, void *closure)
 	{
-		ClientObjectBase* pClientObjectBase = static_cast<ClientObjectBase*>(self);
-		Py_INCREF(pClientObjectBase->pEntities());
-		return pClientObjectBase->pEntities(); 
+		ClientObjectBase* pClientObjectBase = static_cast<ClientObjectBase*>(self);	
+		if (pClientObjectBase->pEntities()) 
+		{
+			Py_INCREF(pClientObjectBase->pEntities());
+			return pClientObjectBase->pEntities();
+		}
+		else 
+		{
+			S_Return;
+		}
 	}
 
 	static PyObject* __pyget_pyGetID(PyObject *self, void *closure){
