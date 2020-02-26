@@ -2619,7 +2619,7 @@ bool Entity::navigatePathPoints(std::vector<Position3D>& outPaths, const Positio
 
 	if(!pNavHandle)
 	{
-		WARNING_MSG(fmt::format("Entity::navigatePathPoints(): space({}), entityID({}), not found navhandle!\n",
+		ERROR_MSG(fmt::format("Entity::navigatePathPoints(): space({}), entityID({}), not found navhandle!\n",
 			spaceID(), id()));
 
 		return false;
@@ -2783,7 +2783,7 @@ bool Entity::getRandomPoints(std::vector<Position3D>& outPoints, const Position3
 
 	if(!pNavHandle)
 	{
-		WARNING_MSG(fmt::format("Entity::getRandomPoints(): space({}), entityID({}), not found navhandle!\n",
+		ERROR_MSG(fmt::format("Entity::getRandomPoints(): space({}), entityID({}), not found navhandle!\n",
 			spaceID(), id()));
 		return false;
 	}
