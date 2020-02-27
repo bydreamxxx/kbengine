@@ -1106,6 +1106,7 @@ namespace KBEngine {
 					char str[4];
 					sprintf(str, "%d", i);
 					bson_append_document(&child, str, -1, &item);
+					bson_destroy(&item);
 				}
 			}
 			else
