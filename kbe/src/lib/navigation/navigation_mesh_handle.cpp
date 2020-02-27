@@ -102,7 +102,8 @@ int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& s
 
 	if (!startRef || !endRef)
 	{
-		ERROR_MSG(fmt::format("NavMeshHandle::findStraightPath({2}): Could not find any nearby poly's ({0}, {1})\n", startRef, endRef, resPath));
+		// 有时候会有大量的查找行为导致输出海量的错误日志，取消日志输出
+		//ERROR_MSG(fmt::format("NavMeshHandle::findStraightPath({2}): Could not find any nearby poly's ({0}, {1})\n", startRef, endRef, resPath));
 		return NAV_ERROR_NEARESTPOLY;
 	}
 
@@ -196,7 +197,8 @@ int NavMeshHandle::findRandomPointAroundCircle(int layer, uint16 flags, const Po
 
 	if (!startRef)
 	{
-		ERROR_MSG(fmt::format("NavMeshHandle::findRandomPointAroundCircle({1}): Could not find any nearby poly's ({0})\n", startRef, resPath));
+		// 有时候会有大量的查找行为导致输出海量的错误日志，取消日志输出
+		//ERROR_MSG(fmt::format("NavMeshHandle::findRandomPointAroundCircle({1}): Could not find any nearby poly's ({0})\n", startRef, resPath));
 		return NAV_ERROR_NEARESTPOLY;
 	}
 
@@ -525,7 +527,8 @@ int NavMeshHandle::findStraightPath(int layer, uint16 flags, const Position3D& s
 
 	if (!startRef || !endRef)
 	{
-		ERROR_MSG(fmt::format("NavMeshHandle::findStraightPath({2}): Could not find any nearby poly's ({0}, {1})\n", startRef, endRef, resPath));
+		// 有时候会有大量的查找行为导致输出海量的错误日志，取消日志输出
+		//ERROR_MSG(fmt::format("NavMeshHandle::findStraightPath({2}): Could not find any nearby poly's ({0}, {1})\n", startRef, endRef, resPath));
 		return NAV_ERROR_NEARESTPOLY;
 	}
 
@@ -622,7 +625,8 @@ int NavMeshHandle::findRandomPointAroundCircle(int layer, uint16 flags, const Po
 
 	if (!startRef)
 	{
-		ERROR_MSG(fmt::format("NavMeshHandle::findRandomPointAroundCircle({1}): Could not find any nearby poly's ({0})\n", startRef, resPath));
+		// 有时候会有大量的查找行为导致输出海量的错误日志，取消日志输出
+		//ERROR_MSG(fmt::format("NavMeshHandle::findRandomPointAroundCircle({1}): Could not find any nearby poly's ({0})\n", startRef, resPath));
 		return NAV_ERROR_NEARESTPOLY;
 	}
 
