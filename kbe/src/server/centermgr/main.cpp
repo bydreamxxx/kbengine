@@ -57,5 +57,5 @@ using namespace KBEngine;
 int KBENGINE_MAIN(int argc, char* argv[])
 {
 	ENGINE_COMPONENT_INFO& info = g_kbeSrvConfig.getCenterMgr();
-	return kbeMainT<Centermgr>(argc, argv, CENTERMGR_TYPE, -1, -1, "", 0, 0, info.internalInterface);
+	return kbeMainT<Centermgr>(argc, argv, CENTERMGR_TYPE, 23001, 23001, "", 0, 0, info.internalInterface);
 }

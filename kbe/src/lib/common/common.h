@@ -130,6 +130,7 @@ const char COMPONENT_NAME[][255] = {
 	"watcher",
 	"interfaces",
 	"tool",
+	"centermgr",
 };
 
 const char COMPONENT_NAME_1[][255] = {
@@ -148,6 +149,7 @@ const char COMPONENT_NAME_1[][255] = {
 	"watcher   ",
 	"interfaces",
 	"tool      ",
+	"centermgr ",
 };
 
 const char COMPONENT_NAME_2[][255] = {
@@ -166,6 +168,7 @@ const char COMPONENT_NAME_2[][255] = {
 	"   watcher",
 	"interfaces",
 	"      tool",
+	" centermgr",
 };
 
 inline const char* COMPONENT_NAME_EX(COMPONENT_TYPE CTYPE)

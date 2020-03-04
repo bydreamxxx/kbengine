@@ -16,6 +16,8 @@ namespace KBEngine
 			COMPONENT_ID componentID);
 
 		~Centermgr();
+
+		virtual bool run();
 	};
 
 }	// end namespace KBEngine

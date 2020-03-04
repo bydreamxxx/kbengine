@@ -18,5 +18,9 @@ namespace KBEngine
 	Centermgr::~Centermgr()
 	{}
 
+	bool Centermgr::run()
+	{
+		return ServerApp::run();
+	}
 }
 
