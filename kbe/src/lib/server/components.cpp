@@ -1508,7 +1508,7 @@ void Components::broadcastSelf()
 //-------------------------------------------------------------------------------------
 bool Components::process()
 {
-	if(componentType_ == MACHINE_TYPE)
+	if(componentType_ == MACHINE_TYPE || componentType_ == CENTERMGR_TYPE)
 	{
 		onFoundAllComponents();
 		return false;

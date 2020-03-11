@@ -181,10 +181,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\lib\dependencies\openssl\include\openssl\applink.c" />
     <ClCompile Include="centermgr.cpp" />
+    <ClCompile Include="centermgr_interface.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="centermgr.h" />
+    <ClInclude Include="centermgr_interface.h" />
+    <ClInclude Include="centermgr_interface_macro.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

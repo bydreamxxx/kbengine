@@ -20,9 +20,18 @@
     <ClCompile Include="..\..\lib\dependencies\openssl\include\openssl\applink.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="centermgr_interface.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="centermgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="centermgr_interface.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="centermgr_interface_macro.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
