@@ -72,6 +72,10 @@ Space::~Space()
 	
 	this->coordinateSystem_.releaseNodes();
 	
+	if (pNavHandle_ && pNavHandle_->type() == NavigationHandle::NAV_TILE) 
+	{
+		SAFE_RELEASE(pNavHandle_);
+	}
 	//pNavHandle_.clear();
 
 	SAFE_RELEASE(pCell_);	

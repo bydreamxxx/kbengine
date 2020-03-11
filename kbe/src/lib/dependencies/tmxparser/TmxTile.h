@@ -44,6 +44,7 @@ namespace Tmx
 	public:
         Tile(int id);
 		Tile();
+		Tile(const Tile& _tile);
 		~Tile();
 	
 		// Parse a tile node.

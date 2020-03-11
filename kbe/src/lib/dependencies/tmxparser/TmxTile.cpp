@@ -37,6 +37,12 @@ namespace Tmx
 	Tile::Tile() : properties()
 	{}
 
+	Tile::Tile(const Tile& _tile)
+		: id(_tile.id)
+		, properties(_tile.properties)
+	{
+	}
+
 	Tile::~Tile() 
 	{}
 

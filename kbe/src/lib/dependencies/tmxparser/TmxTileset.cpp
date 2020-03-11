@@ -60,6 +60,11 @@ namespace Tmx
 		, tiles()
 		, properties(_tileset.properties)
 	{
+		std::vector< Tmx::Tile* >::const_iterator iter1 = _tileset.tiles.begin();
+		for (; iter1 != _tileset.tiles.end(); iter1++)
+		{
+			tiles.push_back(new Tmx::Tile(*(*iter1)));
+		}
 	}
 
 	Tileset::~Tileset() 

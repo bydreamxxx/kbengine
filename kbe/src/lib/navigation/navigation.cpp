@@ -81,24 +81,8 @@ NavigationHandlePtr Navigation::findNavigation(std::string resPath)
 	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(resPath);
 	if(navhandles_.find(resPath) != navhandles_.end())
 	{
-		if(iter->second == NULL)
-			return NULL;
-
-		if(iter->second->type() == NavigationHandle::NAV_MESH)
-		{
-			return iter->second;
-		}
-		else if (iter->second->type() == NavigationHandle::NAV_TILE)
-		{
-			// 由于tile需要做碰撞， 每一个space都需要一份新的数据， 我们这里采用拷贝的方式来增加构造速度
-			NavTileHandle* pNavTileHandle = new NavTileHandle(*(KBEngine::NavTileHandle*)iter->second);	// 注意，NAV_TILE寻路方式使用findNavigation需要自己释放内存
-			DEBUG_MSG(fmt::format("Navigation::findNavigation: copy NavTileHandle({:p})!\n", (void*)pNavTileHandle));
-			return NavigationHandlePtr(pNavTileHandle);
-		}
-
 		return iter->second;
 	}
-
 	return NULL;
 }
 
