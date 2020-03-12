@@ -1,5 +1,7 @@
 
-#include "centermgr.h"
+#include "centermgr/centermgr.h"
+#include "centermgr/centermgr_interface.h"
+#include "network/message_handler.h"
 
 namespace KBEngine 
 {
@@ -12,7 +14,7 @@ namespace KBEngine
 		COMPONENT_ID componentID):
 		ServerApp(dispatcher, ninterface, componentType, componentID)
 	{
-
+		KBEngine::Network::MessageHandlers::pMainMessageHandlers = &CentermgrInterface::messageHandlers;
 	}
 
 	Centermgr::~Centermgr()

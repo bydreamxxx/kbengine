@@ -19,7 +19,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #if defined(DEFINE_IN_INTERFACE)
-	#undef KBE_BASEAPP_INTERFACE_H
+	#undef KBE_CENTERMGR_INTERFACE_H
 #endif // DEFINE_IN_INTERFACE
 
 #ifndef KBE_CENTERMGR_INTERFACE_H
