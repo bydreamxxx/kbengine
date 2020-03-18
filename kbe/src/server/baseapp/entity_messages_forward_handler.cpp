@@ -208,14 +208,6 @@ bool BaseMessagesForwardClientHandler::process()
 {
 	if (!startForward_)
 	{
-		if (timestamp() - createTime_ >= uint64(300 * stampsPerSecond()))
-		{
-			ERROR_MSG(fmt::format("BaseMessagesForwardClientHandler::process(): Wait for a timeout({}s)! size={}, entityID={}\n",
-				((timestamp() - createTime_) / stampsPerSecond()), bufferedSendToClientMessages_.size(), (pEntity_ ? pEntity_->id() : 0)));
-
-			startForward_ = true;
-		}
-
 		return true;
 	}
 
