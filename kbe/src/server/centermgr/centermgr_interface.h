@@ -35,10 +35,21 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 
 namespace KBEngine {
+
 /**
 	centermgr所有消息接口在此定义
 */
 NETWORK_INTERFACE_DECLARE_BEGIN(CentermgrInterface)
+
+// 向 centermgr 注册自己的信息
+CENTERMGR_MESSAGE_DECLARE_ARGS7(onAppRegister, NETWORK_VARIABLE_MESSAGE,
+	COMPONENT_TYPE, componentType,
+	COMPONENT_ID, componentID,
+	uint32, intaddr,
+	uint16, intport,
+	uint32, extaddr,
+	uint16, extport,
+	std::string, extaddrEx)
 
 NETWORK_INTERFACE_DECLARE_END()
 

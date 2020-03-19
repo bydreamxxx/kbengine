@@ -89,6 +89,10 @@ public:
 	virtual void onShutdownBegin();
 	virtual void onShutdownEnd();
 
+	virtual void onAllComponentFound();
+	bool isCentermgrEnable();
+	void findCentermgr();
+
 	/** 获取ID服务器指针 */
 	IDServer<ENTITY_ID>& idServer(void){ return idServer_; }
 

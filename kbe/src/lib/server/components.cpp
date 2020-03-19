@@ -1439,6 +1439,8 @@ RESTART_RECV:
 void Components::onFoundAllComponents()
 {
 	INFO_MSG("Components::process(): Found all the components!\n");
+	if (_pHandler)
+		_pHandler->onAllComponentFound();
 
 #if KBE_PLATFORM == PLATFORM_WIN32
 		DebugHelper::getSingleton().set_normalcolor();

@@ -43,6 +43,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "baseappmgr/baseappmgr_interface.h"
 #include "cellappmgr/cellappmgr_interface.h"
 #include "loginapp/loginapp_interface.h"
+#include "centermgr/centermgr_interface.h"
 
 namespace KBEngine{
 
@@ -177,6 +178,123 @@ void Dbmgr::onShutdownBegin()
 void Dbmgr::onShutdownEnd()
 {
 	PythonApp::onShutdownEnd();
+}
+
+void Dbmgr::onAllComponentFound()
+{
+	ServerApp::onAllComponentFound();
+	findCentermgr();
+}
+
+bool Dbmgr::isCentermgrEnable()
+{
+	// TODO: 检查配置是否启用了 centermgr
+	return true;
+}
+
+void Dbmgr::findCentermgr()
+{
+	if (!isCentermgrEnable())
+		return;
+
+	Network::EndPoint *ep = Network::EndPoint::createPoolObject(OBJECTPOOL_POINT);
+	ep->socket(SOCK_STREAM);
+	if (!ep->good())
+	{
+		ERROR_MSG("Components::findCentermgr: couldn't create a socket\n");
+		Network::EndPoint::reclaimPoolObject(ep);
+		return;
+	}
+
+	ep->setnonblocking(true);
+	std::string ipstr = "172.16.6.173";
+	u_int32_t ipint;
+	Network::Address::string2ip(ipstr.c_str(), ipint);
+	u_int16_t port = ntohs(23001);
+	ep->addr(port, ipint);
+
+	struct timeval tv = { 0, 1000000 };
+	bool success = false;
+	for (int itry = 0; itry < 3; ++itry)
+	{
+		INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 99999999));
+		fd_set	frds, fwds;
+		FD_ZERO(&frds);
+		FD_ZERO(&fwds);
+		FD_SET((int)(*ep), &frds);
+		FD_SET((int)(*ep), &fwds);
+
+		if (ep->connect() == -1)
+		{
+			INFO_MSG(fmt::format("Components::findCentermgr: connect({}) centermgr result({})\n", ep->c_str(), 77777777));
+			if (select((*ep) + 1, &frds, &fwds, NULL, &tv) > 0)
+			{
+				INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({}) \n", 1111111));
+				if (FD_ISSET((*ep), &frds) || FD_ISSET((*ep), &fwds))
+				{
+					ep->connect();
+					INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({}) \n", 333333));
+					int error = kbe_lasterror();
+#if KBE_PLATFORM == PLATFORM_WIN32
+					if (error == WSAEISCONN || error == 0)
+#else
+					if (error == EISCONN)
+#endif
+					{
+						INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 555555));
+						success = true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				ERROR_MSG(fmt::format("Components::findCentermgr: count({}) select wait failed.\n", itry));
+			}
+		}
+		else
+		{
+			INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 22222));
+			success = true;
+			break;
+		}
+	}
+	INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr({}) result({}).\n", ep->c_str(), success));
+
+	if (success)
+	{
+		Network::Channel* pChannel = Network::Channel::createPoolObject(OBJECTPOOL_POINT);
+		success = pChannel->initialize(networkInterface_, ep, Network::Channel::INTERNAL);
+		if (!success)
+		{
+			ERROR_MSG(fmt::format("Components::findCentermgr: channel initialize({}) is failed!\n",
+				pChannel->c_str()));
+			return;
+		}
+
+		if (!networkInterface_.registerChannel(pChannel))
+		{
+			ERROR_MSG(fmt::format("Components::findCentermgr: registerChannel channel({}) is failed!\n",
+				pChannel->c_str()));
+		}
+		else
+		{
+			Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			(*pBundle).newMessage(CentermgrInterface::onAppRegister);
+			CentermgrInterface::onAppRegisterArgs7::staticAddToBundle((*pBundle), componentType_, componentID_,
+				networkInterface_.intaddr().ip, networkInterface_.intaddr().port,
+				networkInterface_.extaddr().ip, networkInterface_.extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+			pChannel->send(pBundle);
+		}
+	}
+	else
+	{
+		ERROR_MSG(fmt::format("Components::findCentermgr: connect({}) is failed! {}.\n",
+			ep->addr().c_str(), kbe_strerror()));
+
+		Network::EndPoint::reclaimPoolObject(ep);
+		return;
+	}
 }
 
 //-------------------------------------------------------------------------------------

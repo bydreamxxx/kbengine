@@ -118,6 +118,7 @@ public:
 	virtual void onAddComponent(const Components::ComponentInfos* pInfos);
 	virtual void onRemoveComponent(const Components::ComponentInfos* pInfos);
 	virtual void onIdentityillegal(COMPONENT_TYPE componentType, COMPONENT_ID componentID, uint32 pid, const char* pAddr);
+	virtual void onAllComponentFound();
 
 	virtual void onShutdownBegin();
 	virtual void onShutdown(bool first);

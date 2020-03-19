@@ -3,8 +3,11 @@
 #include "centermgr/centermgr_interface.h"
 #include "network/message_handler.h"
 
+#include "helper/debug_helper.h"
+
 namespace KBEngine 
 {
+
 	ServerConfig g_serverConfig;
 	KBE_SINGLETON_INIT(Centermgr);
 
@@ -23,6 +26,12 @@ namespace KBEngine
 	bool Centermgr::run()
 	{
 		return ServerApp::run();
+	}
+
+	void Centermgr::onAppRegister(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID, 
+		uint32 intaddr, uint16 intport, uint32 extaddr, uint16 extport, std::string& extaddrEx)
+	{
+		INFO_MSG("Centermgr::onAppRegister --->>>");
 	}
 }
 
