@@ -328,7 +328,7 @@ void Entity::onDestroy(bool callScript)
 				}
 				else
 				{
-					ent->delWitnessed(this);
+					this->delWitnessed(ent);
 				}
 				
 				ERROR_MSG(fmt::format("\t=>witnessed={}({}), isDestroyed={}, isReal={}, inTargetView={}, spaceID={}, position=({},{},{})\n", 
@@ -338,10 +338,9 @@ void Entity::onDestroy(bool callScript)
 			{
 				ERROR_MSG(fmt::format("\t=> witnessed={}, not found entity!\n", (*it)));
 			}
-			
-			witnesses_count_ = 0;
-			witnesses_.clear();
 		}
+		witnesses_count_ = 0;
+		witnesses_.clear();
 
 		//KBE_ASSERT(witnesses_count_ == 0);
 	}
@@ -4433,7 +4432,7 @@ void Entity::createWitnessFromStream(KBEngine::MemoryStream& s)
 			s >> entityID;
 
 			Entity* pEntity = Cellapp::getSingleton().findEntity(entityID);
-			if (pEntity == NULL || pEntity->spaceID() != spaceID())
+			if (pEntity == NULL || pEntity->spaceID() != spaceID() || !pEntity->isReal()) 
 				continue;
 
 			witnesses_.push_back(entityID);
