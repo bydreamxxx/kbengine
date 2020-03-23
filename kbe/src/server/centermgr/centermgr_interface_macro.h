@@ -11,6 +11,57 @@
 
 namespace KBEngine {
 
+/**
+	Centermgr消息宏，  只有 2 个参数的消息
+*/
+#if defined(NETWORK_INTERFACE_DECLARE_BEGIN)
+	#undef CENTERMGR_MESSAGE_HANDLER_ARGS2
+#endif
+
+#if defined(DEFINE_IN_INTERFACE)
+#if defined(CENTERMGR)
+#define CENTERMGR_MESSAGE_HANDLER_ARGS2(NAME, ARG_TYPE1, ARG_NAME1,					\
+											ARG_TYPE2, ARG_NAME2)				\
+	void NAME##CentermgrMessagehandler2::handle(Network::Channel* pChannel,			\
+												KBEngine::MemoryStream& s)		\
+	{																			\
+			ARG_TYPE1 ARG_NAME1;												\
+			s >> ARG_NAME1;														\
+			ARG_TYPE2 ARG_NAME2;												\
+			s >> ARG_NAME2;														\
+			KBEngine::Centermgr::getSingleton().NAME(pChannel,						\
+													ARG_NAME1, ARG_NAME2);		\
+	}																			\
+
+#else
+#define CENTERMGR_MESSAGE_HANDLER_ARGS2(NAME, ARG_TYPE1, ARG_NAME1,					\
+											ARG_TYPE2, ARG_NAME2)				\
+	void NAME##CentermgrMessagehandler2::handle(Network::Channel* pChannel,			\
+												KBEngine::MemoryStream& s)		\
+	{																			\
+	}																			\
+
+#endif
+#else
+#define CENTERMGR_MESSAGE_HANDLER_ARGS2(NAME, ARG_TYPE1, ARG_NAME1,					\
+											ARG_TYPE2, ARG_NAME2)				\
+	class NAME##CentermgrMessagehandler2 : public Network::MessageHandler			\
+	{																			\
+	public:																		\
+		virtual void handle(Network::Channel* pChannel,							\
+							KBEngine::MemoryStream& s);							\
+	};																			\
+
+#endif
+
+#define CENTERMGR_MESSAGE_DECLARE_ARGS2(NAME, MSG_LENGTH, ARG_TYPE1, ARG_NAME1,		\
+											ARG_TYPE2, ARG_NAME2)				\
+	CENTERMGR_MESSAGE_HANDLER_ARGS2(NAME, ARG_TYPE1, ARG_NAME1, 					\
+											ARG_TYPE2, ARG_NAME2)				\
+	NETWORK_MESSAGE_DECLARE_ARGS2(Centermgr, NAME,									\
+				NAME##CentermgrMessagehandler2, MSG_LENGTH, ARG_TYPE1, ARG_NAME1,	\
+											ARG_TYPE2, ARG_NAME2)				\
+
 
 /**
 Centermgr消息宏， 只有 7 个参数的消息

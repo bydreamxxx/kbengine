@@ -72,7 +72,8 @@ Dbmgr::Dbmgr(Network::EventDispatcher& dispatcher,
 	pSyncAppDatasHandler_(NULL),
 	pUpdateDBServerLogHandler_(NULL),
 	pTelnetServer_(NULL),
-	loseBaseappts_()
+	loseBaseappts_(),
+	centermgrInfo_(NULL)
 {
 	KBEngine::Network::MessageHandlers::pMainMessageHandlers = &DbmgrInterface::messageHandlers;
 }
@@ -88,6 +89,8 @@ Dbmgr::~Dbmgr()
 	{
 		SAFE_RELEASE((*iter));
 	}
+
+	SAFE_RELEASE(centermgrInfo_);
 }
 
 //-------------------------------------------------------------------------------------
@@ -180,23 +183,31 @@ void Dbmgr::onShutdownEnd()
 	PythonApp::onShutdownEnd();
 }
 
+//-------------------------------------------------------------------------------------
 void Dbmgr::onAllComponentFound()
 {
 	ServerApp::onAllComponentFound();
-	findCentermgr();
+
+	if (isCentermgrEnable())
+		findCentermgr();
 }
 
+//-------------------------------------------------------------------------------------
 bool Dbmgr::isCentermgrEnable()
 {
 	// TODO: 检查配置是否启用了 centermgr
 	return true;
 }
 
+//-------------------------------------------------------------------------------------
+bool Dbmgr::isCentermgrChannel(Network::Channel *channel)
+{
+	return centermgrInfo_ != NULL && centermgrInfo_->pChannel == channel;
+}
+
+//-------------------------------------------------------------------------------------
 void Dbmgr::findCentermgr()
 {
-	if (!isCentermgrEnable())
-		return;
-
 	Network::EndPoint *ep = Network::EndPoint::createPoolObject(OBJECTPOOL_POINT);
 	ep->socket(SOCK_STREAM);
 	if (!ep->good())
@@ -276,6 +287,9 @@ void Dbmgr::findCentermgr()
 		{
 			ERROR_MSG(fmt::format("Components::findCentermgr: registerChannel channel({}) is failed!\n",
 				pChannel->c_str()));
+
+			pChannel->destroy();
+			Network::Channel::reclaimPoolObject(pChannel);
 		}
 		else
 		{
@@ -285,6 +299,12 @@ void Dbmgr::findCentermgr()
 				networkInterface_.intaddr().ip, networkInterface_.intaddr().port,
 				networkInterface_.extaddr().ip, networkInterface_.extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			pChannel->send(pBundle);
+
+			centermgrInfo_ = new Components::ComponentInfos;
+			centermgrInfo_->componentType = CENTERMGR_TYPE;
+			centermgrInfo_->pChannel = pChannel;
+
+			INFO_MSG(fmt::format("Components::findCentermgr: register  to centermgr({}) success.\n", ep->c_str()));
 		}
 	}
 	else
@@ -294,6 +314,32 @@ void Dbmgr::findCentermgr()
 
 		Network::EndPoint::reclaimPoolObject(ep);
 		return;
+	}
+}
+
+//-------------------------------------------------------------------------------------
+void Dbmgr::onComponentActiveTickTimeout()
+{
+	if (centermgrInfo_ != NULL && centermgrInfo_->pChannel != NULL)
+	{
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		pBundle->newMessage(CentermgrInterface::onAppActiveTick);
+		(*pBundle) << g_componentType;
+		(*pBundle) << g_componentID;
+		centermgrInfo_->pChannel->send(pBundle);
+		INFO_MSG(fmt::format("Dbmgr::onComponentActiveTickTimeout: CentermgrInterface tick at time {}\n", timestamp()));
+	}
+}
+
+void Dbmgr::onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID)
+{
+	ServerApp::onAppActiveTick(pChannel, componentType, componentID);
+
+	// TODO: 需要验证centermgr的身份
+	if (componentType == CENTERMGR_TYPE && centermgrInfo_ != NULL && centermgrInfo_->pChannel != NULL)
+	{
+		INFO_MSG(fmt::format("Dbmgr::onAppActiveTick: app({}:{}) tick at time {}\n", COMPONENT_NAME_EX(componentType), pChannel->c_str(), timestamp()));
+		centermgrInfo_->pChannel->updateLastReceivedTime();
 	}
 }
 
@@ -1416,6 +1462,14 @@ void Dbmgr::onChannelDeregister(Network::Channel * pChannel)
 	}
 
 	ServerApp::onChannelDeregister(pChannel);
+
+	if (isCentermgrChannel(pChannel))
+	{
+		ERROR_MSG(fmt::format("Dbmgr::onChannelDeregister: {} :centermgr({}) Abnormal exit(reason={})! Channel(timestamp={}, lastReceivedTime={}, inactivityExceptionPeriod={})\n",
+			COMPONENT_NAME_EX(CENTERMGR_TYPE), pChannel->c_str(), pChannel->condemnReason(), timestamp(), pChannel->lastReceivedTime(), pChannel->inactivityExceptionPeriod()));
+
+		SAFE_RELEASE(centermgrInfo_);
+	}
 }
 
 //-------------------------------------------------------------------------------------
