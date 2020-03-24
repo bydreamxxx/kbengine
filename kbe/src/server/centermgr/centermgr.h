@@ -4,6 +4,7 @@
 
 #include "server/serverapp.h"
 #include "common/singleton.h"
+#include "common//timer.h"
 
 namespace KBEngine
 {
@@ -12,6 +13,12 @@ class Centermgr: public ServerApp,
 				public Singleton<Centermgr>
 {
 public:
+	enum TimeOutType
+	{
+		CENTERMGR_TIMEOUT_TICK = TIMEOUT_SERVERAPP_MAX + 1,	// +1 不会与父类冲突
+		CENTERMGR_TIMEOUT_MAX
+	};
+
 	Centermgr(Network::EventDispatcher& dispatcher,
 		Network::NetworkInterface& ninterface,
 		COMPONENT_TYPE componentType,
@@ -21,7 +28,15 @@ public:
 
 	virtual bool run();
 
+	void mainProcess();
+
+	virtual bool initializeEnd();
+
 	virtual void onComponentActiveTickTimeout();
+
+	virtual void onChannelDeregister(Network::Channel * pChannel);
+
+	virtual void handleTimeout(TimerHandle handle, void * arg);
 
 	/* 网络接口
 	 * 某个 app 请求注册
@@ -35,10 +50,13 @@ public:
 	virtual void onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID);
 
 private:
+	typedef Components::ComponentInfos APP_INFO;
 	// key 不能是 ip，同一 ip 有可能有多个同类 app，可以是 componentID，要求跨服的所有服务器cid 必须唯一
-	typedef std::map<COMPONENT_ID, Components::ComponentInfos*> APP_INFOS;
+	typedef std::map<COMPONENT_ID, APP_INFO*> APP_INFOS;
+
 	APP_INFOS apps_;
 
+	TimerHandle	tickTimer_;
 };
 
 }	// end namespace KBEngine

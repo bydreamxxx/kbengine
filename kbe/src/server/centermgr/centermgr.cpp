@@ -17,24 +17,53 @@ namespace KBEngine
 		COMPONENT_TYPE componentType,
 		COMPONENT_ID componentID):
 		ServerApp(dispatcher, ninterface, componentType, componentID),
-		apps_()
+		apps_(),
+		tickTimer_()
 	{
 		KBEngine::Network::MessageHandlers::pMainMessageHandlers = &CentermgrInterface::messageHandlers;
 	}
 
 	Centermgr::~Centermgr()
 	{
-		
 		for (APP_INFOS::iterator iter = apps_.begin(); iter != apps_.end(); ++iter)
 		{
 			SAFE_RELEASE(iter->second);
 		}
 		apps_.clear();
+
+		tickTimer_.cancel();
 	}
 
 	bool Centermgr::run()
 	{
 		return ServerApp::run();
+	}
+
+	void Centermgr::mainProcess()
+	{
+		networkInterface_.processChannels(KBEngine::Network::MessageHandlers::pMainMessageHandlers);
+	}
+
+	bool Centermgr::initializeEnd()
+	{
+		tickTimer_ = this->dispatcher().addTimer(1000000 / g_kbeSrvConfig.gameUpdateHertz(), this,
+			reinterpret_cast<void *>(CENTERMGR_TIMEOUT_TICK));
+
+		return true;
+	}
+
+	void Centermgr::handleTimeout(TimerHandle handle, void * arg)
+	{
+		switch (reinterpret_cast<uintptr>(arg))
+		{
+		case CENTERMGR_TIMEOUT_TICK:
+			mainProcess();
+			return;
+		default:
+			break;
+		}
+
+		ServerApp::handleTimeout(handle, arg);
 	}
 
 	void Centermgr::onComponentActiveTickTimeout()
@@ -53,6 +82,21 @@ namespace KBEngine
 		}
 	}
 
+	void Centermgr::onChannelDeregister(Network::Channel * pChannel)
+	{
+		for (APP_INFOS::iterator iter = apps_.begin(); iter != apps_.end(); iter++)
+		{
+			if (iter->second->pChannel == pChannel)
+			{
+				SAFE_RELEASE(iter->second);
+				apps_.erase(iter->first);
+				return;
+			}
+		}
+
+		ServerApp::onChannelDeregister(pChannel);
+	}
+
 	void Centermgr::onAppRegister(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID, 
 		uint32 intaddr, uint16 intport, uint32 extaddr, uint16 extport, std::string& extaddrEx)
 	{
@@ -68,7 +112,7 @@ namespace KBEngine
 			ntohs(extport),
 			pChannel->c_str()));
 
-		Components::ComponentInfos *appInfo = new Components::ComponentInfos;
+		APP_INFO *appInfo = new APP_INFO;
 		appInfo->componentType = componentType;
 		appInfo->pChannel = pChannel;
 		appInfo->cid = componentID;
@@ -77,7 +121,7 @@ namespace KBEngine
 		if (extaddrEx.size() > 0)
 			strncpy(appInfo->externalAddressEx, extaddrEx.c_str(), MAX_NAME);
 
-		apps_.insert(std::pair<COMPONENT_ID, Components::ComponentInfos*>(componentID, appInfo));
+		apps_.insert(std::pair<COMPONENT_ID, APP_INFO*>(componentID, appInfo));
 	}
 
 	void Centermgr::onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID)
