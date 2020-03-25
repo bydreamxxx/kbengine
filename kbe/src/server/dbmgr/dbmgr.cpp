@@ -218,10 +218,9 @@ void Dbmgr::findCentermgr()
 	}
 
 	ep->setnonblocking(true);
-	std::string ipstr = "172.16.6.173";
 	u_int32_t ipint;
-	Network::Address::string2ip(ipstr.c_str(), ipint);
-	u_int16_t port = ntohs(23001);
+	Network::Address::string2ip(g_serverConfig.getCenterMgr().externalAddress, ipint);
+	u_int16_t port = ntohs(g_serverConfig.getCenterMgr().externalPorts_min);
 	ep->addr(port, ipint);
 
 	struct timeval tv = { 0, 1000000 };

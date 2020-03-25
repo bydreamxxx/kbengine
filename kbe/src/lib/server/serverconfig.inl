@@ -53,7 +53,7 @@ INLINE ENGINE_COMPONENT_INFO& ServerConfig::getCellAppMgr(void)
 
 INLINE ENGINE_COMPONENT_INFO& ServerConfig::getCenterMgr(void)
 {
-	return _centerMrgInfo;
+	return _centerMgrInfo;
 }
 
 //-------------------------------------------------------------------------------------
