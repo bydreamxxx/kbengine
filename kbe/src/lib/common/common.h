@@ -105,7 +105,8 @@ enum COMPONENT_TYPE
 	WATCHER_TYPE			= 12,
 	INTERFACES_TYPE			= 13,
 	TOOL_TYPE				= 14,
-	COMPONENT_END_TYPE		= 15,
+	CENTERMGR_TYPE			= 15,
+	COMPONENT_END_TYPE		= 16,
 };
 
 /** 当前服务器组件类别和ID */
@@ -129,6 +130,7 @@ const char COMPONENT_NAME[][255] = {
 	"watcher",
 	"interfaces",
 	"tool",
+	"centermgr",
 };
 
 const char COMPONENT_NAME_1[][255] = {
@@ -147,6 +149,7 @@ const char COMPONENT_NAME_1[][255] = {
 	"watcher   ",
 	"interfaces",
 	"tool      ",
+	"centermgr ",
 };
 
 const char COMPONENT_NAME_2[][255] = {
@@ -165,6 +168,7 @@ const char COMPONENT_NAME_2[][255] = {
 	"   watcher",
 	"interfaces",
 	"      tool",
+	" centermgr",
 };
 
 inline const char* COMPONENT_NAME_EX(COMPONENT_TYPE CTYPE)

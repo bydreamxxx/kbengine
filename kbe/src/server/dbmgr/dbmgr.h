@@ -27,6 +27,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyscript/script.h"
 #include "pyscript/pyobject_pointer.h"
 #include "entitydef/entitydef.h"
+#include "server/components.h"
 #include "server/python_app.h"
 #include "server/idallocate.h"
 #include "server/serverconfig.h"
@@ -89,8 +90,20 @@ public:
 	virtual void onShutdownBegin();
 	virtual void onShutdownEnd();
 
+	virtual void onAllComponentFound();
+	bool isCentermgrEnable();
+	bool isCentermgrChannel(Network::Channel *channel);
+	void findCentermgr();
+
+	virtual void onComponentActiveTickTimeout();
+
 	/** 获取ID服务器指针 */
 	IDServer<ENTITY_ID>& idServer(void){ return idServer_; }
+
+	/** 网络接口
+	某个app向本app告知处于活动状态。
+	*/
+	virtual void onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID);
 
 	/** 网络接口
 		请求分配一个ENTITY_ID段
@@ -290,6 +303,8 @@ protected:
 	std::map<COMPONENT_ID, uint64>						loseBaseappts_;
 
 	PY_CALLBACKMGR										pyCallbackMgr_;
+
+	Components::ComponentInfos							*centermgrInfo_;
 };
 
 }

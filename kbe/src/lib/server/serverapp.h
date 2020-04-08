@@ -118,6 +118,10 @@ public:
 	virtual void onAddComponent(const Components::ComponentInfos* pInfos);
 	virtual void onRemoveComponent(const Components::ComponentInfos* pInfos);
 	virtual void onIdentityillegal(COMPONENT_TYPE componentType, COMPONENT_ID componentID, uint32 pid, const char* pAddr);
+	virtual void onAllComponentFound();
+
+	// 维持组件连接的timer触发通知app
+	virtual void onComponentActiveTickTimeout();
 
 	virtual void onShutdownBegin();
 	virtual void onShutdown(bool first);
@@ -146,7 +150,7 @@ public:
 	/** 网络接口
 		某个app向本app告知处于活动状态。
 	*/
-	void onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID);
+	virtual void onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID);
 	
 	/** 网络接口
 		请求断开服务器的连接

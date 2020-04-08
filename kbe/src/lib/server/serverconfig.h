@@ -157,6 +157,8 @@ typedef struct EngineComponentInfo
 
 	std::vector< std::string > machine_addresses;			// 配置中给出的所有的machine的地址
 	
+	std::vector< std::string > connect_center_addresses;	// 配置给出的所有参与跨服对接的组件地址
+	
 	char entryScriptFile[MAX_NAME];							// 组件的入口脚本文件
 	char dbAccountEntityScriptType[MAX_NAME];				// 数据库帐号脚本类别
 	float defaultViewRadius;								// 配置在cellapp节点中的player的view半径大小
@@ -260,6 +262,7 @@ public:
 	INLINE ENGINE_COMPONENT_INFO& getDBMgr(void);
 	INLINE ENGINE_COMPONENT_INFO& getLoginApp(void);
 	INLINE ENGINE_COMPONENT_INFO& getCellAppMgr(void);
+	INLINE ENGINE_COMPONENT_INFO& getCenterMgr(void);
 	INLINE ENGINE_COMPONENT_INFO& getBaseAppMgr(void);
 	INLINE ENGINE_COMPONENT_INFO& getKBMachine(void);
 	INLINE ENGINE_COMPONENT_INFO& getBots(void);
@@ -307,6 +310,7 @@ private:
 	ENGINE_COMPONENT_INFO _dbmgrInfo;
 	ENGINE_COMPONENT_INFO _loginAppInfo;
 	ENGINE_COMPONENT_INFO _cellAppMgrInfo;
+	ENGINE_COMPONENT_INFO _centerMgrInfo;
 	ENGINE_COMPONENT_INFO _baseAppMgrInfo;
 	ENGINE_COMPONENT_INFO _kbMachineInfo;
 	ENGINE_COMPONENT_INFO _botsInfo;
