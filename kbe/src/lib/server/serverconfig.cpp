@@ -1329,6 +1329,55 @@ bool ServerConfig::loadConfig(std::string fileName)
 		}
 	}
 
+	rootNode = xml->getRootNode("centermgr");
+	if (rootNode != NULL)
+	{
+		node = xml->enterNode(rootNode, "internalInterface");
+		if (node != NULL)
+			strncpy((char*)&_centerMgrInfo.internalInterface, xml->getValStr(node).c_str(), MAX_NAME - 1);
+
+		node = xml->enterNode(rootNode, "externalInterface");
+		if (node != NULL)
+			strncpy((char*)&_centerMgrInfo.externalInterface, xml->getValStr(node).c_str(), MAX_NAME - 1);
+
+		node = xml->enterNode(rootNode, "externalAddress");
+		if (node != NULL)
+			strncpy((char*)&_centerMgrInfo.externalAddress, xml->getValStr(node).c_str(), MAX_NAME - 1);
+
+		node = xml->enterNode(rootNode, "externalPorts_min");
+		if (node != NULL)
+			_centerMgrInfo.externalPorts_min = xml->getValInt(node);
+
+		node = xml->enterNode(rootNode, "externalPorts_max");
+		if (node != NULL)
+			_centerMgrInfo.externalPorts_max = xml->getValInt(node);
+		if (_centerMgrInfo.externalPorts_min < 0)
+			_centerMgrInfo.externalPorts_min = 0;
+		if (_centerMgrInfo.externalPorts_max < _centerMgrInfo.externalPorts_min)
+			_centerMgrInfo.externalPorts_max = _centerMgrInfo.externalPorts_min;
+
+		node = xml->enterNode(rootNode, "addresses");
+		if (node)
+		{
+			do
+			{
+				if (TiXmlNode::TINYXML_COMMENT == node->Type())
+					continue;
+
+				if (node->FirstChild() != NULL)
+				{
+					std::string c = node->FirstChild()->Value();
+					c = strutil::kbe_trim(c);
+					if (c.size() > 0)
+					{
+						_centerMgrInfo.connect_center_addresses.push_back(c);
+					}
+				}
+			} while ((node = node->NextSibling()));
+		}
+	}
+
+
 	if(email_service_config.size() > 0)
 	{
 		SmartPointer<XML> emailxml(new XML(Resmgr::getSingleton().matchRes(email_service_config).c_str()));
