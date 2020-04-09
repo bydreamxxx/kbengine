@@ -24,4 +24,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="centermgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="centermgr_interface.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="centermgr_interface_macro.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
