@@ -43,6 +43,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "baseappmgr/baseappmgr_interface.h"
 #include "cellappmgr/cellappmgr_interface.h"
 #include "loginapp/loginapp_interface.h"
+#include "centermgr/centermgr_interface.h"
 
 namespace KBEngine{
 
@@ -71,7 +72,8 @@ Dbmgr::Dbmgr(Network::EventDispatcher& dispatcher,
 	pSyncAppDatasHandler_(NULL),
 	pUpdateDBServerLogHandler_(NULL),
 	pTelnetServer_(NULL),
-	loseBaseappts_()
+	loseBaseappts_(),
+	centermgrInfo_(NULL)
 {
 	KBEngine::Network::MessageHandlers::pMainMessageHandlers = &DbmgrInterface::messageHandlers;
 }
@@ -87,6 +89,8 @@ Dbmgr::~Dbmgr()
 	{
 		SAFE_RELEASE((*iter));
 	}
+
+	SAFE_RELEASE(centermgrInfo_);
 }
 
 //-------------------------------------------------------------------------------------
@@ -179,6 +183,167 @@ void Dbmgr::onShutdownBegin()
 void Dbmgr::onShutdownEnd()
 {
 	PythonApp::onShutdownEnd();
+}
+
+void Dbmgr::onAllComponentFound()
+{
+	ServerApp::onAllComponentFound();
+
+	if (isCentermgrEnable())
+		findCentermgr();
+}
+
+//-------------------------------------------------------------------------------------
+bool Dbmgr::isCentermgrEnable()
+{
+	// TODO: 检查配置是否启用了 centermgr
+	return true;
+}
+
+//-------------------------------------------------------------------------------------
+bool Dbmgr::isCentermgrChannel(Network::Channel *channel)
+{
+	return centermgrInfo_ != NULL && centermgrInfo_->pChannel == channel;
+}
+
+//-------------------------------------------------------------------------------------
+void Dbmgr::findCentermgr()
+{
+	Network::EndPoint *ep = Network::EndPoint::createPoolObject(OBJECTPOOL_POINT);
+	ep->socket(SOCK_STREAM);
+	if (!ep->good())
+	{
+		ERROR_MSG("Components::findCentermgr: couldn't create a socket\n");
+		Network::EndPoint::reclaimPoolObject(ep);
+		return;
+	}
+
+	ep->setnonblocking(true);
+	u_int32_t ipint;
+	Network::Address::string2ip(g_serverConfig.getCenterMgr().externalAddress, ipint);
+	u_int16_t port = ntohs(g_serverConfig.getCenterMgr().externalPorts_min);
+	ep->addr(port, ipint);
+
+	struct timeval tv = { 0, 1000000 };
+	bool success = false;
+	for (int itry = 0; itry < 3; ++itry)
+	{
+		INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 99999999));
+		fd_set	frds, fwds;
+		FD_ZERO(&frds);
+		FD_ZERO(&fwds);
+		FD_SET((int)(*ep), &frds);
+		FD_SET((int)(*ep), &fwds);
+
+		if (ep->connect() == -1)
+		{
+			INFO_MSG(fmt::format("Components::findCentermgr: connect({}) centermgr result({})\n", ep->c_str(), 77777777));
+			if (select((*ep) + 1, &frds, &fwds, NULL, &tv) > 0)
+			{
+				INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({}) \n", 1111111));
+				if (FD_ISSET((*ep), &frds) || FD_ISSET((*ep), &fwds))
+				{
+					ep->connect();
+					INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({}) \n", 333333));
+					int error = kbe_lasterror();
+#if KBE_PLATFORM == PLATFORM_WIN32
+					if (error == WSAEISCONN || error == 0)
+#else
+					if (error == EISCONN)
+#endif
+					{
+						INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 555555));
+						success = true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				ERROR_MSG(fmt::format("Components::findCentermgr: count({}) select wait failed.\n", itry));
+			}
+		}
+		else
+		{
+			INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 22222));
+			success = true;
+			break;
+		}
+	}
+	INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr({}) result({}).\n", ep->c_str(), success));
+
+	if (success)
+	{
+		Network::Channel* pChannel = Network::Channel::createPoolObject(OBJECTPOOL_POINT);
+		success = pChannel->initialize(networkInterface_, ep, Network::Channel::INTERNAL);
+		if (!success)
+		{
+			ERROR_MSG(fmt::format("Components::findCentermgr: channel initialize({}) is failed!\n",
+				pChannel->c_str()));
+			return;
+		}
+
+		if (!networkInterface_.registerChannel(pChannel))
+		{
+			ERROR_MSG(fmt::format("Components::findCentermgr: registerChannel channel({}) is failed!\n",
+				pChannel->c_str()));
+
+			pChannel->destroy();
+			Network::Channel::reclaimPoolObject(pChannel);
+		}
+		else
+		{
+			Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			(*pBundle).newMessage(CentermgrInterface::onAppRegister);
+			CentermgrInterface::onAppRegisterArgs7::staticAddToBundle((*pBundle), componentType_, componentID_,
+				networkInterface_.intaddr().ip, networkInterface_.intaddr().port,
+				networkInterface_.extaddr().ip, networkInterface_.extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+			pChannel->send(pBundle);
+
+			centermgrInfo_ = new Components::ComponentInfos;
+			centermgrInfo_->componentType = CENTERMGR_TYPE;
+			centermgrInfo_->pChannel = pChannel;
+
+			INFO_MSG(fmt::format("Components::findCentermgr: register  to centermgr({}) success.\n", ep->c_str()));
+		}
+	}
+	else
+	{
+		ERROR_MSG(fmt::format("Components::findCentermgr: connect({}) is failed! {}.\n",
+			ep->addr().c_str(), kbe_strerror()));
+
+		Network::EndPoint::reclaimPoolObject(ep);
+		return;
+	}
+}
+
+//-------------------------------------------------------------------------------------
+void Dbmgr::onComponentActiveTickTimeout()
+{
+	if (centermgrInfo_ != NULL && centermgrInfo_->pChannel != NULL)
+	{
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		pBundle->newMessage(CentermgrInterface::onAppActiveTick);
+		(*pBundle) << g_componentType;
+		(*pBundle) << g_componentID;
+		centermgrInfo_->pChannel->send(pBundle);
+		INFO_MSG(fmt::format("Dbmgr::onComponentActiveTickTimeout: CentermgrInterface tick at time {}\n", timestamp()));
+	}
+}
+
+void Dbmgr::onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID)
+{
+	ServerApp::onAppActiveTick(pChannel, componentType, componentID);
+
+	// TODO: 需要验证centermgr的身份
+	if (componentType == CENTERMGR_TYPE && centermgrInfo_ != NULL && centermgrInfo_->pChannel != NULL)
+	{
+		INFO_MSG(fmt::format("Dbmgr::onAppActiveTick: app({}:{}) tick at time {}\n", COMPONENT_NAME_EX(componentType), pChannel->c_str(), timestamp()));
+		centermgrInfo_->pChannel->updateLastReceivedTime();
+		return;
+	}
+
+	ServerApp::onAppActiveTick(pChannel, componentType, componentID);
 }
 
 //-------------------------------------------------------------------------------------
@@ -1079,6 +1244,14 @@ void Dbmgr::onChannelDeregister(Network::Channel * pChannel)
 	}
 
 	ServerApp::onChannelDeregister(pChannel);
+
+	if (isCentermgrChannel(pChannel))
+	{
+		INFO_MSG(fmt::format("Dbmgr::onChannelDeregister: {} :centermgr({}) Abnormal exit(reason={})! Channel(timestamp={}, lastReceivedTime={})\n",
+			COMPONENT_NAME_EX(CENTERMGR_TYPE), pChannel->c_str(), pChannel->condemnReason(), timestamp(), pChannel->lastReceivedTime()));
+
+		SAFE_RELEASE(centermgrInfo_);
+	}
 }
 
 //-------------------------------------------------------------------------------------
