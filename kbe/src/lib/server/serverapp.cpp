@@ -332,6 +332,11 @@ void ServerApp::onIdentityillegal(COMPONENT_TYPE componentType, COMPONENT_ID com
 }
 
 //-------------------------------------------------------------------------------------
+void ServerApp::onAllComponentFound()
+{
+}
+
+//-------------------------------------------------------------------------------------
 void ServerApp::onRemoveComponent(const Components::ComponentInfos* pInfos)
 {
 	if(pInfos->componentType == LOGGER_TYPE)
