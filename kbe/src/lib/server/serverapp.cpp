@@ -333,8 +333,11 @@ void ServerApp::onIdentityillegal(COMPONENT_TYPE componentType, COMPONENT_ID com
 
 //-------------------------------------------------------------------------------------
 void ServerApp::onAllComponentFound()
-{
-}
+{}
+
+//-------------------------------------------------------------------------------------
+void ServerApp::onComponentActiveTickTimeout()
+{}
 
 //-------------------------------------------------------------------------------------
 void ServerApp::onRemoveComponent(const Components::ComponentInfos* pInfos)
