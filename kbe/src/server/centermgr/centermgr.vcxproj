@@ -204,6 +204,11 @@
       <Project>{2992abdb-0853-4c43-b9e2-98d4211192ee}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="centermgr.h" />
+    <ClInclude Include="centermgr_interface.h" />
+    <ClInclude Include="centermgr_interface_macro.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
