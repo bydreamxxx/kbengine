@@ -56,6 +56,7 @@ public:
 	void finalise()
 	{
 		clear(false);
+		_pGarbages->finalise();
 	}
 
 	/** 
