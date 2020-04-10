@@ -333,8 +333,6 @@ void Dbmgr::onComponentActiveTickTimeout()
 
 void Dbmgr::onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID)
 {
-	ServerApp::onAppActiveTick(pChannel, componentType, componentID);
-
 	// TODO: 需要验证centermgr的身份
 	if (componentType == CENTERMGR_TYPE && centermgrInfo_ != NULL && centermgrInfo_->pChannel != NULL)
 	{
