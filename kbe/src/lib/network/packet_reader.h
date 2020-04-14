@@ -48,10 +48,10 @@ public:
 	virtual void processMessages(KBEngine::Network::MessageHandlers* pMsgHandlers, Packet* pPacket);
 	
 	Network::MessageID	currMsgID() const{return currMsgID_;}
-	Network::MessageLength	currMsgLen() const{return currMsgLen_;}
+	Network::MessageLength1	currMsgLen() const{return currMsgLen_;}
 	
 	void currMsgID(Network::MessageID id){currMsgID_ = id;}
-	void currMsgLen(Network::MessageLength len){currMsgLen_ = len;}
+	void currMsgLen(Network::MessageLength1 len){currMsgLen_ = len;}
 
 	virtual PacketReader::PACKET_READER_TYPE type()const { return PACKET_READER_TYPE_SOCKET; }
 
