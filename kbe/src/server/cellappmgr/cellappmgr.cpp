@@ -358,6 +358,11 @@ void Cellappmgr::reqCreateCellEntityInNewSpace(Network::Channel* pChannel, Memor
 
 	uint32 cellappSize = cellapp_cids_.size();
 
+	if (cellappIndex > 0 && cellappIndex > cellappSize)
+	{
+		WARNING_MSG(fmt::format("Cellappmgr::reqCreateCellEntityInNewSpace: request cellapp index is greater than cellapp size, cellappIndex[{}],cellappSize[{}].\n", cellappIndex, cellappSize));
+	}
+
 	if (cellappSize > 0)
 	{
 		updateBestCellapp();
