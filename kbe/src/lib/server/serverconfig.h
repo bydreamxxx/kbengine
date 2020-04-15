@@ -127,6 +127,8 @@ struct DBInterfaceInfo
 	uint16 db_numConnections;								// 数据库最大连接
 	std::string db_unicodeString_characterSet;				// 设置数据库字符集
 	std::string db_unicodeString_collation;
+	std::string auto_increment_offset;								// 自增长字段偏移值
+	std::string auto_increment_increment;							// 自增长字段增长量
 };
 
 // 引擎组件信息结构体

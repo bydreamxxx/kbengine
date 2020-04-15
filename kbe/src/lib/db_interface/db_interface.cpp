@@ -165,7 +165,8 @@ DBInterface* DBUtil::createInterface(const std::string& name, bool showinfo)
 
 	if (strcmp(pDBInfo->db_type, "mysql") == 0)
 	{
-		dbinterface = new DBInterfaceMysql(name.c_str(), pDBInfo->db_unicodeString_characterSet, pDBInfo->db_unicodeString_collation);
+		dbinterface = new DBInterfaceMysql(name.c_str(), pDBInfo->db_unicodeString_characterSet, pDBInfo->db_unicodeString_collation, 
+			pDBInfo->auto_increment_offset, pDBInfo->auto_increment_increment);
 	}
 	else if (strcmp(pDBInfo->db_type, "redis") == 0)
 	{

@@ -937,7 +937,23 @@ bool ServerConfig::loadConfig(std::string fileName)
 
 					if (pDBInfo->db_unicodeString_collation.size() == 0)
 						pDBInfo->db_unicodeString_collation = "utf8_bin";
-	
+
+					node = xml->enterNode(interfaceNode, "auto_increment");
+					if (node != NULL)
+					{
+						TiXmlNode* childnode = xml->enterNode(node, "offset");
+						if (childnode)
+						{
+							pDBInfo->auto_increment_offset = xml->getValStr(childnode);
+						}
+
+						childnode = xml->enterNode(node, "increment");
+						if (childnode)
+						{
+							pDBInfo->auto_increment_increment = xml->getValStr(childnode);
+						}
+					}
+
 					if (pDBInfo == &dbinfo)
 					{
 						// 检查不能在不同的接口中使用相同的数据库与相同的表

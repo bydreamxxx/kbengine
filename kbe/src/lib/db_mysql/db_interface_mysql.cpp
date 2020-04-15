@@ -144,14 +144,16 @@ static void initializeWatcher()
 
 size_t DBInterfaceMysql::sql_max_allowed_packet_ = 0;
 //-------------------------------------------------------------------------------------
-DBInterfaceMysql::DBInterfaceMysql(const char* name, std::string characterSet, std::string collation) :
+DBInterfaceMysql::DBInterfaceMysql(const char* name, std::string characterSet, std::string collation, std::string autoIncrementOffset, std::string autoIncrementIncrement) :
 DBInterface(name),
 pMysql_(NULL),
 hasLostConnection_(false),
 inTransaction_(false),
 lock_(NULL, false),
 characterSet_(characterSet),
-collation_(collation)
+collation_(collation),
+autoIncrementOffset_(autoIncrementOffset),
+autoIncrementIncrement_(autoIncrementIncrement)
 {
 	lock_.pdbi(this);
 }
@@ -270,6 +272,13 @@ __RECONNECT:
 			characterSet_.c_str(), collation_.c_str());
 
 		query(&characterset_sql[0], strlen(characterset_sql), false);
+
+		char autoIncrement_sql[MAX_BUF];
+		kbe_snprintf(autoIncrement_sql, MAX_BUF, "set global auto_increment_increment = %s", autoIncrementIncrement_.c_str());
+		query(autoIncrement_sql, strlen(autoIncrement_sql), true);
+		memset(autoIncrement_sql, 0, MAX_BUF);
+		kbe_snprintf(autoIncrement_sql, MAX_BUF, "set global auto_increment_offset = %s", autoIncrementOffset_.c_str());
+		query(autoIncrement_sql, strlen(autoIncrement_sql), true);
 	}
 	catch (std::exception& e)
 	{
