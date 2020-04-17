@@ -286,6 +286,10 @@
 				（Database interface name)
 			-->
 			<default>
+				<!-- 是否其它服务器数据库，如果是，会忽略<pure>、<unicodeString>、<auto_increment>配置项
+				-->
+				<acrossDB>	false	</acrossDB>
+				
 				<!-- 如果为true，则为纯净的数据库，引擎不创建实体表 
 					（If true is pure database, engine does not create the entity table)
 				-->
@@ -339,8 +343,9 @@
 					<offset>1	</offset>			<!-- 取值范围 1 - 65535 -->
 					<increment>1	</increment>	<!-- 取值范围 1 - 65535 -->
 				</auto_increment>
-			</default>
+			</default>			
 		</databaseInterfaces>
+		
 		<!-- 账号系统
 			(Account system)
 		-->

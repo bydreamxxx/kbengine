@@ -874,6 +874,12 @@ bool ServerConfig::loadConfig(std::string fileName)
 					if (name == "default")
 						pDBInfo->isPure = false;
 
+					node = xml->enterNode(interfaceNode, "acrossDB");
+					if (node)
+						pDBInfo->acrossDB = xml->getValStr(node) == "true";
+					if (name == "default")	// 默认库不允许是跨服数据库
+						pDBInfo->acrossDB = false;
+
 					node = xml->enterNode(interfaceNode, "type");
 					if(node != NULL)
 						strncpy((char*)&pDBInfo->db_type, xml->getValStr(node).c_str(), MAX_NAME);
