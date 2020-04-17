@@ -258,6 +258,9 @@ bool DBUtil::initInterface(DBInterface* pdbi)
 	EntityTables& entityTables = EntityTables::findByInterfaceName(pdbi->name());
 	bool ret = entityTables.load(pdbi);
 
+	if (pDBInfo->acrossDB)
+		return ret;
+
 	if(ret)
 	{
 		ret = pdbi->checkEnvironment();
