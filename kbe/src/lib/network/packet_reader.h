@@ -76,6 +76,8 @@ protected:
 	FragmentDataTypes			fragmentDatasFlag_;
 	MemoryStream*				pFragmentStream_;
 
+	bool						bWaitLength1_;
+
 	Network::MessageID			currMsgID_;
 	Network::MessageLength1		currMsgLen_;
 	
