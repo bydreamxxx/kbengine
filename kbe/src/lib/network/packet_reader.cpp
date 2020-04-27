@@ -35,6 +35,7 @@ PacketReader::PacketReader(Channel* pChannel):
 	pFragmentDatasRemain_(0),
 	fragmentDatasFlag_(FRAGMENT_DATA_UNKNOW),
 	pFragmentStream_(NULL),
+	bWaitLength1_(false),
 	currMsgID_(0),
 	currMsgLen_(0),
 	pChannel_(pChannel)
@@ -159,6 +160,22 @@ void PacketReader::processMessages(KBEngine::Network::MessageHandlers* pMsgHandl
 						currMsgLen_ + NETWORK_MESSAGE_LENGTH_SIZE);
 				}
 			}
+			
+			if (bWaitLength1_)
+			{
+				bWaitLength1_ = false;
+				if (pPacket->length() < NETWORK_MESSAGE_LENGTH1_SIZE) 
+				{
+					writeFragmentMessage(FRAGMENT_DATA_MESSAGE_LENGTH1, pPacket, NETWORK_MESSAGE_LENGTH1_SIZE);
+					break;
+				}
+				else 
+				{
+					(*pPacket) >> currMsgLen_;
+					NetworkStats::getSingleton().trackMessage(NetworkStats::RECV, *pMsgHandler,
+						currMsgLen_ + NETWORK_MESSAGE_ID_SIZE + NETWORK_MESSAGE_LENGTH1_SIZE);
+				}
+			}
 
 			if(this->pChannel_->isExternal() && 
 				g_componentType != BOTS_TYPE && 
@@ -275,6 +292,12 @@ void PacketReader::mergeFragmentMessage(Packet* pPacket)
 
 		case FRAGMENT_DATA_MESSAGE_LENGTH:		// 消息长度信息不全
 			memcpy(&currMsgLen_, pFragmentDatas_, NETWORK_MESSAGE_LENGTH_SIZE);
+			
+			if (currMsgLen_ == NETWORK_MESSAGE_MAX_SIZE) 
+			{
+				bWaitLength1_ = true;			// 记录一下还需要扩展长度
+			}
+
 			break;
 
 		case FRAGMENT_DATA_MESSAGE_LENGTH1:		// 消息长度信息不全
