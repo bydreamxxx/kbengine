@@ -588,6 +588,7 @@ void ClientApp::onChannelTimeOut(Network::Channel * pChannel)
 		"Channel {} timeout!\n", pChannel->c_str()));
 
 	pChannel->condemn("timedout");
+	networkInterface().deregisterChannel(pChannel);
 	pChannel->destroy();
 	Network::Channel::reclaimPoolObject(pChannel);
 }
