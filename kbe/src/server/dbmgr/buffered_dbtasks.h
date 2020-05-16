@@ -52,6 +52,8 @@ public:
 
 	std::string getTasksinfos() 
 	{
+		mutex_.lockMutex();
+
 		std::string ret;
 
 		{
@@ -99,6 +101,8 @@ public:
 				ret += fmt::format("{}:({}), ", iter->first, names);
 			}
 		}
+
+		mutex_.unlockMutex();
 
 		return ret;
 	}
