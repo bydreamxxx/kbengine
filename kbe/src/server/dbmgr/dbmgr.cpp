@@ -62,6 +62,7 @@ Dbmgr::Dbmgr(Network::EventDispatcher& dispatcher,
 	pGlobalData_(NULL),
 	pBaseAppData_(NULL),
 	pCellAppData_(NULL),
+	pCenterData_(NULL),
 	bufferedDBTasksMaps_(),
 	numWrittenEntity_(0),
 	numRemovedEntity_(0),
@@ -476,10 +477,13 @@ bool Dbmgr::initializeEnd()
 	pGlobalData_ = new GlobalDataServer(GlobalDataServer::GLOBAL_DATA);
 	pBaseAppData_ = new GlobalDataServer(GlobalDataServer::BASEAPP_DATA);
 	pCellAppData_ = new GlobalDataServer(GlobalDataServer::CELLAPP_DATA);
+	pCenterData_ = new GlobalDataServer(GlobalDataServer::CENTER_DATA);
 	pGlobalData_->addConcernComponentType(CELLAPP_TYPE);
 	pGlobalData_->addConcernComponentType(BASEAPP_TYPE);
 	pBaseAppData_->addConcernComponentType(BASEAPP_TYPE);
 	pCellAppData_->addConcernComponentType(CELLAPP_TYPE);
+	pCenterData_->addConcernComponentType(CELLAPP_TYPE);
+	pCenterData_->addConcernComponentType(BASEAPP_TYPE);
 
 	INFO_MSG(fmt::format("Dbmgr::initializeEnd: digest({})\n", 
 		EntityDef::md5().getDigestStr()));
@@ -658,6 +662,7 @@ void Dbmgr::finalise()
 	SAFE_RELEASE(pGlobalData_);
 	SAFE_RELEASE(pBaseAppData_);
 	SAFE_RELEASE(pCellAppData_);
+	SAFE_RELEASE(pCenterData_);
 
 	if (pTelnetServer_)
 	{
@@ -853,6 +858,12 @@ void Dbmgr::onBroadcastGlobalDataChanged(Network::Channel* pChannel, KBEngine::M
 			pCellAppData_->del(pChannel, componentType, key);
 		else
 			pCellAppData_->write(pChannel, componentType, key, value);
+		break;
+	case GlobalDataServer::CENTER_DATA:
+		if (isDelete)
+			pCenterData_->del(pChannel, componentType, key);
+		else
+			pCenterData_->write(pChannel, componentType, key, value);
 		break;
 	default:
 		KBE_ASSERT(false && "dataType error!\n");
