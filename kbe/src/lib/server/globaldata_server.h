@@ -36,7 +36,8 @@ public:
 	{
 		GLOBAL_DATA,
 		BASEAPP_DATA,
-		CELLAPP_DATA
+		CELLAPP_DATA,
+		CENTER_DATA
 	};
 
 public:	

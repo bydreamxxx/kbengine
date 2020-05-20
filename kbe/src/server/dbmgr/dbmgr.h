@@ -270,6 +270,9 @@ protected:
 	// cellAppData
 	GlobalDataServer*									pCellAppData_;
 
+	// 跨服全局数据 KBEngine.centerData
+	GlobalDataServer*									pCenterData_;
+
 	typedef KBEUnordered_map<std::string, Buffered_DBTasks> BUFFERED_DBTASKS_MAP;
 	BUFFERED_DBTASKS_MAP								bufferedDBTasksMaps_;
 
