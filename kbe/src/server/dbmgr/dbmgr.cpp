@@ -33,6 +33,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "network/message_handler.h"
 #include "thread/threadpool.h"
 #include "server/components.h"
+#include "server/globaldata_server.h"
 #include "server/telnet_server.h"
 #include "db_interface/db_interface.h"
 #include "db_mysql/db_interface_mysql.h"
