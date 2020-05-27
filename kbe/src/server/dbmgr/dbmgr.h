@@ -122,7 +122,8 @@ public:
 	*/
 	void onGlobalDataClientLogon(Network::Channel* pChannel, COMPONENT_TYPE componentType);
 	void onBroadcastGlobalDataChanged(Network::Channel* pChannel, KBEngine::MemoryStream& s);
-	
+	void onBroadcastCenterDataChanged(Network::Channel* pChannel, KBEngine::MemoryStream& s);
+
 	/** 网络接口
 		请求创建账号
 	*/

@@ -11,6 +11,45 @@
 
 namespace KBEngine {
 
+#if defined(NETWORK_INTERFACE_DECLARE_BEGIN)
+#undef CENTERMGR_MESSAGE_HANDLER_STREAM
+#endif
+
+#if defined(DEFINE_IN_INTERFACE)
+#if defined(CENTERMGR)
+#define CENTERMGR_MESSAGE_HANDLER_STREAM(NAME)										\
+	void NAME##CentermgrMessagehandler_stream::handle(Network::Channel* pChannel,	\
+												KBEngine::MemoryStream& s)		\
+	{																			\
+			KBEngine::Centermgr::getSingleton().NAME(pChannel, s);					\
+	}																			\
+
+#else
+#define CENTERMGR_MESSAGE_HANDLER_STREAM(NAME)										\
+	void NAME##CentermgrMessagehandler_stream::handle(Network::Channel* pChannel,	\
+												KBEngine::MemoryStream& s)		\
+	{																			\
+	}																			\
+
+#endif
+#else
+#define CENTERMGR_MESSAGE_HANDLER_STREAM(NAME)										\
+	class NAME##CentermgrMessagehandler_stream : public Network::MessageHandler		\
+	{																			\
+	public:																		\
+		virtual void handle(Network::Channel* pChannel,							\
+												KBEngine::MemoryStream& s);		\
+	};																			\
+
+#endif
+
+#define CENTERMGR_MESSAGE_DECLARE_STREAM(NAME, MSG_LENGTH)							\
+	CENTERMGR_MESSAGE_HANDLER_STREAM(NAME)											\
+	NETWORK_MESSAGE_DECLARE_STREAM(Centermgr, NAME,									\
+				NAME##CentermgrMessagehandler_stream, MSG_LENGTH)					\
+																				\
+
+
 /**
 	Centermgr消息宏，  只有 2 个参数的消息
 */

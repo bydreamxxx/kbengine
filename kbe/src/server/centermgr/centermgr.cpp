@@ -1,6 +1,7 @@
 
 #include "centermgr/centermgr.h"
 #include "centermgr/centermgr_interface.h"
+#include "centermgr/centerdata_server.h"
 #include "network/message_handler.h"
 #include "dbmgr/dbmgr_interface.h"
 
@@ -18,7 +19,8 @@ namespace KBEngine
 		COMPONENT_ID componentID):
 		ServerApp(dispatcher, ninterface, componentType, componentID),
 		apps_(),
-		tickTimer_()
+		tickTimer_(),
+		centerData_(NULL)
 	{
 		KBEngine::Network::MessageHandlers::pMainMessageHandlers = &CentermgrInterface::messageHandlers;
 	}
@@ -46,10 +48,18 @@ namespace KBEngine
 
 	bool Centermgr::initializeEnd()
 	{
+		centerData_ = new CenterDataServer(GlobalDataServer::CENTER_DATA);
+		centerData_->addConcernComponentType(DBMGR_TYPE);
+
 		tickTimer_ = this->dispatcher().addTimer(1000000 / g_kbeSrvConfig.gameUpdateHertz(), this,
 			reinterpret_cast<void *>(CENTERMGR_TIMEOUT_TICK));
 
 		return true;
+	}
+
+	void Centermgr::finalise()
+	{
+		SAFE_RELEASE(centerData_);
 	}
 
 	void Centermgr::handleTimeout(TimerHandle handle, void * arg)
@@ -137,6 +147,39 @@ namespace KBEngine
 		{
 			ERROR_MSG(fmt::format("Centermgr::onAppActiveTick: cant find app by componentID({})\n", componentID));
 		}
+	}
+
+	void Centermgr::onBroadcastCenterDataChanged(Network::Channel* pChannel, KBEngine::MemoryStream& s)
+	{
+		DEBUG_MSG(fmt::format("Centermgr::onBroadcastCenterDataChanged from {}\n", pChannel->c_str()));
+
+		uint8 dataType;
+		std::string key, value;
+		bool isDelete;
+		COMPONENT_TYPE componentType;
+
+		s >> dataType;
+		s >> isDelete;
+		s.readBlob(key);
+		if (!isDelete)
+		{
+			s.readBlob(value);
+		}
+		s >> componentType;
+
+		if (isDelete)
+		{
+			centerData_->del(pChannel, componentType, key);
+		}
+		else
+		{
+			centerData_->write(pChannel, componentType, key, value);
+		}
+	}
+
+	Centermgr::APP_INFOS const &Centermgr::getConnectedAppInfos()
+	{
+		return apps_;
 	}
 }
 

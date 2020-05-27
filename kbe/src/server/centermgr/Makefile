@@ -2,7 +2,8 @@ BIN  = centermgr
 SRCS =						\
 	main					\
 	centermgr				\
-	centermgr_interface
+	centermgr_interface			\
+	centerdata_server
 
 ASMS =
 

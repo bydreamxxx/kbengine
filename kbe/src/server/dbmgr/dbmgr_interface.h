@@ -79,6 +79,9 @@ NETWORK_INTERFACE_DECLARE_BEGIN(DbmgrInterface)
 	// global数据改变
 	DBMGR_MESSAGE_DECLARE_STREAM(onBroadcastGlobalDataChanged,		NETWORK_VARIABLE_MESSAGE)
 
+	// KBEngine.centerData数据改变
+	DBMGR_MESSAGE_DECLARE_STREAM(onBroadcastCenterDataChanged,		NETWORK_VARIABLE_MESSAGE)
+
 	// 某个app向本app告知处于活动状态。
 	DBMGR_MESSAGE_DECLARE_ARGS2(onAppActiveTick,					NETWORK_FIXED_MESSAGE,
 									COMPONENT_TYPE,					componentType, 
