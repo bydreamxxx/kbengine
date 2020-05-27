@@ -42,7 +42,7 @@ public:
 
 public:	
 	GlobalDataServer(DATA_TYPE dataType);
-	~GlobalDataServer();
+	virtual ~GlobalDataServer();
 			
 	/** Ð´Êý¾Ý */
 	bool write(Network::Channel* pChannel, COMPONENT_TYPE componentType, const std::string& key, const std::string& value);
