@@ -9,10 +9,16 @@
 namespace KBEngine
 {
 
+class CenterDataServer;
+
 class Centermgr: public ServerApp,
 				public Singleton<Centermgr>
 {
 public:
+	typedef Components::ComponentInfos APP_INFO;
+	// key 不能是 ip，同一 ip 有可能有多个同类 app，可以是 componentID，要求跨服的所有服务器cid 必须唯一
+	typedef std::map<COMPONENT_ID, APP_INFO*> APP_INFOS;
+
 	enum TimeOutType
 	{
 		CENTERMGR_TIMEOUT_TICK = TIMEOUT_SERVERAPP_MAX + 1,	// +1 不会与父类冲突
@@ -31,12 +37,15 @@ public:
 	void mainProcess();
 
 	virtual bool initializeEnd();
+	virtual void finalise();
 
 	virtual void onComponentActiveTickTimeout();
 
 	virtual void onChannelDeregister(Network::Channel * pChannel);
 
 	virtual void handleTimeout(TimerHandle handle, void * arg);
+
+	APP_INFOS const &getConnectedAppInfos();
 
 	/* 网络接口
 	 * 某个 app 请求注册
@@ -49,14 +58,19 @@ public:
 	 */
 	virtual void onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID);
 
+	/* 网络接口
+	* KBEngine.centerData 数据改变
+	*/
+	void onBroadcastCenterDataChanged(Network::Channel* pChannel, KBEngine::MemoryStream& s);
+
 private:
-	typedef Components::ComponentInfos APP_INFO;
-	// key 不能是 ip，同一 ip 有可能有多个同类 app，可以是 componentID，要求跨服的所有服务器cid 必须唯一
-	typedef std::map<COMPONENT_ID, APP_INFO*> APP_INFOS;
+
 
 	APP_INFOS apps_;
 
 	TimerHandle	tickTimer_;
+
+	CenterDataServer* centerData_;
 };
 
 }	// end namespace KBEngine

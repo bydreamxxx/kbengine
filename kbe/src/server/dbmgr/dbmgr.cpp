@@ -806,11 +806,13 @@ void Dbmgr::onGlobalDataClientLogon(Network::Channel* pChannel, COMPONENT_TYPE c
 	{
 		pBaseAppData_->onGlobalDataClientLogon(pChannel, componentType);
 		pGlobalData_->onGlobalDataClientLogon(pChannel, componentType);
+		pCenterData_->onGlobalDataClientLogon(pChannel, componentType);
 	}
 	else if(CELLAPP_TYPE == componentType)
 	{
 		pGlobalData_->onGlobalDataClientLogon(pChannel, componentType);
 		pCellAppData_->onGlobalDataClientLogon(pChannel, componentType);
+		pCenterData_->onGlobalDataClientLogon(pChannel, componentType);
 	}
 	else
 	{
@@ -826,7 +828,7 @@ void Dbmgr::onBroadcastGlobalDataChanged(Network::Channel* pChannel, KBEngine::M
 	std::string key, value;
 	bool isDelete;
 	COMPONENT_TYPE componentType;
-	
+
 	s >> dataType;
 	s >> isDelete;
 
@@ -864,11 +866,64 @@ void Dbmgr::onBroadcastGlobalDataChanged(Network::Channel* pChannel, KBEngine::M
 			pCenterData_->del(pChannel, componentType, key);
 		else
 			pCenterData_->write(pChannel, componentType, key, value);
+
+		// 除了本服广播，还需通过中枢服务器广播
+		if (centermgrInfo_)
+		{
+			Network::Bundle *centerDataBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			(*centerDataBundle).newMessage(CentermgrInterface::onBroadcastCenterDataChanged);
+
+			(*centerDataBundle).append(s);
+
+			(*centerDataBundle) << dataType;
+			(*centerDataBundle) << isDelete;
+			ArraySize len = key.length();
+			(*centerDataBundle) << len;
+			(*centerDataBundle).assign(key.data(), len);
+			if (!isDelete)
+			{
+				len = value.length();
+				(*centerDataBundle) << len;
+				(*centerDataBundle).assign(value.data(), len);
+			}
+			(*centerDataBundle) << componentType;
+
+			centermgrInfo_->pChannel->send(centerDataBundle);
+		}
+		else
+		{
+			WARNING_MSG("Dbmgr::onBroadcastGlobalDataChanged: centermgr is not enable.");
+		}
+
 		break;
 	default:
 		KBE_ASSERT(false && "dataType error!\n");
 		break;
 	};
+}
+
+//-------------------------------------------------------------------------------------
+void Dbmgr::onBroadcastCenterDataChanged(Network::Channel* pChannel, KBEngine::MemoryStream& s)
+{
+	std::string key, value;
+	bool isDelete;
+	COMPONENT_TYPE componentType;
+
+	s >> isDelete;
+
+	s.readBlob(key);
+
+	if (!isDelete)
+	{
+		s.readBlob(value);
+	}
+
+	s >> componentType;
+
+	if (isDelete)
+		pCenterData_->del(pChannel, componentType, key);
+	else
+		pCenterData_->write(pChannel, componentType, key, value);
 }
 
 //-------------------------------------------------------------------------------------
