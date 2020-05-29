@@ -543,6 +543,13 @@ DBTaskEntityAutoLoad::~DBTaskEntityAutoLoad()
 bool DBTaskEntityAutoLoad::db_thread_process()
 {
 	ScriptDefModule* pModule = EntityDef::findScriptModule(entityType_);
+	
+	if (!pModule)
+	{
+		ERROR_MSG(fmt::format("Dbmgr::DBTaskEntityAutoLoad: not found module. entityType({}).\n", entityType_));
+		return false;
+	}
+
 	EntityTables::findByInterfaceName(pdbi_->name()).queryAutoLoadEntities(this->pdbi_, pModule, start_, end_, outs_);
 	return false;
 }
