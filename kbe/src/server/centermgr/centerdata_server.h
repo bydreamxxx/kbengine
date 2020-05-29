@@ -33,6 +33,7 @@ public:
 	virtual void broadcastDataChanged(Network::Channel* pChannel, COMPONENT_TYPE componentType, const std::string& key,
 		const std::string& value, bool isDelete = false);
 
+	void onGlobalDataClientLogon(Network::Channel* client, COMPONENT_TYPE componentType);
 };
 
 }	// end namespace KBEngine

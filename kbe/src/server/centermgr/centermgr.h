@@ -65,8 +65,9 @@ public:
 
 private:
 
-
 	APP_INFOS apps_;
+
+	COMPONENT_ORDER appStartOrder_;	// ×é¼þÆô¶¯Ë³Ðò
 
 	TimerHandle	tickTimer_;
 

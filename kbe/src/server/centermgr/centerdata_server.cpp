@@ -56,7 +56,7 @@ void CenterDataServer::broadcastDataChanged(Network::Channel* pChannel, COMPONEN
 		(*pBundle).assign(key.data(), len);
 		if (!isDelete)
 		{
-			ArraySize len = value.length();
+			len = value.length();
 			(*pBundle) << len;
 			(*pBundle).assign(value.data(), len);
 		}
@@ -66,5 +66,29 @@ void CenterDataServer::broadcastDataChanged(Network::Channel* pChannel, COMPONEN
 	}
 }
 
+void CenterDataServer::onGlobalDataClientLogon(Network::Channel * client, COMPONENT_TYPE componentType)
+{
+	bool isDelete = false;
+	
+	DATA_MAP_KEY iter = dict_.begin();
+	for (; iter != dict_.end(); iter++)
+	{
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		(*pBundle).newMessage(DbmgrInterface::onBroadcastCenterDataChanged);
+
+		(*pBundle) << isDelete;
+		ArraySize len = iter->first.length();
+		(*pBundle) << len;
+		(*pBundle).assign(iter->first.data(), len);
+
+		len = iter->second.length();
+		(*pBundle) << len;
+		(*pBundle).assign(iter->second.data(), len);
+
+		(*pBundle) << componentType;
+
+		client->send(pBundle);
+	}
+}
 
 }	// end namespace KBEngine

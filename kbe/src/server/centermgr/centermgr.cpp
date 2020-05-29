@@ -19,6 +19,7 @@ namespace KBEngine
 		COMPONENT_ID componentID):
 		ServerApp(dispatcher, ninterface, componentType, componentID),
 		apps_(),
+		appStartOrder_(0),
 		tickTimer_(),
 		centerData_(NULL)
 	{
@@ -131,7 +132,12 @@ namespace KBEngine
 		if (extaddrEx.size() > 0)
 			strncpy(appInfo->externalAddressEx, extaddrEx.c_str(), MAX_NAME);
 
+		appStartOrder_ += 1;
+		appInfo->globalOrderid = appStartOrder_;
+
 		apps_.insert(std::pair<COMPONENT_ID, APP_INFO*>(componentID, appInfo));
+
+		centerData_->onGlobalDataClientLogon(pChannel, CENTERMGR_TYPE);
 	}
 
 	void Centermgr::onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID)
