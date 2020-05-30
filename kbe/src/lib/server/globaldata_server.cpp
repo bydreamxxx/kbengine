@@ -199,6 +199,20 @@ void GlobalDataServer::onGlobalDataClientLogon(Network::Channel* client, COMPONE
 
 			(*pBundle).newMessage(CellappInterface::onBroadcastCellAppDataChanged);
 			break;
+		case CENTER_DATA:
+			if (componentType == CELLAPP_TYPE)
+			{
+				(*pBundle).newMessage(CellappInterface::onBroadcastCenterDataChanged);
+			}
+			else if (componentType == BASEAPP_TYPE)
+			{
+				(*pBundle).newMessage(BaseappInterface::onBroadcastCenterDataChanged);
+			}
+			else
+			{
+				KBE_ASSERT(false && "componentType is error!\n");
+			}
+			break;
 		default:
 			KBE_ASSERT(false && "dataType is error!\n");
 			break;
