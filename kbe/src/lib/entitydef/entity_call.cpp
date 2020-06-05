@@ -214,7 +214,8 @@ void EntityCall::c_str(char* s, size_t size)
 		(type_ == ENTITYCALL_TYPE_BASE_VIA_CELL)		? "BaseViaCell" :
 		(type_ == ENTITYCALL_TYPE_CLIENT_VIA_CELL)		? "ClientViaCell" :
 		(type_ == ENTITYCALL_TYPE_CELL_VIA_BASE)		? "CellViaBase" :
-		(type_ == ENTITYCALL_TYPE_CLIENT_VIA_BASE)		? "ClientViaBase" : "???";
+		(type_ == ENTITYCALL_TYPE_CLIENT_VIA_BASE)		? "ClientViaBase" :
+		(type_ == ENTITYCALL_TYPE_CROSS_SERVER)			? "EntityCallCrossServer" : "???";
 	
 	Network::Channel* pChannel = getChannel();
 
