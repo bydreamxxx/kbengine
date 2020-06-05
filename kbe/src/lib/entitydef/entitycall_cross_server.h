@@ -27,9 +27,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 namespace KBEngine
 {
 
-class ScriptDefModule;
-class Network::Address;
-
 class EntityCallCrossServer : public EntityCall
 {
 	/** 子类化 将一些py操作填充进派生类 */

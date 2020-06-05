@@ -47,8 +47,8 @@ SRCS =						\
 ASMS =
 
 MY_LIBS =		\
-	entitydef	\
 	server		\
+	entitydef	\
 	pyscript	\
 	network		\
 	navigation	\
