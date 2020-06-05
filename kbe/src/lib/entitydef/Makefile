@@ -7,6 +7,7 @@ SRCS =				\
 	datatypes		\
 	detaillevel		\
 	entity_call		\
+	entitycall_cross_server	\
 	entitydef		\
 	entitycallabstract		\
 	fixeddict		\

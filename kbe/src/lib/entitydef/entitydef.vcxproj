@@ -177,6 +177,7 @@
     <ClCompile Include="datatype.cpp" />
     <ClCompile Include="datatypes.cpp" />
     <ClCompile Include="detaillevel.cpp" />
+    <ClCompile Include="entitycall_cross_server.cpp" />
     <ClCompile Include="entity_call.cpp" />
     <ClCompile Include="entitydef.cpp" />
     <ClCompile Include="entitycallabstract.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="datatypes.h" />
     <ClInclude Include="detaillevel.h" />
     <ClInclude Include="entities.h" />
+    <ClInclude Include="entitycall_cross_server.h" />
     <ClInclude Include="entity_garbages.h" />
     <ClInclude Include="entity_macro.h" />
     <ClInclude Include="entity_call.h" />

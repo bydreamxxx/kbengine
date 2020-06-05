@@ -55,7 +55,7 @@ public:
 	EntityCall(ScriptDefModule* pScriptModule, const Network::Address* pAddr, COMPONENT_ID componentID, 
 		ENTITY_ID eid, ENTITYCALL_TYPE type);
 
-	~EntityCall();
+	virtual ~EntityCall();
 	
 	/** 
 		脚本请求获取属性或者方法 
