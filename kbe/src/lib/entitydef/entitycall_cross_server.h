@@ -37,12 +37,14 @@ public:
 
 	virtual ~EntityCallCrossServer();
 
-protected:
+	PyObject* onScriptGetAttribute(PyObject* attr);
 
+	virtual void newCall(Network::Bundle& bundle);
+
+protected:
+	ENTITYCALL_TYPE prototype_;	// ‘≠ EntityCall ¿‡–Õ
 
 };
-
-
 
 }	// end namespace KBengine
 
