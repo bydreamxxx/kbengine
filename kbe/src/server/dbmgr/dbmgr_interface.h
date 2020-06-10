@@ -76,6 +76,9 @@ NETWORK_INTERFACE_DECLARE_BEGIN(DbmgrInterface)
 								COMPONENT_TYPE,						componentType,
 								COMPONENT_ID,						componentID)
 
+	// dbmgr 注册到 centermgr 成功
+	DBMGR_MESSAGE_DECLARE_ARGS1(onRegisterCentermgr, NETWORK_FIXED_MESSAGE, COMPONENT_ORDER, centerID)
+
 	// global数据改变
 	DBMGR_MESSAGE_DECLARE_STREAM(onBroadcastGlobalDataChanged,		NETWORK_VARIABLE_MESSAGE)
 

@@ -691,6 +691,32 @@ void Dbmgr::onReqAllocEntityID(Network::Channel* pChannel, COMPONENT_ORDER compo
 	pChannel->send(pBundle);
 }
 
+void Dbmgr::onRegisterCentermgr(Network::Channel * pChannel, COMPONENT_ORDER centerID)
+{
+	ServerApp::onRegisterCentermgr(pChannel, centerID);
+
+	// 通知所有 baseapp 和 cellapp
+	Components::COMPONENTS& componets = Components::getSingleton().getComponents(BASEAPP_TYPE);
+	Components::COMPONENTS::iterator iter = componets.begin();
+	for (; iter != componets.end(); iter++)
+	{
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		pBundle->newMessage(BaseappInterface::onRegisterCentermgr);
+		(*pBundle) << centerID;
+		iter->pChannel->send(pBundle);
+	}
+
+	componets = Components::getSingleton().getComponents(CELLAPP_TYPE);
+	iter = componets.begin();
+	for (; iter != componets.end(); iter++)
+	{
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		pBundle->newMessage(CellappInterface::onRegisterCentermgr);
+		(*pBundle) << centerID;
+		iter->pChannel->send(pBundle);
+	}
+}
+
 //-------------------------------------------------------------------------------------
 void Dbmgr::onRegisterNewApp(Network::Channel* pChannel, int32 uid, std::string& username, 
 						COMPONENT_TYPE componentType, COMPONENT_ID componentID, COMPONENT_ORDER globalorderID, COMPONENT_ORDER grouporderID,

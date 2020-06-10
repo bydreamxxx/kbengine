@@ -137,6 +137,11 @@ namespace KBEngine
 
 		apps_.insert(std::pair<COMPONENT_ID, APP_INFO*>(componentID, appInfo));
 
+		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		pBundle->newMessage(DbmgrInterface::onRegisterCentermgr);
+		(*pBundle) << appStartOrder_;
+		pChannel->send(pBundle);
+
 		centerData_->onGlobalDataClientLogon(pChannel, CENTERMGR_TYPE);
 	}
 
