@@ -27,6 +27,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyscript/script.h"
 #include "pyscript/pyobject_pointer.h"
 #include "entitydef/entitydef.h"
+#include "entitydef/entity_call.h"
 #include "server/components.h"
 #include "server/python_app.h"
 #include "server/idallocate.h"
@@ -37,7 +38,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "network/endpoint.h"
 #include "resmgr/resmgr.h"
 #include "thread/threadpool.h"
-
 
 namespace KBEngine{
 
@@ -257,6 +257,10 @@ public:
 	}
 
 	virtual void onChannelDeregister(Network::Channel * pChannel);
+
+	PyObject* tryGetEntityByEntityCall(COMPONENT_ID componentID, ENTITY_ID eid);
+
+	Network::Channel * findChannelByEntityCall(EntityCall & entitycall);
 
 	InterfacesHandler* findBestInterfacesHandler();
 

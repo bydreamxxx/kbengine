@@ -22,26 +22,33 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "entitydef/entitycallabstract.h"
 #include "entitydef/scriptdef_module.h"
 #include "entitydef/remote_entity_method.h"
+#include "network/channel.h"
 
 
 namespace KBEngine
 {
-	EntityCallCrossServer::EntityCallCrossServer(EntityCall *entitycall) :
-		EntityCall(entitycall->pScriptDefModule(), &(entitycall->addr()), entitycall->componentID(), entitycall->id(), entitycall->type())
+	EntityCallCrossServer::EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall, const Network::Address *addr) :
+		EntityCall(entitycall->pScriptDefModule(), addr, entitycall->componentID(), entitycall->id(), entitycall->type()),
+		prototype_(entitycall->type()),
+		centerID_(centerID)
 	{
-		prototype_ = type_;
 		switch (prototype_)
 		{
 		case ENTITYCALL_TYPE_CELL:
 		case ENTITYCALL_TYPE_CELL_VIA_BASE:
 			type_ = ENTITYCALL_TYPE_CROSS_SERVER_CELL;
+			break;
 		case ENTITYCALL_TYPE_BASE:
 		case ENTITYCALL_TYPE_BASE_VIA_CELL:
 			type_ = ENTITYCALL_TYPE_CROSS_SERVER_BASE;
+			break;
 		case ENTITYCALL_TYPE_CLIENT:
 		case ENTITYCALL_TYPE_CLIENT_VIA_CELL:
 		case ENTITYCALL_TYPE_CLIENT_VIA_BASE:
 			type_ = ENTITYCALL_TYPE_CROSS_SERVER_CLIENT;
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -92,6 +99,19 @@ namespace KBEngine
 
 		free(ccattr);
 		return ScriptObject::onScriptGetAttribute(attr);
+	}
+
+	void EntityCallCrossServer::c_str(char * s, size_t size)
+	{
+		const char * entitycallName =
+			(type_ == ENTITYCALL_TYPE_CROSS_SERVER_CELL) ? "CellCrossServer" :
+			(type_ == ENTITYCALL_TYPE_CROSS_SERVER_BASE) ? "BaseCrossServer" :
+			(type_ == ENTITYCALL_TYPE_CROSS_SERVER_CLIENT) ? "ClientCrossServer" : "???";
+
+		kbe_snprintf(s, size, "%s centerid:%d, utype:%u, component=%s[%" PRIu64 "], addr: %s.",
+			entitycallName, centerID_, utype_,
+			COMPONENT_NAME_EX(ENTITYCALL_COMPONENT_TYPE_MAPPING[type_]),
+			componentID_, addr_.c_str());
 	}
 
 	void EntityCallCrossServer::newCall(Network::Bundle & bundle)

@@ -33,17 +33,20 @@ class EntityCallCrossServer : public EntityCall
 	INSTANCE_SCRIPT_HREADER(EntityCallCrossServer, EntityCall)
 
 public:
-	EntityCallCrossServer(EntityCall *entitycall);
+	EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall, const Network::Address *addr);
 
 	virtual ~EntityCallCrossServer();
 
 	PyObject* onScriptGetAttribute(PyObject* attr);
+
+	virtual void c_str(char* s, size_t size);
 
 	virtual void newCall(Network::Bundle& bundle);
 
 protected:
 	ENTITYCALL_TYPE prototype_;	// 原 EntityCall 类型
 
+	COMPONENT_ORDER centerID_;	// centermgr分配的EntityCall所在服务器的全局id
 };
 
 }	// end namespace KBengine

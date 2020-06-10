@@ -38,6 +38,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "db_interface/db_interface.h"
 #include "db_mysql/db_interface_mysql.h"
 #include "entitydef/scriptdef_module.h"
+#include "entitydef/entity_call.h"
+#include "entitydef/entitycall_cross_server.h"
 
 #include "baseapp/baseapp_interface.h"
 #include "cellapp/cellapp_interface.h"
@@ -78,6 +80,14 @@ Dbmgr::Dbmgr(Network::EventDispatcher& dispatcher,
 	centermgrInfo_(NULL)
 {
 	KBEngine::Network::MessageHandlers::pMainMessageHandlers = &DbmgrInterface::messageHandlers;
+
+	// 初始化entitycall模块获取entity实体函数地址
+	EntityCall::setGetEntityFunc(std::tr1::bind(&Dbmgr::tryGetEntityByEntityCall, this,
+		std::tr1::placeholders::_1, std::tr1::placeholders::_2));
+
+	// 初始化entitycall模块获取channel函数地址
+	EntityCall::setFindChannelFunc(std::tr1::bind(&Dbmgr::findChannelByEntityCall, this,
+		std::tr1::placeholders::_1));
 }
 
 //-------------------------------------------------------------------------------------
@@ -453,6 +463,8 @@ bool Dbmgr::inInitialize()
 	// assets/scripts/
 	if (!PythonApp::inInitialize())
 		return false;
+
+	EntityCall::installScript(NULL);
 
 	std::vector<PyTypeObject*>	scriptBaseTypes;
 	if(!EntityDef::initialize(scriptBaseTypes, componentType_)){
@@ -893,12 +905,24 @@ void Dbmgr::onBroadcastGlobalDataChanged(Network::Channel* pChannel, KBEngine::M
 			ArraySize len = key.length();
 			(*centerDataBundle) << len;
 			(*centerDataBundle).assign(key.data(), len);
+
 			if (!isDelete)
 			{
+				// 检查如果是EntityCall，需要重新封装成 EntityCallCrossServer
+				PyObject * pyValue = script::Pickler::unpickle(value);
+				if (strcmp(pyValue->ob_type->tp_name, "EntityCall") == 0)
+				{
+					EntityCall* entitycall = static_cast<EntityCall *>(pyValue);
+					const Network::Address *addr = &(entitycall->getChannel()->addr());
+					pyValue = static_cast<PyObject *>(new EntityCallCrossServer(g_centerID, entitycall, addr));
+					value = script::Pickler::pickle(pyValue);
+				}
+				
 				len = value.length();
 				(*centerDataBundle) << len;
 				(*centerDataBundle).assign(value.data(), len);
 			}
+
 			(*centerDataBundle) << componentType;
 
 			centermgrInfo_->pChannel->send(centerDataBundle);
@@ -1346,4 +1370,30 @@ void Dbmgr::onChannelDeregister(Network::Channel * pChannel)
 }
 
 //-------------------------------------------------------------------------------------
+PyObject* Dbmgr::tryGetEntityByEntityCall(COMPONENT_ID componentID, ENTITY_ID eid)
+{
+	return NULL;
+}
+
+//-------------------------------------------------------------------------------------
+Network::Channel* Dbmgr::findChannelByEntityCall(EntityCall& entitycall)
+{
+	// 如果组件ID大于0则查找组件
+	if (entitycall.componentID() > 0)
+	{
+		Components::ComponentInfos* cinfos =
+			Components::getSingleton().findComponent(entitycall.componentID());
+
+		if (cinfos != NULL && cinfos->pChannel != NULL)
+			return cinfos->pChannel;
+	}
+	else
+	{
+		return Components::getSingleton().pNetworkInterface()->findChannel(entitycall.addr());
+	}
+
+	return NULL;
+}
+
+
 }
