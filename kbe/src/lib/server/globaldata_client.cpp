@@ -121,15 +121,7 @@ void GlobalDataClient::onDataChanged(PyObject* key, PyObject* value, bool isDele
 	std::string sval = "";
 
 	if (value)
-	{
-		// 如果是加入KBEngine.centerData的EntityCall，需要包装成EntityCallCrossServer
-		if ((dataType_ == GlobalDataServer::CENTER_DATA) && strcmp(value->ob_type->tp_name, "EntityCall") == 0)
-		{
-			EntityCall* entitycall = static_cast<EntityCall *>(value);
-			value = static_cast<PyObject *>(new EntityCallCrossServer(entitycall));
-		}
 		sval = script::Pickler::pickle(value, 0);
-	}
 
 	Components::COMPONENTS& channels = Components::getSingleton().getComponents(serverComponentType_);
 	Components::COMPONENTS::iterator iter1 = channels.begin();

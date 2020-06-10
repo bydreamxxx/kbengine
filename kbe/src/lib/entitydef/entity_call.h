@@ -68,7 +68,7 @@ public:
 	PyObject* tp_repr();
 	PyObject* tp_str();
 	
-	void c_str(char* s, size_t size);
+	virtual void c_str(char* s, size_t size);
 
 	/** 
 		unpickle·½·¨ 
