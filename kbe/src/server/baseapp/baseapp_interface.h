@@ -69,6 +69,9 @@ NETWORK_INTERFACE_DECLARE_BEGIN(BaseappInterface)
 	// console远程执行python语句。
 	BASEAPP_MESSAGE_DECLARE_STREAM(onExecScriptCommand,								NETWORK_VARIABLE_MESSAGE)
 
+	// dbmgr 注册到 centermgr 成功
+	BASEAPP_MESSAGE_DECLARE_ARGS1(onRegisterCentermgr, NETWORK_FIXED_MESSAGE, COMPONENT_ORDER, centerID)
+
 	// 某app注册自己的接口地址到本app
 	BASEAPP_MESSAGE_DECLARE_ARGS11(onRegisterNewApp,								NETWORK_VARIABLE_MESSAGE,
 									int32,											uid, 

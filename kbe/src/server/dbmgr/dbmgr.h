@@ -110,6 +110,11 @@ public:
 	*/
 	void onReqAllocEntityID(Network::Channel* pChannel, COMPONENT_ORDER componentType, COMPONENT_ID componentID);
 
+	/** 网络接口
+		dbmgr 注册到 centermgr 成功
+	*/
+	virtual void onRegisterCentermgr(Network::Channel* pChannel, COMPONENT_ORDER centerID);
+
 	/* 网络接口
 		注册一个新激活的baseapp或者cellapp或者dbmgr
 		通常是一个新的app被启动了， 它需要向某些组件注册自己。

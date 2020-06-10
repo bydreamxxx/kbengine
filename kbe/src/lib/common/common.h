@@ -113,6 +113,9 @@ enum COMPONENT_TYPE
 extern COMPONENT_TYPE g_componentType;
 extern COMPONENT_ID g_componentID;
 
+// 当前服务器注册到 centermgr 被分配的id
+extern COMPONENT_ORDER g_centerID;
+
 /** 定义服务器各组件名称 */
 const char COMPONENT_NAME[][255] = {
 	"unknown",
