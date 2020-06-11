@@ -55,6 +55,9 @@ public:
 	EntityCall(ScriptDefModule* pScriptModule, const Network::Address* pAddr, COMPONENT_ID componentID, 
 		ENTITY_ID eid, ENTITYCALL_TYPE type);
 
+	EntityCall(PyTypeObject* scriptType, ScriptDefModule* pScriptModule, const Network::Address* pAddr, COMPONENT_ID componentID,
+		ENTITY_ID eid, ENTITYCALL_TYPE type);
+
 	virtual ~EntityCall();
 	
 	/** 

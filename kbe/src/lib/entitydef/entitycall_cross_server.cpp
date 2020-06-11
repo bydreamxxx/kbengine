@@ -41,7 +41,7 @@ namespace KBEngine
 	
 
 	EntityCallCrossServer::EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall) :
-		EntityCall(entitycall->pScriptDefModule(), NULL, entitycall->componentID(), entitycall->id(), entitycall->type()),
+		EntityCall(getScriptType(), entitycall->pScriptDefModule(), NULL, entitycall->componentID(), entitycall->id(), entitycall->type()),
 		prototype_(entitycall->type()),
 		centerID_(centerID)
 	{
@@ -67,7 +67,7 @@ namespace KBEngine
 
 	EntityCallCrossServer::EntityCallCrossServer(ScriptDefModule * pScriptModule, const Network::Address * pAddr, 
 		COMPONENT_ID componentID, ENTITY_ID eid, ENTITYCALL_TYPE type, ENTITYCALL_TYPE prototype, COMPONENT_ORDER centerID)
-		:EntityCall(pScriptModule, pAddr, componentID, eid, type),
+		:EntityCall(getScriptType(), pScriptModule, pAddr, componentID, eid, type),
 		prototype_(prototype),
 		centerID_(centerID)
 	{
