@@ -53,8 +53,19 @@ EntityCall::EntityCall(ScriptDefModule* pScriptModule,
 							 const Network::Address* pAddr, 
 							 COMPONENT_ID componentID, 
 ENTITY_ID eid, ENTITYCALL_TYPE type):
-	EntityCall(getScriptType(), pScriptModule, pAddr, componentID, eid, type)
+EntityCallAbstract(getScriptType(),
+					  pAddr, 
+					  componentID, 
+					  eid, pScriptModule->getUType(),
+					  type),
+					  scriptModuleName_(pScriptModule->getName()),
+					  pScriptModule_(pScriptModule),
+atIdx_(ENTITYCALLS::size_type(-1))
 {
+	atIdx_ = EntityCall::entityCalls.size();
+	EntityCall::entityCalls.push_back(this);
+
+	script::PyGC::incTracing("EntityCall");
 }
 
 EntityCall::EntityCall(PyTypeObject * scriptType, ScriptDefModule * pScriptModule, 
