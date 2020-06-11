@@ -20,15 +20,28 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "entitydef/entitycall_cross_server.h"
 #include "entitydef/entitycallabstract.h"
-#include "entitydef/scriptdef_module.h"
+#include "entitydef/entitydef.h"
 #include "entitydef/remote_entity_method.h"
+#include "entitydef/scriptdef_module.h"
 #include "network/channel.h"
+#include "pyscript/py_macros.h"
 
 
 namespace KBEngine
 {
-	EntityCallCrossServer::EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall, const Network::Address *addr) :
-		EntityCall(entitycall->pScriptDefModule(), addr, entitycall->componentID(), entitycall->id(), entitycall->type()),
+	SCRIPT_METHOD_DECLARE_BEGIN(EntityCallCrossServer)
+	SCRIPT_METHOD_DECLARE_END()
+
+	SCRIPT_MEMBER_DECLARE_BEGIN(EntityCallCrossServer)
+	SCRIPT_MEMBER_DECLARE_END()
+
+	SCRIPT_GETSET_DECLARE_BEGIN(EntityCallCrossServer)
+	SCRIPT_GETSET_DECLARE_END()
+	SCRIPT_INIT(EntityCallCrossServer, 0, 0, 0, 0, 0)
+	
+
+	EntityCallCrossServer::EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall) :
+		EntityCall(entitycall->pScriptDefModule(), NULL, entitycall->componentID(), entitycall->id(), entitycall->type()),
 		prototype_(entitycall->type()),
 		centerID_(centerID)
 	{
@@ -50,6 +63,14 @@ namespace KBEngine
 		default:
 			break;
 		}
+	}
+
+	EntityCallCrossServer::EntityCallCrossServer(ScriptDefModule * pScriptModule, const Network::Address * pAddr, 
+		COMPONENT_ID componentID, ENTITY_ID eid, ENTITYCALL_TYPE type, ENTITYCALL_TYPE prototype, COMPONENT_ORDER centerID)
+		:EntityCall(pScriptModule, pAddr, componentID, eid, type),
+		prototype_(prototype),
+		centerID_(centerID)
+	{
 	}
 
 	EntityCallCrossServer::~EntityCallCrossServer()
@@ -116,6 +137,78 @@ namespace KBEngine
 
 	void EntityCallCrossServer::newCall(Network::Bundle & bundle)
 	{
+	}
+
+	PyObject * EntityCallCrossServer::__unpickle__(PyObject * self, PyObject * args)
+	{
+		Py_ssize_t size = PyTuple_Size(args);
+		if (size != 6)
+		{
+			ERROR_MSG("EntityCallCrossServer::__unpickle__: args is error! size != 6.\n");
+			S_Return;
+		}
+
+		ENTITY_ID eid = 0;
+		COMPONENT_ID componentID = 0;
+		ENTITY_SCRIPT_UID utype = 0;
+		int16 type = 0;
+		int16 prototype = 0;
+		COMPONENT_ORDER centerID = 0;
+
+		if (!PyArg_ParseTuple(args, "iKHhhi", &eid, &componentID, &utype, &type, &prototype, &centerID))
+		{
+			ERROR_MSG("EntityCallCrossServer::__unpickle__: args is error!\n");
+			S_Return;
+		}
+
+		ScriptDefModule *sm = EntityDef::findScriptModule(utype);
+		if (sm == NULL)
+		{
+			ERROR_MSG(fmt::format("EntityCallCrossServer::__unpickle__: not found utype {}!\n", utype));
+			S_Return;
+		}
+
+		return new EntityCallCrossServer(sm, NULL, componentID, eid, (ENTITYCALL_TYPE)type, (ENTITYCALL_TYPE)prototype, centerID);
+	}
+
+	void EntityCallCrossServer::onInstallScript(PyObject * mod)
+	{
+		static PyMethodDef __unpickle__Method =
+		{ "EntityCallCrossServer", (PyCFunction)&EntityCall::__unpickle__, METH_VARARGS, 0 };
+
+		PyObject* pyFunc = PyCFunction_New(&__unpickle__Method, NULL);
+		script::Pickler::registerUnpickleFunc(pyFunc, "EntityCallCrossServer");
+
+		Py_DECREF(pyFunc);
+	}
+
+	PyObject * EntityCallCrossServer::__py_reduce_ex__(PyObject * self, PyObject * protocol)
+	{
+		PyObject* unpickleMethod = script::Pickler::getUnpickleFunc("EntityCallCrossServer");
+		if (unpickleMethod == NULL)
+			return NULL;
+
+		EntityCallCrossServer* entitycall = static_cast<EntityCallCrossServer*>(self);
+
+		PyObject* args = PyTuple_New(2);
+		PyTuple_SET_ITEM(args, 0, unpickleMethod);
+
+		PyObject* args1 = PyTuple_New(6);
+		PyTuple_SET_ITEM(args1, 0, PyLong_FromLong(entitycall->id()));
+		PyTuple_SET_ITEM(args1, 1, PyLong_FromUnsignedLongLong(entitycall->componentID()));
+		PyTuple_SET_ITEM(args1, 2, PyLong_FromUnsignedLong(entitycall->utype()));
+
+		int16 mbType = static_cast<int16>(entitycall->type());
+		PyTuple_SET_ITEM(args1, 3, PyLong_FromLong(mbType));
+
+		mbType = static_cast<int16>(entitycall->prototype_);
+		PyTuple_SET_ITEM(args1, 4, PyLong_FromLong(mbType));
+
+		PyTuple_SET_ITEM(args1, 5, PyLong_FromLong(entitycall->centerID_));
+
+		PyTuple_SET_ITEM(args, 1, args1);
+
+		return args;
 	}
 
 

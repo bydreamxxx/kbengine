@@ -465,6 +465,7 @@ bool Dbmgr::inInitialize()
 		return false;
 
 	EntityCall::installScript(NULL);
+	EntityCallCrossServer::installScript(NULL);
 
 	std::vector<PyTypeObject*>	scriptBaseTypes;
 	if(!EntityDef::initialize(scriptBaseTypes, componentType_)){
@@ -928,7 +929,7 @@ void Dbmgr::onBroadcastGlobalDataChanged(Network::Channel* pChannel, KBEngine::M
 				{
 					EntityCall* entitycall = static_cast<EntityCall *>(pyValue);
 					const Network::Address *addr = &(entitycall->getChannel()->addr());
-					pyValue = static_cast<PyObject *>(new EntityCallCrossServer(g_centerID, entitycall, addr));
+					pyValue = static_cast<PyObject *>(new EntityCallCrossServer(g_centerID, entitycall));
 					value = script::Pickler::pickle(pyValue);
 				}
 				

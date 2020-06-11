@@ -33,7 +33,10 @@ class EntityCallCrossServer : public EntityCall
 	INSTANCE_SCRIPT_HREADER(EntityCallCrossServer, EntityCall)
 
 public:
-	EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall, const Network::Address *addr);
+	EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall);
+
+	EntityCallCrossServer(ScriptDefModule* pScriptModule, const Network::Address* pAddr, COMPONENT_ID componentID,
+		ENTITY_ID eid, ENTITYCALL_TYPE type, ENTITYCALL_TYPE prototype, COMPONENT_ORDER centerID);
 
 	virtual ~EntityCallCrossServer();
 
@@ -42,6 +45,18 @@ public:
 	virtual void c_str(char* s, size_t size);
 
 	virtual void newCall(Network::Bundle& bundle);
+
+	/**
+	unpickle方法
+	*/
+	static PyObject* __unpickle__(PyObject* self, PyObject* args);
+
+	/**
+	脚本被安装时被调用
+	*/
+	static void onInstallScript(PyObject* mod);
+
+	static PyObject* __py_reduce_ex__(PyObject* self, PyObject* protocol);
 
 protected:
 	ENTITYCALL_TYPE prototype_;	// 原 EntityCall 类型
