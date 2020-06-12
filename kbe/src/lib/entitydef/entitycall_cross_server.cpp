@@ -30,6 +30,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 namespace KBEngine
 {
 	SCRIPT_METHOD_DECLARE_BEGIN(EntityCallCrossServer)
+	SCRIPT_METHOD_DECLARE("__reduce_ex__", reduce_ex__, METH_VARARGS, 0)
 	SCRIPT_METHOD_DECLARE_END()
 
 	SCRIPT_MEMBER_DECLARE_BEGIN(EntityCallCrossServer)
@@ -38,7 +39,6 @@ namespace KBEngine
 	SCRIPT_GETSET_DECLARE_BEGIN(EntityCallCrossServer)
 	SCRIPT_GETSET_DECLARE_END()
 	SCRIPT_INIT(EntityCallCrossServer, 0, 0, 0, 0, 0)
-	
 
 	EntityCallCrossServer::EntityCallCrossServer(COMPONENT_ORDER centerID, EntityCall *entitycall) :
 		EntityCall(getScriptType(), entitycall->pScriptDefModule(), NULL, entitycall->componentID(), entitycall->id(), entitycall->type()),
