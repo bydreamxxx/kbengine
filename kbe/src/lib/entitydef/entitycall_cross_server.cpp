@@ -129,10 +129,10 @@ namespace KBEngine
 			(type_ == ENTITYCALL_TYPE_CROSS_SERVER_BASE) ? "BaseCrossServer" :
 			(type_ == ENTITYCALL_TYPE_CROSS_SERVER_CLIENT) ? "ClientCrossServer" : "???";
 
-		kbe_snprintf(s, size, "%s centerid:%d, utype:%u, component=%s[%" PRIu64 "], addr: %s.",
-			entitycallName, centerID_, utype_,
+		kbe_snprintf(s, size, "%s centerid:%d, id:%d, utype:%u, component=%s[%" PRIu64 "].",
+			entitycallName, centerID_, id_, utype_,
 			COMPONENT_NAME_EX(ENTITYCALL_COMPONENT_TYPE_MAPPING[type_]),
-			componentID_, addr_.c_str());
+			componentID_);
 	}
 
 	void EntityCallCrossServer::newCall(Network::Bundle & bundle)
@@ -174,7 +174,7 @@ namespace KBEngine
 	void EntityCallCrossServer::onInstallScript(PyObject * mod)
 	{
 		static PyMethodDef __unpickle__Method =
-		{ "EntityCallCrossServer", (PyCFunction)&EntityCall::__unpickle__, METH_VARARGS, 0 };
+		{ "EntityCallCrossServer", (PyCFunction)&EntityCallCrossServer::__unpickle__, METH_VARARGS, 0 };
 
 		PyObject* pyFunc = PyCFunction_New(&__unpickle__Method, NULL);
 		script::Pickler::registerUnpickleFunc(pyFunc, "EntityCallCrossServer");
