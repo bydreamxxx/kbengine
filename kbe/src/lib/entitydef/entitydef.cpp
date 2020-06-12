@@ -28,6 +28,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "common/smartpointer.h"
 #include "entitydef/volatileinfo.h"
 #include "entitydef/entity_call.h"
+#include "entitydef/entitycall_cross_server.h"
 
 #ifndef CODE_INLINE
 #include "entitydef.inl"
@@ -1660,6 +1661,7 @@ bool EntityDef::installScript(PyObject* mod)
 	APPEND_SCRIPT_MODULE_METHOD(mod, MemoryStream, script::PyMemoryStream::py_new, METH_VARARGS, 0);
 
 	EntityCall::installScript(NULL);
+	EntityCallCrossServer::installScript(NULL);
 	FixedArray::installScript(NULL);
 	FixedDict::installScript(NULL);
 	VolatileInfo::installScript(NULL);
