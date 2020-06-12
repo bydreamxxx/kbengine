@@ -916,7 +916,7 @@ void Dbmgr::onBroadcastGlobalDataChanged(Network::Channel* pChannel, KBEngine::M
 					EntityCall* entitycall = static_cast<EntityCall *>(pyValue);
 					//const Network::Address *addr = &(entitycall->getChannel()->addr());
 					pyValue = static_cast<PyObject *>(new EntityCallCrossServer(g_centerID, entitycall));
-					value = script::Pickler::pickle(pyValue);
+					value = script::Pickler::pickle(pyValue, 0);
 				}
 				
 				len = value.length();
