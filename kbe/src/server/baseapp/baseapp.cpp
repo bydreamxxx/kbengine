@@ -4228,6 +4228,14 @@ void Baseapp::forwardMessageToClientFromCellapp(Network::Channel* pChannel,
 
 	BaseMessagesForwardClientHandler* pBufferedSendToClientMessages = pEntity->pBufferedSendToClientMessages();
 
+	 //需要判断来源是否符合
+	if (pBufferedSendToClientMessages)
+	{
+		Components::ComponentInfos* cinfos = Components::getSingleton().findComponent(pChannel);
+		if (cinfos->cid != pBufferedSendToClientMessages->cellappID())
+			pBufferedSendToClientMessages = NULL;
+	}
+
 	Network::Channel* pClientChannel = entitycall->getChannel();
 	Network::Bundle* pSendBundle = NULL;
 	
