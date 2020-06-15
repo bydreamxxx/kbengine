@@ -149,6 +149,7 @@ namespace KBEngine
 		bundle << centerID_;
 		bundle << componentID_;
 		bundle << id();
+		bundle << prototype_;
 	}
 
 	PyObject * EntityCallCrossServer::__unpickle__(PyObject * self, PyObject * args)
