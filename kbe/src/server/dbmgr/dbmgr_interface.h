@@ -79,6 +79,12 @@ NETWORK_INTERFACE_DECLARE_BEGIN(DbmgrInterface)
 	// dbmgr 注册到 centermgr 成功
 	DBMGR_MESSAGE_DECLARE_ARGS1(onRegisterCentermgr, NETWORK_FIXED_MESSAGE, COMPONENT_ORDER, centerID)
 
+	// 收到跨服call请求, 由某个app上的EntityCallCrossServer发起
+	DBMGR_MESSAGE_DECLARE_STREAM(requestEntityCallCrossServer, NETWORK_VARIABLE_MESSAGE)
+
+	// 收到跨服call请求, 由某个app上的entityCallCrossServer发起,调用到本服某个app
+	DBMGR_MESSAGE_DECLARE_STREAM(onEntityCallCrossServer, NETWORK_VARIABLE_MESSAGE)
+
 	// global数据改变
 	DBMGR_MESSAGE_DECLARE_STREAM(onBroadcastGlobalDataChanged,		NETWORK_VARIABLE_MESSAGE)
 

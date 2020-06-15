@@ -25,6 +25,9 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "entitydef/scriptdef_module.h"
 #include "network/channel.h"
 #include "pyscript/py_macros.h"
+#include "server/components.h"
+
+#include "../../server/dbmgr/dbmgr_interface.h"
 
 
 namespace KBEngine
@@ -135,8 +138,17 @@ namespace KBEngine
 			componentID_);
 	}
 
+	Network::Channel * EntityCallCrossServer::getChannel()
+	{
+		return Components::getSingleton().getDbmgrChannel();
+	}
+
 	void EntityCallCrossServer::newCall(Network::Bundle & bundle)
 	{
+		bundle.newMessage(DbmgrInterface::requestEntityCallCrossServer);
+		bundle << centerID_;
+		bundle << componentID_;
+		bundle << id();
 	}
 
 	PyObject * EntityCallCrossServer::__unpickle__(PyObject * self, PyObject * args)

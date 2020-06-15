@@ -745,6 +745,66 @@ void Dbmgr::onRegisterCentermgr(Network::Channel * pChannel, COMPONENT_ORDER cen
 }
 
 //-------------------------------------------------------------------------------------
+void Dbmgr::requestEntityCallCrossServer(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+{
+	if (pChannel->isExternal())
+		return;
+
+	if (!centermgrInfo_)
+	{
+		ERROR_MSG("Dbmgr::requestEntityCallCrossServer: cannot find CenterMgr, may be it was disconnected.");
+		return;
+	}
+
+	Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+	bundle->newMessage(CentermgrInterface::onEntityCallCrossServer);
+	bundle->append(s);
+	centermgrInfo_->pChannel->send(bundle);
+
+	s.done();
+}
+
+void Dbmgr::onEntityCallCrossServer(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+{
+	// 如果做如下判断，需要明确CenterMgr也是内部组件
+	//if (pChannel->isExternal())
+	//	return;
+
+	COMPONENT_ID cid;
+	s >> cid;
+
+	Components::ComponentInfos* cinfos = Components::getSingleton().findComponent(cid);
+	if (cinfos != NULL)
+	{
+		Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		if (cinfos->componentType == BASEAPP_TYPE)
+		{
+			bundle->newMessage(BaseappInterface::onEntityCall);
+		}
+		else
+		{
+			bundle->newMessage(CellappInterface::onEntityCall);
+		}
+		bundle->append(s);
+
+		if (cinfos->pChannel && !cinfos->pChannel->isDestroyed())
+		{
+			cinfos->pChannel->send(bundle);
+		}
+		else
+		{
+			ERROR_MSG(fmt::format("Dbmgr::onEntityCallCrossServer: invalid channel for component({})!\n", cid));
+		}
+
+		s.done();
+	}
+	else
+	{
+		ERROR_MSG(fmt::format("EntityCallAbstract::newCall: not found component({})!\n", cid));
+	}
+}
+
+//-------------------------------------------------------------------------------------
 void Dbmgr::onRegisterNewApp(Network::Channel* pChannel, int32 uid, std::string& username, 
 						COMPONENT_TYPE componentType, COMPONENT_ID componentID, COMPONENT_ORDER globalorderID, COMPONENT_ORDER grouporderID,
 						uint32 intaddr, uint16 intport, uint32 extaddr, uint16 extport, std::string& extaddrEx)
