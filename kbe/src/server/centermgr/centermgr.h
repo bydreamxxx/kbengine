@@ -63,8 +63,12 @@ public:
 	*/
 	void onBroadcastCenterDataChanged(Network::Channel* pChannel, KBEngine::MemoryStream& s);
 
-private:
+	/* 网络接口
+	* 收到跨服call请求, 由某个app上的entityCallCrossServer发起
+	*/
+	void onEntityCallCrossServer(Network::Channel* pChannel, KBEngine::MemoryStream& s);
 
+private:
 	APP_INFOS apps_;
 
 	COMPONENT_ORDER appStartOrder_;	// 组件启动顺序

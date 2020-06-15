@@ -111,6 +111,16 @@ public:
 	*/
 	virtual void onRegisterCentermgr(Network::Channel* pChannel, COMPONENT_ORDER centerID);
 
+	/** 网络接口
+	收到跨服call请求, 由某个app上的entityCallCrossServer发起(只限与服务器内部使用)
+	*/
+	void requestEntityCallCrossServer(Network::Channel* pChannel, KBEngine::MemoryStream& s);
+
+	/** 网络接口
+	收到跨服call请求, 由某个app上的entityCallCrossServer发起,调用到本服某个app
+	*/
+	void onEntityCallCrossServer(Network::Channel* pChannel, KBEngine::MemoryStream& s);
+
 	/* 网络接口
 		注册一个新激活的baseapp或者cellapp或者dbmgr
 		通常是一个新的app被启动了， 它需要向某些组件注册自己。

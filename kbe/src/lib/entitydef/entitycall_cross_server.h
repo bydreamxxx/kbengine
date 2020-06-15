@@ -44,6 +44,8 @@ public:
 
 	virtual void c_str(char* s, size_t size);
 
+	virtual Network::Channel* getChannel();
+
 	virtual void newCall(Network::Bundle& bundle);
 
 	/**

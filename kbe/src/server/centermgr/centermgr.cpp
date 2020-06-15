@@ -188,6 +188,33 @@ namespace KBEngine
 		}
 	}
 
+	void Centermgr::onEntityCallCrossServer(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+	{
+		// 如果做如下判断，需要明确CenterMgr也是内部组件
+		//if (pChannel->isExternal())
+		//	return;
+
+		COMPONENT_ORDER centerID;
+		s >> centerID;
+
+		APP_INFOS::iterator iter = apps_.begin();
+		for (; iter != apps_.end(); iter++)
+		{
+			if (iter->second->globalOrderid == centerID)
+			{
+				Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+				bundle->newMessage(DbmgrInterface::onEntityCallCrossServer);
+				bundle->append(s);
+				iter->second->pChannel->send(bundle);
+
+				s.done();
+				return;
+			}
+		}
+
+		ERROR_MSG(fmt::format("Centermgr::onEntityCallCrossServer: cannot find server:centerID = {}\n", centerID));
+	}
+
 	Centermgr::APP_INFOS const &Centermgr::getConnectedAppInfos()
 	{
 		return apps_;
