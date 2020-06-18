@@ -1677,6 +1677,7 @@ bool EntityDef::uninstallScript()
 	{
 		script::PyMemoryStream::uninstallScript();
 		EntityCall::uninstallScript();
+		EntityCallCrossServer::uninstallScript();
 		FixedArray::uninstallScript();
 		FixedDict::uninstallScript();
 		VolatileInfo::uninstallScript();

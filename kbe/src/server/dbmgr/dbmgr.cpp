@@ -670,6 +670,9 @@ void Dbmgr::finalise()
 		SAFE_RELEASE(pTelnetServer_);
 	}
 
+	EntityCall::uninstallScript();
+	EntityCallCrossServer::uninstallScript();
+
 	DBUtil::finalise();
 	PythonApp::finalise();
 }
