@@ -3610,6 +3610,80 @@ void Baseapp::onBroadcastBaseAppDataChanged(Network::Channel* pChannel, KBEngine
 }
 
 //-------------------------------------------------------------------------------------
+void Baseapp::receiveAcrossServerRequest(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+{
+	DEBUG_MSG("Baseapp::receiveAcrossServerRequest->>>");
+	if (pChannel->isExternal())
+		return;
+
+	COMPONENT_ORDER centerID;
+	COMPONENT_ID cid;
+	ENTITY_ID entityid;
+	std::string accountName;
+	std::string dbip;
+	std::string dbName;
+	s >> centerID >> cid >> entityid >> accountName >> dbip >> dbName;
+
+	std::string dbInterfaceName = g_serverConfig.getDBInterfaceNameByDBInfo(dbip.c_str(), dbName.c_str());
+	if (dbInterfaceName == "")
+	{
+		ERROR_MSG(fmt::format("Baseapp::receiveAcrossServerRequest can not find db interface name by ip({}) and db name({})", dbip, dbName));
+		return;
+	}
+
+	uint64 loginKey = genUUID64();
+	Network::Bundle *bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+	bundle->newMessage(DbmgrInterface::requestAcrossServerSuccess);
+	(*bundle) << centerID << cid << entityid << loginKey;
+
+	if (strlen((const char*)&g_kbeSrvConfig.getBaseApp().externalAddress) > 0)
+	{
+		(*bundle) << g_kbeSrvConfig.getBaseApp().externalAddress;
+	}
+	else
+	{
+		(*bundle) << inet_ntoa((struct in_addr&)networkInterface().extaddr().ip);
+	}
+	(*bundle) << this->networkInterface().extaddr().port;
+	pChannel->send(bundle);
+
+	PendingLoginMgr::AcrossPLInfos *infos = new PendingLoginMgr::AcrossPLInfos;
+	infos->accountName = accountName;
+	infos->dbInterfaceName = dbInterfaceName;
+	infos->needCheckPassword = false;
+	infos->loginKey = loginKey;
+	pendingLoginMgr_.add(infos);
+}
+
+//-------------------------------------------------------------------------------------
+void Baseapp::receiveAcrossServerSuccess(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+{
+	DEBUG_MSG("Baseapp::receiveAcrossServerSuccess->>>");
+	ENTITY_ID entityID;
+	uint64 loginKey;
+	std::string dstBaseappIP;
+	uint16 port;
+	s >> entityID >> loginKey >> dstBaseappIP >> port;
+
+	Entity* pEntity = findEntity(entityID);
+	if (pEntity == NULL || !PyObject_TypeCheck(pEntity, Proxy::getScriptType()) || pEntity->isDestroyed())
+	{
+		WARNING_MSG(fmt::format("Baseapp::receiveAcrossServerSuccess: cannot find entity({}), maybe destroyed.", entityID));
+		return;
+	}
+
+	if (pEntity->clientEntityCall() == NULL)
+	{
+		ERROR_MSG(fmt::format("Baseapp::receiveAcrossServerSuccess: entity:{},client channel is NULL.\n", entityID));
+		return;
+	}
+
+	pEntity->acrossServerSuccess();
+
+	//pEntity->clientEntityCall();
+}
+
+//-------------------------------------------------------------------------------------
 void Baseapp::registerPendingLogin(Network::Channel* pChannel, KBEngine::MemoryStream& s)
 {
 	if(pChannel->isExternal())

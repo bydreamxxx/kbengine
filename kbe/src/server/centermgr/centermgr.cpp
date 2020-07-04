@@ -197,27 +197,91 @@ namespace KBEngine
 		COMPONENT_ORDER centerID;
 		s >> centerID;
 
-		APP_INFOS::iterator iter = apps_.begin();
-		for (; iter != apps_.end(); iter++)
+		const APP_INFO *appinfo = getAppInfo(centerID);
+		if (appinfo != NULL)
 		{
-			if (iter->second->globalOrderid == centerID)
-			{
-				Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
-				bundle->newMessage(DbmgrInterface::onEntityCallCrossServer);
-				bundle->append(s);
-				iter->second->pChannel->send(bundle);
-
-				s.done();
-				return;
-			}
+			Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			bundle->newMessage(DbmgrInterface::onEntityCallCrossServer);
+			bundle->append(s);
+			appinfo->pChannel->send(bundle);
+		}
+		else
+		{
+			ERROR_MSG(fmt::format("Centermgr::onEntityCallCrossServer: cannot find server:centerID = {}\n", centerID));
 		}
 
-		ERROR_MSG(fmt::format("Centermgr::onEntityCallCrossServer: cannot find server:centerID = {}\n", centerID));
+		s.done();
+	}
+
+	void Centermgr::requestAcrossServer(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+	{
+		DEBUG_MSG("Centermgr::requestAcrossServer->>>");
+		// 如果做如下判断，需要明确CenterMgr也是内部组件
+		//if (pChannel->isExternal())
+		//	return;
+
+		COMPONENT_ORDER dstCenterID;
+		s >> dstCenterID;
+
+		const Centermgr::APP_INFO *dstApp = getAppInfo(dstCenterID);
+		if (dstApp == NULL)
+		{
+			// acrossEntityCall->centerID() << acrossEntityCall->componentID() << g_centerID << g_componentID << id() << accountName << dbip << dbName;
+			COMPONENT_ID cid;
+			COMPONENT_ORDER srcCenterID;
+			std::string accountName;
+			s >> cid >> srcCenterID >> cid >> accountName;
+			ERROR_MSG(fmt::format("Centermgr::onEntityCallCrossServer: cannot find server:centerID = {} for account({})\n", dstCenterID, accountName));
+
+			// TODO: 跨服失败回调，使用者发起请需求需要得知结果以便下一步的行为，如果没有就不知道明确的失败时间点。可以不用，没有结果返回就是失败？
+		}
+		else
+		{
+			Network::Bundle *bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			bundle->newMessage(DbmgrInterface::receiveAcrossServerRequest);
+			bundle->append(s);
+			dstApp->pChannel->send(bundle);
+		}
+
+		s.done();
+	}
+
+	void Centermgr::requestAcrossServerSuccess(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+	{
+		DEBUG_MSG("Centermgr::requestAcrossServerSuccess->>>");
+		COMPONENT_ORDER centerID;
+		s >> centerID;
+
+		const APP_INFO *appinfo = getAppInfo(centerID);
+		if (appinfo != NULL)
+		{
+			Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			bundle->newMessage(DbmgrInterface::requestAcrossServerSuccess);
+			bundle->append(s);
+			appinfo->pChannel->send(bundle);
+		}
+		else
+		{
+			ERROR_MSG(fmt::format("Centermgr::requestAcrossServerSuccess: cannot find server:centerID = {}\n", centerID));
+		}
+
+		s.done();		
 	}
 
 	Centermgr::APP_INFOS const &Centermgr::getConnectedAppInfos()
 	{
 		return apps_;
+	}
+
+	Centermgr::APP_INFO const *Centermgr::getAppInfo(COMPONENT_ORDER centerID)
+	{
+		APP_INFOS::iterator iter = apps_.begin();
+		for (; iter->second->globalOrderid != centerID; iter++)
+		{
+			return iter->second;
+		}
+
+		return NULL;
 	}
 }
 

@@ -189,5 +189,23 @@ INLINE const char* ServerConfig::dbInterfaceIndex2dbInterfaceName(size_t dbInter
 }
 
 //-------------------------------------------------------------------------------------	
+INLINE bool ServerConfig::getDBInfoByInterfaceName(const char *interfaceName, char *addr, char *dbName)
+{
+	ENGINE_COMPONENT_INFO &dbinfo = getDBMgr();
 
+	std::vector<DBInterfaceInfo>::iterator iter = dbinfo.dbInterfaceInfos.begin();
+	for (; iter != dbinfo.dbInterfaceInfos.end(); iter++)
+	{
+		if (strcmp(iter->name, interfaceName) == 0)
+		{
+			addr = iter->db_ip;
+			dbName = iter->db_name;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+//-------------------------------------------------------------------------------------		
 }

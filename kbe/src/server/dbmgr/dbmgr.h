@@ -125,6 +125,26 @@ public:
 	*/
 	void onEntityCallCrossServer(Network::Channel* pChannel, KBEngine::MemoryStream& s);
 
+	/** 网络接口
+	跨服登录请求
+	*/
+	void requestAcrossServer(Network::Channel *pChannel, KBEngine::MemoryStream& s);
+
+	/** 网络接口
+	接收跨服登录请求
+	*/
+	void receiveAcrossServerRequest(Network::Channel *pChannel, KBEngine::MemoryStream& s);
+
+	/* 网络接口
+	* 请求跨服登录成功
+	*/
+	void requestAcrossServerSuccess(Network::Channel *pChannel, KBEngine::MemoryStream& s);
+
+	/* 网络接口
+	* 收到跨服请求成功的通知
+	*/
+	void receiveAcrossServerSuccess(Network::Channel *pChannel, KBEngine::MemoryStream& s);
+
 	/* 网络接口
 		注册一个新激活的baseapp或者cellapp或者dbmgr
 		通常是一个新的app被启动了， 它需要向某些组件注册自己。

@@ -48,6 +48,8 @@ public:
 
 	virtual void newCall(Network::Bundle& bundle);
 
+	COMPONENT_ORDER centerID() { return centerID_; }
+
 	/**
 	unpickle·½·¨
 	*/
