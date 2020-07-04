@@ -238,6 +238,17 @@ public:
 	void onTeleportFailure();  
 	void onTeleportSuccess(SPACE_ID spaceID);
 
+	/**
+	    发起跨服
+	*/
+	DECLARE_PY_MOTHOD_ARG1(pyAcrossServer, PyObject_ptr)
+	void acrossServer(PyObject_ptr baseEntityCallRef);
+
+	/**
+		跨服回调
+	*/
+	void acrossServerSuccess();
+
 	/** 网络接口
 		某个entity请求teleport到这个entity的space上。
 	*/

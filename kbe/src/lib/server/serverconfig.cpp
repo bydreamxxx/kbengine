@@ -1787,5 +1787,25 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 #endif
 }
 
-//-------------------------------------------------------------------------------------		
+//-------------------------------------------------------------------------------------
+std::string ServerConfig::getDBInterfaceNameByDBInfo(const char *ip, const char *dbName)
+{
+	ENGINE_COMPONENT_INFO &dbinfo = getDBMgr();
+
+	std::vector<DBInterfaceInfo>::iterator iter = dbinfo.dbInterfaceInfos.begin();
+	for (; iter != dbinfo.dbInterfaceInfos.end(); iter++)
+	{
+		if (strcmp(iter->db_ip, ip) == 0)
+		{
+			if(strcmp(iter->db_name, dbName))
+			{ 
+				return iter->name;
+			}
+		}
+	}
+
+	return "";
+}
+
+//-------------------------------------------------------------------------------------
 }

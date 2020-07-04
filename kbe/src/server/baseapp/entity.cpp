@@ -24,6 +24,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "entity_messages_forward_handler.h"
 #include "pyscript/py_gc.h"
 #include "entitydef/entity_call.h"
+#include "entitydef/entitycall_cross_server.h"
 #include "network/channel.h"	
 #include "network/fixed_messages.h"
 #include "client_lib/client_interface.h"
@@ -43,6 +44,7 @@ SCRIPT_METHOD_DECLARE("createCellEntity",				createCellEntity,				METH_VARARGS,	
 SCRIPT_METHOD_DECLARE("createCellEntityInNewSpace",		createCellEntityInNewSpace,		METH_VARARGS,			0)
 SCRIPT_METHOD_DECLARE("destroyCellEntity",				pyDestroyCellEntity,			METH_VARARGS,			0)
 SCRIPT_METHOD_DECLARE("teleport",						pyTeleport,						METH_VARARGS,			0)
+SCRIPT_METHOD_DECLARE("acrossServer",					pyAcrossServer,					METH_VARARGS,			0)
 ENTITY_METHOD_DECLARE_END()
 
 SCRIPT_MEMBER_DECLARE_BEGIN(Entity)
@@ -1671,4 +1673,97 @@ bool Entity::_reload(bool fullReload)
 }
 
 //-------------------------------------------------------------------------------------
+PyObject *Entity::pyAcrossServer(PyObject_ptr acrossServerBaseRef)
+{
+	if (this->isDestroyed())
+	{
+		PyErr_Format(PyExc_AssertionError, "%s::acrossServer: %d is destroyed!\n",
+			scriptName(), id());
+		PyErr_PrintEx(0);
+		return 0;
+	}
+	
+	if (!PyObject_TypeCheck(this, Proxy::getScriptType()))
+	{
+		PyErr_Format(PyExc_AssertionError, "%s::acrossServer: %d is not a account!\n",
+			scriptName(), id());
+		PyErr_PrintEx(0);
+		return 0;
+	}
+
+	this->acrossServer(acrossServerBaseRef);
+	S_Return;
+}
+
+//-------------------------------------------------------------------------------------
+void Entity::acrossServer(PyObject_ptr acrossServerBaseRef)
+{
+	if (acrossServerBaseRef == Py_None)
+	{
+		PyErr_Format(PyExc_AssertionError, "%s::acrossServer: %d acrossServerBaseRef cant be None!\n",
+			scriptName(), id());
+		PyErr_PrintEx(0);
+		return;
+	}
+
+	if(!PyObject_TypeCheck(acrossServerBaseRef, EntityCallCrossServer::getScriptType()))
+	{
+		PyErr_Format(PyExc_AssertionError, "%s::acrossServer: %d acrossServerBaseRef must be EntityCallCrossServer!\n",
+			scriptName(), id());
+		PyErr_PrintEx(0);
+		return;
+	}
+
+	PyObject *py__ACCOUNT_NAME__ = PyObject_GetAttrString(this, "__ACCOUNT_NAME__");
+	if (py__ACCOUNT_NAME__ == NULL)
+	{
+		ERROR_MSG(fmt::format("Entity::acrossServer: {}({}) not found __ACCOUNT_NAME__!\n", this->scriptName(), id()));
+		PyErr_Clear();
+		return;
+	}
+	wchar_t *wname = PyUnicode_AsWideCharString(py__ACCOUNT_NAME__, NULL);
+	char* name = strutil::wchar2char(wname);
+	PyMem_Free(wname);
+	std::string accountName = name;
+	free(name);
+	Py_DECREF(py__ACCOUNT_NAME__);
+
+	char *dbip;
+	char *dbName;
+	const char *dbinterfaceName = g_kbeSrvConfig.dbInterfaceIndex2dbInterfaceName(dbInterfaceIndex());
+	if (!g_kbeSrvConfig.getDBInfoByInterfaceName(dbinterfaceName, dbip, dbName))
+	{
+		ERROR_MSG(fmt::format("Entity::acrossServer: {}({}) not found db interface({})!\n", this->scriptName(), id(), dbinterfaceName));
+		return;
+	}
+
+	Network::Bundle *bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+	bundle->newMessage(DbmgrInterface::requestAcrossServer);
+
+	EntityCallCrossServer* acrossEntityCall = static_cast<EntityCallCrossServer *>(acrossServerBaseRef);
+	(*bundle) << acrossEntityCall->centerID() << acrossEntityCall->componentID() << g_centerID << g_componentID << id() << accountName << dbip << dbName;
+
+	Components::ComponentInfos* dbinfos = Components::getSingleton().getDbmgr();
+	if (dbinfos && dbinfos->pChannel)
+	{
+		dbinfos->pChannel->send(bundle);
+	}
+	else
+	{
+		ERROR_MSG(fmt::format("{}::acrossServer({}): not found dbmgr!\n",
+			this->scriptName(), this->id()));
+	}
+}
+
+//-------------------------------------------------------------------------------------
+void Entity::acrossServerSuccess()
+{
+	DEBUG_MSG("Entity::acrossServerSuccess->>>");
+	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
+
+	SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onAcrossServerSuccess"), false);
+}
+
+//-------------------------------------------------------------------------------------
+
 }

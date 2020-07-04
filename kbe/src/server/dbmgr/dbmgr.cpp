@@ -784,13 +784,119 @@ void Dbmgr::onEntityCallCrossServer(Network::Channel * pChannel, KBEngine::Memor
 		{
 			ERROR_MSG(fmt::format("Dbmgr::onEntityCallCrossServer: invalid channel for component({})!\n", cid));
 		}
-
-		s.done();
 	}
 	else
 	{
 		ERROR_MSG(fmt::format("EntityCallAbstract::newCall: not found component({})!\n", cid));
 	}
+
+	s.done();
+}
+
+//-------------------------------------------------------------------------------------
+void Dbmgr::requestAcrossServer(Network::Channel *pChannel, KBEngine::MemoryStream& s)
+{
+	DEBUG_MSG("Dbmgr::requestAcrossServer->>>");
+	if (pChannel->isExternal())
+		return;
+
+	if (!centermgrInfo_)
+	{
+		ERROR_MSG("Dbmgr::requestAcrossServer: cannot find CenterMgr, may be it was disconnected.");
+	}
+	else
+	{
+		Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		bundle->newMessage(CentermgrInterface::requestAcrossServer);
+		bundle->append(s);
+		centermgrInfo_->pChannel->send(bundle);
+	}
+
+	s.done();
+}
+
+//-------------------------------------------------------------------------------------
+void Dbmgr::receiveAcrossServerRequest(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+{
+	DEBUG_MSG("Dbmgr::receiveAcrossServerRequest-->>>");
+	if (!centermgrInfo_ || pChannel != centermgrInfo_->pChannel)
+	{
+		ERROR_MSG(fmt::format("Dbmgr::receiveAcrossServerRequest: from unknow centermgr:{}", pChannel->addr().c_str()));
+	}
+	else
+	{
+		COMPONENT_ID cid;
+		s >> cid;
+
+		Components::ComponentInfos* cinfos = Components::getSingleton().findComponent(cid);
+		if (cinfos != NULL)
+		{
+			Network::Bundle *bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			bundle->newMessage(BaseappInterface::receiveAcrossServerRequest);
+			bundle->append(s);
+			cinfos->pChannel->send(bundle);
+		}
+		else
+		{
+			ERROR_MSG(fmt::format("Dbmgr::receiveAcrossServerRequest: cannot find component: {}", cid));
+			// TODO: 跨服失败回调
+		}
+	}
+
+	s.done();
+}
+
+void Dbmgr::requestAcrossServerSuccess(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+{
+	DEBUG_MSG("Dbmgr::requestAcrossServerSuccess-->>>");
+	if (pChannel->isExternal())
+		return;
+
+	if (!centermgrInfo_)
+	{
+		ERROR_MSG("Dbmgr::requestAcrossServerSuccess: cannot find CenterMgr, may be it was disconnected.");
+	}
+	else
+	{
+		Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		bundle->newMessage(CentermgrInterface::requestAcrossServerSuccess);
+		bundle->append(s);
+		centermgrInfo_->pChannel->send(bundle);
+	}
+
+	s.done();
+}
+
+
+//-------------------------------------------------------------------------------------
+void Dbmgr::receiveAcrossServerSuccess(Network::Channel * pChannel, KBEngine::MemoryStream & s)
+{
+	DEBUG_MSG("Dbmgr::receiveAcrossServerSuccess-->>>");
+	if (!centermgrInfo_ || pChannel != centermgrInfo_->pChannel)
+	{
+		ERROR_MSG(fmt::format("Dbmgr::receiveAcrossServerRequest: from unknow centermgr:{}", pChannel->addr().c_str()));
+	}
+	else
+	{
+		COMPONENT_ID cid;
+		s >> cid;
+
+		Components::ComponentInfos* cinfos = Components::getSingleton().findComponent(cid);
+		if (cinfos != NULL)
+		{
+			Network::Bundle *bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+			bundle->newMessage(BaseappInterface::receiveAcrossServerSuccess);
+			bundle->append(s);
+			cinfos->pChannel->send(bundle);
+		}
+		else
+		{
+			ERROR_MSG(fmt::format("Dbmgr::receiveAcrossServerRequest: cannot find component: {}", cid));
+			// TODO: 跨服失败回调
+		}
+	}
+
+	s.done();
 }
 
 //-------------------------------------------------------------------------------------

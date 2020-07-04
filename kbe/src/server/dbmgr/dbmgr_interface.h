@@ -85,6 +85,18 @@ NETWORK_INTERFACE_DECLARE_BEGIN(DbmgrInterface)
 	// 收到跨服call请求, 由某个app上的entityCallCrossServer发起,调用到本服某个app
 	DBMGR_MESSAGE_DECLARE_STREAM(onEntityCallCrossServer, NETWORK_VARIABLE_MESSAGE)
 
+	// 收到跨服登录请求
+	DBMGR_MESSAGE_DECLARE_STREAM(requestAcrossServer, NETWORK_VARIABLE_MESSAGE)
+
+	// 收到跨服登录请求
+	DBMGR_MESSAGE_DECLARE_STREAM(receiveAcrossServerRequest, NETWORK_VARIABLE_MESSAGE)
+
+	// 跨服登录请求成功
+	DBMGR_MESSAGE_DECLARE_STREAM(requestAcrossServerSuccess, NETWORK_VARIABLE_MESSAGE)
+
+	// 收到跨服登录请求成功的通知
+	DBMGR_MESSAGE_DECLARE_STREAM(receiveAcrossServerSuccess, NETWORK_VARIABLE_MESSAGE)
+
 	// global数据改变
 	DBMGR_MESSAGE_DECLARE_STREAM(onBroadcastGlobalDataChanged,		NETWORK_VARIABLE_MESSAGE)
 

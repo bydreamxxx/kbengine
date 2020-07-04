@@ -125,6 +125,12 @@ NETWORK_INTERFACE_DECLARE_BEGIN(BaseappInterface)
 	BASEAPP_MESSAGE_DECLARE_STREAM(onBroadcastBaseAppDataChanged,					NETWORK_VARIABLE_MESSAGE)
 	BASEAPP_MESSAGE_DECLARE_STREAM(onBroadcastCenterDataChanged,					NETWORK_VARIABLE_MESSAGE)
 
+	// 收到跨服登录请求
+	BASEAPP_MESSAGE_DECLARE_STREAM(receiveAcrossServerRequest,						 NETWORK_VARIABLE_MESSAGE)
+
+	// 收到跨服登录请求成功的通知
+	BASEAPP_MESSAGE_DECLARE_STREAM(receiveAcrossServerSuccess,						NETWORK_VARIABLE_MESSAGE)
+
 	// 某个app向本app告知处于活动状态。
 	BASEAPP_MESSAGE_DECLARE_ARGS2(onAppActiveTick,									NETWORK_FIXED_MESSAGE,
 									COMPONENT_TYPE,									componentType, 

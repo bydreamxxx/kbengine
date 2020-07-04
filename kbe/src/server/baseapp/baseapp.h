@@ -291,6 +291,16 @@ public:
 	void onBroadcastBaseAppDataChanged(Network::Channel* pChannel, KBEngine::MemoryStream& s);
 
 	/** 网络接口
+		跨服登录请求
+	*/
+	void receiveAcrossServerRequest(Network::Channel *pChannel, KBEngine::MemoryStream& s);
+
+	/* 网络接口
+	*  收到跨服登录请求成功的通知
+	*/
+	void receiveAcrossServerSuccess(Network::Channel *pChannel, KBEngine::MemoryStream& s);
+
+	/** 网络接口
 		注册将要登录的账号, 注册后则允许登录到此网关
 	*/
 	void registerPendingLogin(Network::Channel* pChannel, KBEngine::MemoryStream& s);

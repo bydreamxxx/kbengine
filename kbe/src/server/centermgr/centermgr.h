@@ -47,6 +47,8 @@ public:
 
 	APP_INFOS const &getConnectedAppInfos();
 
+	APP_INFO const *getAppInfo(COMPONENT_ORDER centerID);
+
 	/* 网络接口
 	 * 某个 app 请求注册
 	*/
@@ -67,6 +69,16 @@ public:
 	* 收到跨服call请求, 由某个app上的entityCallCrossServer发起
 	*/
 	void onEntityCallCrossServer(Network::Channel* pChannel, KBEngine::MemoryStream& s);
+
+	/* 网络接口
+	* 跨服登录请求
+	*/
+	void requestAcrossServer(Network::Channel *pChannel, KBEngine::MemoryStream& s);
+
+	/* 网络接口
+	* 请求跨服登录成功
+	*/
+	void requestAcrossServerSuccess(Network::Channel *pChannel, KBEngine::MemoryStream& s);
 
 private:
 	APP_INFOS apps_;
