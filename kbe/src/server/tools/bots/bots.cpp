@@ -1447,5 +1447,15 @@ void Bots::onAppActiveTickCB(Network::Channel* pChannel)
 }
 
 //-------------------------------------------------------------------------------------
+void Bots::acrossServerReady(Network::Channel * pChannel, MemoryStream& s)
+{
+	ClientObject* pClient = findClient(pChannel);
+	if (pClient)
+	{
+		pClient->acrossServerReady(pChannel, s);
+	}
+}
+
+//-------------------------------------------------------------------------------------
 
 }

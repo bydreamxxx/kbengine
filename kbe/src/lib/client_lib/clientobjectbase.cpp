@@ -1150,6 +1150,11 @@ void ClientObjectBase::onUpdatePropertys_(ENTITY_ID eid, MemoryStream& s)
 	entity->onUpdatePropertys(s);
 }
 
+void ClientObjectBase::acrossServerReady(Network::Channel * pChannel, MemoryStream& s)
+{
+	ERROR_MSG("ClientObjectBase::acrossServerReady: .\n");
+}
+
 //-------------------------------------------------------------------------------------
 client::Entity* ClientObjectBase::pPlayer()
 {

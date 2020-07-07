@@ -242,6 +242,9 @@ NETWORK_INTERFACE_DECLARE_BEGIN(ClientInterface)
 									ENTITY_ID,								eid,
 									ENTITY_ID,								parentID)
 
+	// 跨服准备完毕 
+	CLIENT_MESSAGE_DECLARE_STREAM(acrossServerReady,					 NETWORK_VARIABLE_MESSAGE)
+
 	NETWORK_INTERFACE_DECLARE_END()
 
 #ifdef DEFINE_IN_INTERFACE

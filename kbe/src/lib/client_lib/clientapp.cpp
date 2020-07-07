@@ -468,6 +468,12 @@ int ClientApp::processOnce(bool shouldIdle)
 }
 
 //-------------------------------------------------------------------------------------
+void ClientApp::acrossServerReady(Network::Channel * pChannel, MemoryStream& s)
+{
+	ClientObjectBase::acrossServerReady(pChannel, s);
+}
+
+//-------------------------------------------------------------------------------------
 void ClientApp::onTargetChanged()
 { 
 	// 所有脚本都加载完毕
