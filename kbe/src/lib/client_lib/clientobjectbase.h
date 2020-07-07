@@ -362,6 +362,11 @@ public:
 	*/
 	virtual void onReqAccountNewPasswordCB(Network::Channel* pChannel, SERVER_ERROR_CODE failedcode){}
 
+	/** 网络接口
+	    跨服已经准备好
+	*/
+	virtual void acrossServerReady(Network::Channel* pChannel, MemoryStream& s);
+
 	/** 
 		获得player实例
 	*/

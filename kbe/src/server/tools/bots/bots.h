@@ -341,6 +341,11 @@ public:
 	*/
 	void onAppActiveTickCB(Network::Channel* pChannel);
 
+	/** 网络接口
+		跨服已经准备好
+	*/
+	virtual void acrossServerReady(Network::Channel* pChannel, MemoryStream& s);
+
 protected:
 	PyBots*													pPyBots_;
 
