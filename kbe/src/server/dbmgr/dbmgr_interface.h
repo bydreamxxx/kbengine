@@ -117,9 +117,10 @@ NETWORK_INTERFACE_DECLARE_BEGIN(DbmgrInterface)
 	DBMGR_MESSAGE_DECLARE_STREAM(onLoginAccountCBBFromInterfaces,	NETWORK_VARIABLE_MESSAGE)
 
 	// baseapp≤È—Ø’À∫≈–≈œ¢°£
-	DBMGR_MESSAGE_DECLARE_ARGS8(queryAccount,						NETWORK_VARIABLE_MESSAGE,
+	DBMGR_MESSAGE_DECLARE_ARGS9(queryAccount,						NETWORK_VARIABLE_MESSAGE,
 									std::string,					accountName,
 									std::string,					password,
+									std::string,					dbInterfaceName,
 									bool,							needCheckPassword,
 									COMPONENT_ID,					componentID,
 									ENTITY_ID,						entityID,

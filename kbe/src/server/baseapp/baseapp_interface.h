@@ -188,6 +188,14 @@ NETWORK_INTERFACE_DECLARE_BEGIN(BaseappInterface)
 									uint64,											key,
 									ENTITY_ID,										entityID)
 
+	// 前端请求登录到网关上。
+	BASEAPP_MESSAGE_EXPOSED(acrossLogin)
+	BASEAPP_MESSAGE_DECLARE_ARGS4(acrossLogin, NETWORK_VARIABLE_MESSAGE,
+		std::string, accountName,
+		std::string, password,
+		int8, clientType,
+		uint64, loginKey)
+
 	// 从dbmgr获取到账号Entity信息
 	BASEAPP_MESSAGE_DECLARE_STREAM(onQueryAccountCBFromDbmgr,						NETWORK_VARIABLE_MESSAGE)
 

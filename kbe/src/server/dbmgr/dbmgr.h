@@ -183,7 +183,7 @@ public:
 	/** 网络接口
 		baseapp请求查询account信息
 	*/
-	void queryAccount(Network::Channel* pChannel, std::string& accountName, std::string& password, bool needCheckPassword,
+	void queryAccount(Network::Channel* pChannel, std::string& accountName, std::string& password, std::string& dbInterfaceName, bool needCheckPassword,
 		COMPONENT_ID componentID, ENTITY_ID entityID, DBID entityDBID, uint32 ip, uint16 port);
 
 	/** 网络接口

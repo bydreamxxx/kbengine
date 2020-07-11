@@ -3656,14 +3656,99 @@ void Baseapp::receiveAcrossServerRequest(Network::Channel * pChannel, KBEngine::
 }
 
 //-------------------------------------------------------------------------------------
+void Baseapp::acrossLogin(Network::Channel * pChannel, std::string accountName, std::string password, int8 clientType, uint64 loginKey)
+{
+	accountName = KBEngine::strutil::kbe_trim(accountName);
+	if (accountName.size() > ACCOUNT_NAME_MAX_LENGTH)
+	{
+		ERROR_MSG(fmt::format("Baseapp::acrossLogin: accountName too big, size={}, limit={}.\n",
+			accountName.size(), ACCOUNT_NAME_MAX_LENGTH));
+
+		return;
+	}
+
+	if (password.size() > ACCOUNT_PASSWD_MAX_LENGTH)
+	{
+		ERROR_MSG(fmt::format("Baseapp::acrossLogin: password too big, size={}, limit={}.\n",
+			password.size(), ACCOUNT_PASSWD_MAX_LENGTH));
+
+		return;
+	}
+
+	INFO_MSG(fmt::format("Baseapp::acrossLogin: new user[{0}], channel[{1}].\n",
+		accountName, pChannel->c_str()));
+
+	Components::ComponentInfos* dbmgrinfos = Components::getSingleton().getDbmgr();
+	if (dbmgrinfos == NULL || dbmgrinfos->pChannel == NULL || dbmgrinfos->cid == 0)
+	{
+		loginBaseappFailed(pChannel, accountName, SERVER_ERR_SRV_NO_READY);
+		return;
+	}
+
+	PendingLoginMgr::PLInfos* ptinfos = pendingLoginMgr_.find(accountName);
+	if (ptinfos == NULL)
+	{
+		loginBaseappFailed(pChannel, accountName, SERVER_ERR_ILLEGAL_LOGIN);
+		return;
+	}
+	else if (!ptinfos->addr.isNone() && ptinfos->addr != pChannel->addr())
+	{
+		loginBaseappFailed(pChannel, accountName, SERVER_ERR_ILLEGAL_LOGIN);
+		return;
+	}
+
+	if ((ptinfos->flags & ACCOUNT_FLAG_LOCK) > 0)
+	{
+		loginBaseappFailed(pChannel, accountName, SERVER_ERR_ACCOUNT_LOCK);
+		pendingLoginMgr_.removeNextTick(accountName);
+		return;
+	}
+
+	if ((ptinfos->flags & ACCOUNT_FLAG_NOT_ACTIVATED) > 0)
+	{
+		loginBaseappFailed(pChannel, accountName, SERVER_ERR_ACCOUNT_NOT_ACTIVATED);
+		pendingLoginMgr_.removeNextTick(accountName);
+		return;
+	}
+
+	if (ptinfos->deadline > 0 && ::time(NULL) - ptinfos->deadline <= 0)
+	{
+		loginBaseappFailed(pChannel, accountName, SERVER_ERR_ACCOUNT_DEADLINE);
+		pendingLoginMgr_.removeNextTick(accountName);
+		return;
+	}
+
+	if (idClient_.size() == 0)
+	{
+		ERROR_MSG("Baseapp::loginBaseapp: idClient size is 0.\n");
+		loginBaseappFailed(pChannel, accountName, SERVER_ERR_SRV_NO_READY);
+		pendingLoginMgr_.removeNextTick(accountName);
+		return;
+	}
+
+	Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+	(*pBundle).newMessage(DbmgrInterface::queryAccount);
+
+	ENTITY_ID entityID = idClient_.alloc();
+	KBE_ASSERT(entityID > 0);
+
+	static_cast<PendingLoginMgr::AcrossPLInfos *>(ptinfos)->dbInterfaceName;
+
+	DbmgrInterface::queryAccountArgs9::staticAddToBundle((*pBundle), accountName, password, static_cast<PendingLoginMgr::AcrossPLInfos *>(ptinfos)->dbInterfaceName, 
+		ptinfos->needCheckPassword, g_componentID, entityID, ptinfos->entityDBID, pChannel->addr().ip, pChannel->addr().port);
+
+	dbmgrinfos->pChannel->send(pBundle);
+
+	// 记录客户端地址
+	ptinfos->addr = pChannel->addr();
+}
+
+//-------------------------------------------------------------------------------------
 void Baseapp::receiveAcrossServerSuccess(Network::Channel * pChannel, KBEngine::MemoryStream & s)
 {
 	DEBUG_MSG("Baseapp::receiveAcrossServerSuccess->>>");
 	ENTITY_ID entityID;
-	uint64 loginKey;
-	std::string dstBaseappIP;
-	uint16 port;
-	s >> entityID >> loginKey >> dstBaseappIP >> port;
+	s >> entityID;
 
 	Entity* pEntity = findEntity(entityID);
 	if (pEntity == NULL || !PyObject_TypeCheck(pEntity, Proxy::getScriptType()) || pEntity->isDestroyed())
@@ -3678,7 +3763,7 @@ void Baseapp::receiveAcrossServerSuccess(Network::Channel * pChannel, KBEngine::
 		return;
 	}
 
-	pEntity->acrossServerSuccess();
+	pEntity->acrossServerSuccess(s);
 
 	//pEntity->clientEntityCall();
 }
@@ -3942,7 +4027,7 @@ void Baseapp::loginBaseapp(Network::Channel* pChannel,
 		ENTITY_ID entityID = idClient_.alloc();
 		KBE_ASSERT(entityID > 0);
 
-		DbmgrInterface::queryAccountArgs8::staticAddToBundle((*pBundle), accountName, password, ptinfos->needCheckPassword, g_componentID,
+		DbmgrInterface::queryAccountArgs9::staticAddToBundle((*pBundle), accountName, password, "", ptinfos->needCheckPassword, g_componentID,
 			entityID, ptinfos->entityDBID, pChannel->addr().ip, pChannel->addr().port);
 
 		dbmgrinfos->pChannel->send(pBundle);
@@ -4142,6 +4227,18 @@ void Baseapp::onQueryAccountCBFromDbmgr(Network::Channel* pChannel, KBEngine::Me
 	PyObject* py__ACCOUNT_PASSWD__ = PyUnicode_FromString(KBE_MD5::getDigest(password.data(), (int)password.length()).c_str());
 	PyDict_SetItemString(pyDict, "__ACCOUNT_PASSWORD__", py__ACCOUNT_PASSWD__);
 	Py_DECREF(py__ACCOUNT_PASSWD__);
+
+	// 是否跨服登录
+	bool isAcrossServer = g_kbeSrvConfig.IsAcrossDB(dbInterfaceIndex);
+	if(isAcrossServer)
+		PyDict_SetItemString(pyDict, "isAcrossServer", Py_True);
+	else
+		PyDict_SetItemString(pyDict, "isAcrossServer", Py_False);
+
+	std::string dbInterfaceName = g_kbeSrvConfig.dbInterfaceIndex2dbInterfaceName(dbInterfaceIndex);
+	PyObject* py_dbInterfaceName = PyUnicode_FromString(dbInterfaceName.c_str());
+	PyDict_SetItemString(pyDict, "dbInterfaceName", py_dbInterfaceName);
+	Py_DECREF(py_dbInterfaceName);
 
 	Py_INCREF(pEntity);
 	pEntity->initializeEntity(pyDict);

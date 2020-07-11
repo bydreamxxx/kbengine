@@ -1198,6 +1198,7 @@ void Dbmgr::onLoginAccountCBBFromInterfaces(Network::Channel* pChannel, KBEngine
 void Dbmgr::queryAccount(Network::Channel* pChannel, 
 						 std::string& accountName, 
 						 std::string& password,
+						 std::string& dbInterfaceName,
 						 bool needCheckPassword,
 						 COMPONENT_ID componentID,
 						 ENTITY_ID entityID,
@@ -1211,8 +1212,16 @@ void Dbmgr::queryAccount(Network::Channel* pChannel,
 		return;
 	}
 
-	Buffered_DBTasks* pBuffered_DBTasks = 
-		findBufferedDBTask(Dbmgr::getSingleton().selectAccountDBInterfaceName(accountName));
+	Buffered_DBTasks* pBuffered_DBTasks;
+	if (dbInterfaceName.size() > 0)
+	{
+		pBuffered_DBTasks =	findBufferedDBTask(dbInterfaceName);
+	}
+	else
+	{
+		pBuffered_DBTasks =
+			findBufferedDBTask(Dbmgr::getSingleton().selectAccountDBInterfaceName(accountName));
+	}
 
 	if (!pBuffered_DBTasks)
 	{

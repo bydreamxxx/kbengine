@@ -1638,12 +1638,30 @@ void Entity::acrossServer(PyObject_ptr acrossServerBaseRef)
 }
 
 //-------------------------------------------------------------------------------------
-void Entity::acrossServerSuccess()
+void Entity::acrossServerSuccess(MemoryStream& s)
 {
 	DEBUG_MSG("Entity::acrossServerSuccess->>>");
 	SCOPED_PROFILE(SCRIPTCALL_PROFILE);
 
-	SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onAcrossServerSuccess"), false);
+	/*
+	uint64 loginKey;
+	std::string dstBaseappIP;
+	uint16 port;
+	s >> loginKey >> dstBaseappIP >> port;
+	*/
+
+	// 按照当前的设计来说，有clientEntityCall_必定是proxy
+	// 至于为何跑到baseEntity里来和python本身是C语言实现有关
+	if (clientEntityCall_)
+	{
+		Network::Bundle *bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+		bundle->newMessage(ClientInterface::acrossServerReady);
+		bundle->append(s);
+		static_cast<Proxy *>(this)->sendToClient(bundle);
+		s.done();
+
+		SCRIPT_OBJECT_CALL_ARGS0(this, const_cast<char*>("onAcrossServerReady"), false);
+	}
 }
 
 //-------------------------------------------------------------------------------------
