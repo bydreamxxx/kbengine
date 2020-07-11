@@ -295,6 +295,8 @@ public:
 	*/
 	void receiveAcrossServerRequest(Network::Channel *pChannel, KBEngine::MemoryStream& s);
 
+	void acrossLogin(Network::Channel *pChannel, std::string accountName, std::string password, int8 clientType, uint64 loginKey);
+
 	/* 网络接口
 	*  收到跨服登录请求成功的通知
 	*/
