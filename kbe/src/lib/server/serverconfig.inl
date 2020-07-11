@@ -163,6 +163,16 @@ INLINE bool ServerConfig::isPureDBInterfaceName(const std::string& dbInterfaceNa
 	return false;
 }
 
+INLINE bool ServerConfig::IsAcrossDB(size_t dbInterfaceIndex)
+{
+	if (_dbmgrInfo.dbInterfaceInfos.size() > dbInterfaceIndex)
+	{
+		return _dbmgrInfo.dbInterfaceInfos[dbInterfaceIndex].acrossDB;
+	}
+
+	return false;
+}
+
 //-------------------------------------------------------------------------------------	
 INLINE int ServerConfig::dbInterfaceName2dbInterfaceIndex(const std::string& dbInterfaceName)
 {
