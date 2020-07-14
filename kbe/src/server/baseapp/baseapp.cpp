@@ -3732,8 +3732,6 @@ void Baseapp::acrossLogin(Network::Channel * pChannel, std::string accountName, 
 	ENTITY_ID entityID = idClient_.alloc();
 	KBE_ASSERT(entityID > 0);
 
-	static_cast<PendingLoginMgr::AcrossPLInfos *>(ptinfos)->dbInterfaceName;
-
 	DbmgrInterface::queryAccountArgs9::staticAddToBundle((*pBundle), accountName, password, static_cast<PendingLoginMgr::AcrossPLInfos *>(ptinfos)->dbInterfaceName, 
 		ptinfos->needCheckPassword, g_componentID, entityID, ptinfos->entityDBID, pChannel->addr().ip, pChannel->addr().port);
 
