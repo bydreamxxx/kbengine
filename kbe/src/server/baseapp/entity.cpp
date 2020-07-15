@@ -1610,8 +1610,8 @@ void Entity::acrossServer(PyObject_ptr acrossServerBaseRef)
 	free(name);
 	Py_DECREF(py__ACCOUNT_NAME__);
 
-	char *dbip;
-	char *dbName;
+	char *dbip = NULL;
+	char *dbName = NULL;
 	const char *dbinterfaceName = g_kbeSrvConfig.dbInterfaceIndex2dbInterfaceName(dbInterfaceIndex());
 	if (!g_kbeSrvConfig.getDBInfoByInterfaceName(dbinterfaceName, dbip, dbName))
 	{
