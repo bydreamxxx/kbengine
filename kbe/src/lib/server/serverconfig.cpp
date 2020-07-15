@@ -1902,6 +1902,37 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 			infostr += (fmt::format("\tcomponentID : {}\n", info.componentID));
 		}
 	}
+	else if (componentType == CENTERMGR_TYPE)
+	{
+		ENGINE_COMPONENT_INFO& info = getCenterMgr();
+		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
+		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
+		info.componentID = componentID;
+
+		if (isPrint)
+		{
+			INFO_MSG("server-configs:\n");
+			INFO_MSG(fmt::format("\tinternalAddr : {}\n", internalAddr.c_str()));
+			INFO_MSG(fmt::format("\texternalAddr : {}\n", externalAddr.c_str()));
+			if (strlen(info.externalAddress) > 0)
+			{
+				INFO_MSG(fmt::format("\texternalCustomAddr : {}\n", info.externalAddress));
+			}
+
+			INFO_MSG(fmt::format("\tcomponentID : {}\n", info.componentID));
+
+			infostr += "server-configs:\n";
+			infostr += (fmt::format("\tinternalAddr : {}\n", internalAddr.c_str()));
+			infostr += (fmt::format("\texternalAddr : {}\n", externalAddr.c_str()));
+
+			if (strlen(info.externalAddress) > 0)
+			{
+				infostr += (fmt::format("\texternalCustomAddr : {}\n", info.externalAddress));
+			}
+
+			infostr += (fmt::format("\tcomponentID : {}\n", info.componentID));
+		}
+	}
 
 #if KBE_PLATFORM == PLATFORM_WIN32
 	if(infostr.size() > 0)
