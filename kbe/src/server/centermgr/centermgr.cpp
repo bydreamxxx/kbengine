@@ -256,7 +256,7 @@ namespace KBEngine
 		if (appinfo != NULL)
 		{
 			Network::Bundle* bundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
-			bundle->newMessage(DbmgrInterface::requestAcrossServerSuccess);
+			bundle->newMessage(DbmgrInterface::receiveAcrossServerSuccess);
 			bundle->append(s);
 			appinfo->pChannel->send(bundle);
 		}
