@@ -1397,25 +1397,6 @@ bool ServerConfig::loadConfig(std::string fileName)
 				}
 			} while ((node = node->NextSibling()));
 		}
-
-		// 覆盖 <channelCommon>
-		TiXmlNode* node = xml->enterNode(rootNode, "channelTimeout");
-		if(node)
-		{
-			TiXmlNode* childnode1 = xml->enterNode(node, "internal");
-			if(childnode1)
-			{
-				channelCommon_.channelInternalTimeout = KBE_MAX(0.f, float(xml->getValFloat(childnode1)));
-				Network::g_channelInternalTimeout = channelCommon_.channelInternalTimeout;
-			}
-
-			childnode1 = xml->enterNode(node, "external");
-			if(node)
-			{
-				channelCommon_.channelExternalTimeout = KBE_MAX(0.f, float(xml->getValFloat(childnode1)));
-				Network::g_channelExternalTimeout = channelCommon_.channelExternalTimeout;
-			}
-		}
 	}
 
 
