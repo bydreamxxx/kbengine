@@ -71,7 +71,7 @@ bool ServerConfig::loadConfig(std::string fileName)
 	
 	if(xml->getRootNode() == NULL)
 	{
-		// root½ÚµãÏÂÃ»ÓĞ×Ó½ÚµãÁË
+		// rootèŠ‚ç‚¹ä¸‹æ²¡æœ‰å­èŠ‚ç‚¹äº†
 		return true;
 	}
 
@@ -114,7 +114,7 @@ bool ServerConfig::loadConfig(std::string fileName)
 					{
 						Network::g_trace_packet_disables.push_back(c);
 						
-						// ²»debug¼ÓÃÜ°ü
+						// ä¸debugåŠ å¯†åŒ…
 						if(c == "Encrypted::packets")
 							Network::g_trace_encrypted_packet = false;
 					}
@@ -870,14 +870,14 @@ bool ServerConfig::loadConfig(std::string fileName)
 					if (node)
 						pDBInfo->isPure = xml->getValStr(node) == "true";
 
-					// Ä¬ÈÏ¿â²»ÔÊĞíÊÇ´¿¾»¿â£¬ÒıÇæĞèÒª´´½¨ÊµÌå±í
+					// é»˜è®¤åº“ä¸å…è®¸æ˜¯çº¯å‡€åº“ï¼Œå¼•æ“éœ€è¦åˆ›å»ºå®ä½“è¡¨
 					if (name == "default")
 						pDBInfo->isPure = false;
 
 					node = xml->enterNode(interfaceNode, "acrossDB");
 					if (node)
 						pDBInfo->acrossDB = xml->getValStr(node) == "true";
-					if (name == "default")	// Ä¬ÈÏ¿â²»ÔÊĞíÊÇ¿ç·şÊı¾İ¿â
+					if (name == "default")	// é»˜è®¤åº“ä¸å…è®¸æ˜¯è·¨æœæ•°æ®åº“
 						pDBInfo->acrossDB = false;
 
 					node = xml->enterNode(interfaceNode, "type");
@@ -962,7 +962,7 @@ bool ServerConfig::loadConfig(std::string fileName)
 
 					if (pDBInfo == &dbinfo)
 					{
-						// ¼ì²é²»ÄÜÔÚ²»Í¬µÄ½Ó¿ÚÖĞÊ¹ÓÃÏàÍ¬µÄÊı¾İ¿âÓëÏàÍ¬µÄ±í
+						// æ£€æŸ¥ä¸èƒ½åœ¨ä¸åŒçš„æ¥å£ä¸­ä½¿ç”¨ç›¸åŒçš„æ•°æ®åº“ä¸ç›¸åŒçš„è¡¨
 						std::vector<DBInterfaceInfo>::iterator dbinfo_iter = _dbmgrInfo.dbInterfaceInfos.begin();
 						for (; dbinfo_iter != _dbmgrInfo.dbInterfaceInfos.end(); ++dbinfo_iter)
 						{
@@ -1397,6 +1397,25 @@ bool ServerConfig::loadConfig(std::string fileName)
 				}
 			} while ((node = node->NextSibling()));
 		}
+
+		// è¦†ç›– <channelCommon>
+		TiXmlNode* node = xml->enterNode(rootNode, "channelTimeout");
+		if(node)
+		{
+			TiXmlNode* childnode1 = xml->enterNode(node, "internal");
+			if(childnode1)
+			{
+				channelCommon_.channelInternalTimeout = KBE_MAX(0.f, float(xml->getValFloat(childnode1)));
+				Network::g_channelInternalTimeout = channelCommon_.channelInternalTimeout;
+			}
+
+			childnode1 = xml->enterNode(node, "external");
+			if(node)
+			{
+				channelCommon_.channelExternalTimeout = KBE_MAX(0.f, float(xml->getValFloat(childnode1)));
+				Network::g_channelExternalTimeout = channelCommon_.channelExternalTimeout;
+			}
+		}
 	}
 
 
@@ -1532,7 +1551,7 @@ uint32 ServerConfig::tcp_SOMAXCONN(COMPONENT_TYPE componentType)
 //-------------------------------------------------------------------------------------	
 void ServerConfig::_updateEmailInfos()
 {
-	// Èç¹ûĞ¡ÓÚ64Ôò±íÊ¾Ä¿Ç°»¹ÊÇÃ÷ÎÄÃÜÂë
+	// ÃˆÃ§Â¹Ã»ÃÂ¡Ã“Ãš64Ã”Ã²Â±Ã­ÃŠÂ¾Ã„Â¿Ã‡Â°Â»Â¹ÃŠÃ‡ÃƒÃ·ÃÃ„ÃƒÃœÃ‚Ã«
 	if(emailServerInfo_.password.size() < 64)
 	{
 		WARNING_MSG(fmt::format("ServerConfig::loadConfig: email password(email_service.xml) is not encrypted!\nplease use password(rsa):\n{}\n"
