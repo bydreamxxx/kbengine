@@ -125,7 +125,11 @@ namespace KBEngine
 
 		APP_INFO *appInfo = new APP_INFO;
 		appInfo->componentType = componentType;
+
 		appInfo->pChannel = pChannel;
+		// shufeng：注意这里 channel 为 EXTERNAL ，但调整连接检测间隔为 INTERNAL，以便和所连接的 app 保持一致
+		appInfo->pChannel->startInactivityDetection(g_channelInternalTimeout, g_channelInternalTimeout  / 2.f);
+		
 		appInfo->cid = componentID;
 		appInfo->pIntAddr.reset(new Network::Address(intaddr, intport));	// pIntAddr 的类型是 KBEShared_ptr
 		appInfo->pExtAddr.reset(new Network::Address(extaddr, extport));
