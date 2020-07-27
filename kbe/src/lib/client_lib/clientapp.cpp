@@ -749,6 +749,12 @@ void ClientApp::onLoginBaseappFailed(Network::Channel * pChannel, SERVER_ERROR_C
 }
 
 //-------------------------------------------------------------------------------------	
+void ClientApp::onLoginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
+{
+	ClientObjectBase::onLoginBaseappSuccessfully(pChannel, s);
+}
+
+//-------------------------------------------------------------------------------------	
 void ClientApp::onReloginBaseappFailed(Network::Channel * pChannel, SERVER_ERROR_CODE failedcode)
 {
 	ClientObjectBase::onReloginBaseappFailed(pChannel, failedcode);

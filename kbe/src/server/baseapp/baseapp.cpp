@@ -3644,7 +3644,7 @@ void Baseapp::receiveAcrossServerRequest(Network::Channel * pChannel, KBEngine::
 	{
 		(*bundle) << inet_ntoa((struct in_addr&)networkInterface().extaddr().ip);
 	}
-	(*bundle) << this->networkInterface().extaddr().port;
+	(*bundle) << ntohs(this->networkInterface().extaddr().port);
 	pChannel->send(bundle);
 
 	PendingLoginMgr::AcrossPLInfos *infos = new PendingLoginMgr::AcrossPLInfos;
@@ -3819,6 +3819,24 @@ void Baseapp::registerPendingLogin(Network::Channel* pChannel, KBEngine::MemoryS
 	ptinfos->datas = datas;
 	ptinfos->needCheckPassword = needCheckPassword;
 	pendingLoginMgr_.add(ptinfos);
+}
+
+//-------------------------------------------------------------------------------------
+void Baseapp::loginBaseappSuccessfully(Network::Channel* pChannel, std::string& accountName,
+	KBEngine::uint64 proxyUid, bool relogin)
+{
+	if (pChannel == NULL)
+		return;
+
+	Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
+
+	if (relogin)
+		(*pBundle).newMessage(ClientInterface::onReloginBaseappSuccessfully);
+	else
+		(*pBundle).newMessage(ClientInterface::onLoginBaseappSuccessfully);
+
+	(*pBundle) << proxyUid;
+	pChannel->send(pBundle);
 }
 
 //-------------------------------------------------------------------------------------
@@ -4006,6 +4024,8 @@ void Baseapp::loginBaseapp(Network::Channel* pChannel,
 				createClientProxies(pEntity, true);
 				pEntity->onGetWitness();
 			}
+
+			loginBaseappSuccessfully(pChannel, accountName, pEntity->rndUUID());
 			break;
 		case LOG_ON_WAIT_FOR_DESTROY:
 		default:
@@ -4127,10 +4147,7 @@ void Baseapp::reloginBaseapp(Network::Channel* pChannel, std::string& accountNam
 	Py_DECREF(proxy);
 	// proxy->onClientEnabled();
 
-	Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
-	(*pBundle).newMessage(ClientInterface::onReloginBaseappSuccessfully);
-	(*pBundle) << proxy->rndUUID();
-	pChannel->send(pBundle);
+	loginBaseappSuccessfully(pChannel, accountName,	proxy->rndUUID(), true);
 }
 
 //-------------------------------------------------------------------------------------
@@ -4258,6 +4275,8 @@ void Baseapp::onQueryAccountCBFromDbmgr(Network::Channel* pChannel, KBEngine::Me
 		pEntity->addr(pClientChannel->addr());
 
 		createClientProxies(pEntity);
+
+		loginBaseappSuccessfully(pClientChannel, accountName, pEntity->rndUUID());
 		
 		/*
 		Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);

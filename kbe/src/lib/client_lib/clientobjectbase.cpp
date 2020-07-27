@@ -750,6 +750,13 @@ void ClientObjectBase::onReloginBaseappFailed(Network::Channel * pChannel, SERVE
 }
 
 //-------------------------------------------------------------------------------------	
+void ClientObjectBase::onLoginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
+{
+	s >> rndUUID_;
+	INFO_MSG(fmt::format("ClientObjectBase::onLoginBaseappSuccessfully! name={}, rndUUID={}.\n", name_, rndUUID_));
+}
+
+//-------------------------------------------------------------------------------------	
 void ClientObjectBase::onReloginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
 {
 	s >> rndUUID_;
