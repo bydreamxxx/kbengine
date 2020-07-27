@@ -298,7 +298,7 @@ public:
 	INLINE const char* dbInterfaceIndex2dbInterfaceName(size_t dbInterfaceIndex);
 	INLINE bool IsAcrossDB(size_t dbInterfaceIndex);
 
-	INLINE bool getDBInfoByInterfaceName(const char *interfaceName, char *addr, char *dbName);
+	INLINE bool getDBInfoByInterfaceName(const char *interfaceName, std::string &addr, std::string &dbName);
 	std::string getDBInterfaceNameByDBInfo(const char *ip, const char *dbName);
 
 private:

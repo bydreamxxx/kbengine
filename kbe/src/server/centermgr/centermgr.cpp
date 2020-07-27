@@ -280,9 +280,10 @@ namespace KBEngine
 	Centermgr::APP_INFO const *Centermgr::getAppInfo(COMPONENT_ORDER centerID)
 	{
 		APP_INFOS::iterator iter = apps_.begin();
-		for (; iter->second->globalOrderid != centerID; iter++)
+		for (; iter != apps_.end(); iter++)
 		{
-			return iter->second;
+			if (iter->second->globalOrderid == centerID)
+				return iter->second;
 		}
 
 		return NULL;

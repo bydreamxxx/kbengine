@@ -197,7 +197,7 @@ INLINE const char* ServerConfig::dbInterfaceIndex2dbInterfaceName(size_t dbInter
 }
 
 //-------------------------------------------------------------------------------------	
-INLINE bool ServerConfig::getDBInfoByInterfaceName(const char *interfaceName, char *addr, char *dbName)
+INLINE bool ServerConfig::getDBInfoByInterfaceName(const char *interfaceName, std::string &addr, std::string &dbName)
 {
 	ENGINE_COMPONENT_INFO &dbinfo = getDBMgr();
 

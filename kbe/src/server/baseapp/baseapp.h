@@ -330,6 +330,12 @@ public:
 		std::string& password, uint64 key, ENTITY_ID entityID);
 
 	/**
+		登录成功
+	*/
+	void loginBaseappSuccessfully(Network::Channel* pChannel, std::string& accountName,
+		KBEngine::uint64 proxyUid, bool relogin = false);
+
+	/**
 	   登录失败
 	   @failedcode: 失败返回码 NETWORK_ERR_SRV_NO_READY:服务器没有准备好, 
 									NETWORK_ERR_ILLEGAL_LOGIN:非法登录, 

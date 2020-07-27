@@ -1828,7 +1828,7 @@ std::string ServerConfig::getDBInterfaceNameByDBInfo(const char *ip, const char 
 	{
 		if (strcmp(iter->db_ip, ip) == 0)
 		{
-			if(strcmp(iter->db_name, dbName))
+			if(strcmp(iter->db_name, dbName) == 0)
 			{ 
 				return iter->name;
 			}
