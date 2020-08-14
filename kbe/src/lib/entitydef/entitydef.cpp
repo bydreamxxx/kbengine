@@ -51,6 +51,8 @@ bool g_isReload = false;
 bool EntityDef::__entityAliasID = false;
 bool EntityDef::__entitydefAliasID = false;
 
+bool EntityDef::__useScriptModuleAlias = false;
+
 // 方法产生时自动产生utype用的
 ENTITY_METHOD_UID g_methodUtypeAuto = 1;
 std::vector<ENTITY_METHOD_UID> g_methodCusUtypes;																									
@@ -181,6 +183,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 	if(node == NULL)
 		return true;
 
+	int clientModuleNum = 0;
 	// 开始遍历所有的entity节点
 	XML_FOR_BEGIN(node)
 	{
@@ -221,10 +224,21 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		}
 
 		pScriptModule->onLoaded();
+
+		if(pScriptModule->hasClient()) 
+		{
+			clientModuleNum++;
+		}
 	}
 	XML_FOR_END(node);
 
 	EntityDef::md5().final();
+
+	DEBUG_MSG(fmt::format("EntityDef::initialize: clientModuleNum({}).\n", clientModuleNum));
+	if (clientModuleNum <= 255) 
+	{
+		EntityDef::__useScriptModuleAlias = true;
+	}
 
 	if(loadComponentType == DBMGR_TYPE)
 		return true;
