@@ -1596,6 +1596,15 @@ void Entity::acrossServer(PyObject_ptr acrossServerBaseRef)
 		return;
 	}
 
+	PyObject* isAcrossServer = PyObject_GetAttrString(this, "isAcrossServer");
+	if (isAcrossServer == Py_True) 
+	{
+		PyErr_Format(PyExc_AssertionError, "%s::acrossServer: %d is in across server state!\n",
+			scriptName(), id());
+		PyErr_PrintEx(0);
+		return;
+	}
+
 	PyObject *py__ACCOUNT_NAME__ = PyObject_GetAttrString(this, "__ACCOUNT_NAME__");
 	if (py__ACCOUNT_NAME__ == NULL)
 	{
