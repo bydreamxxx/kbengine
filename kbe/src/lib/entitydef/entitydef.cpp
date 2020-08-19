@@ -51,7 +51,7 @@ bool g_isReload = false;
 bool EntityDef::__entityAliasID = false;
 bool EntityDef::__entitydefAliasID = false;
 
-bool EntityDef::__useScriptModuleAlias = false;
+uint16 EntityDef::__maxClientModuleUType = 0;
 
 // 方法产生时自动产生utype用的
 ENTITY_METHOD_UID g_methodUtypeAuto = 1;
@@ -177,7 +177,6 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 	if(node == NULL)
 		return true;
 
-	int clientModuleNum = 0;
 	// 开始遍历所有的entity节点
 	XML_FOR_BEGIN(node)
 	{
@@ -219,20 +218,18 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 
 		pScriptModule->onLoaded();
 
-		if(pScriptModule->hasClient()) 
+		//只能放在这里，因为baseapp和bots执行到这里时，module的 hasClient属性是一致的（之后因为setScriptModuleHasComponentEntity方法，bots上module的hasClient属性可能会改变），
+		//这样才能保证baseapp和bots上的__maxClientModuleUType值是一样的，避免远程通信时打包utype出错。
+		if (pScriptModule->hasClient())
 		{
-			clientModuleNum++;
+			__maxClientModuleUType = pScriptModule->getUType();
 		}
 	}
 	XML_FOR_END(node);
 
-	EntityDef::md5().final();
+	DEBUG_MSG(fmt::format("EntityDef::initialize: __maxClientModuleUType({}).\n", __maxClientModuleUType));
 
-	DEBUG_MSG(fmt::format("EntityDef::initialize: clientModuleNum({}).\n", clientModuleNum));
-	if (clientModuleNum <= 255) 
-	{
-		EntityDef::__useScriptModuleAlias = true;
-	}
+	EntityDef::md5().final();
 
 	if(loadComponentType == DBMGR_TYPE)
 		return true;
