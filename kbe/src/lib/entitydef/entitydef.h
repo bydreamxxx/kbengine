@@ -183,7 +183,7 @@ public:
 
 	static bool scriptModuleAliasID()
 	{ 
-		return __entitydefAliasID && __useScriptModuleAlias;
+		return __entitydefAliasID && __maxClientModuleUType <= 255;
 	}
 
 	static bool isReload();
@@ -206,7 +206,7 @@ private:
 	static bool __entityAliasID;												// 优化EntityID，view范围内小于255个EntityID, 传输到client时使用1字节伪ID 
 	static bool __entitydefAliasID;												// 优化entity属性和方法广播时占用的带宽，entity客户端属性或者客户端不超过255个时， 方法uid和属性uid传输到client时使用1字节别名ID
 	
-	static bool __useScriptModuleAlias;											// 发给客户端的entityType是否使用优化的id：为true时发1个字节，为false发两个字节
+	static uint16 __maxClientModuleUType;										// 有client的脚本模块中最大的utype是多少
 };
 
 }
