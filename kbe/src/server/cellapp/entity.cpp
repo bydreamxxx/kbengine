@@ -1975,6 +1975,22 @@ void Entity::setWitness(Witness* pWitness)
 //-------------------------------------------------------------------------------------
 void Entity::onGetWitnessFromBase(Network::Channel* pChannel)
 {
+	if (!isReal())
+	{
+		DEBUG_MSG(fmt::format("{}::onGetWitnessFromBase: {}, entity is ghost!\n",
+			this->scriptName(), this->id()));
+
+		GhostManager* gm = Cellapp::getSingleton().pGhostManager();
+		if (gm)
+		{
+			Network::Bundle* pBundle = gm->createSendBundle(realCell());
+			pBundle->newMessage(CellappInterface::onGetWitnessFromBase);
+			(*pBundle) << this->id();
+			gm->pushMessage(realCell(), pBundle);
+		}
+		return;
+	}
+
 	onGetWitness(true);
 }
 
@@ -2079,7 +2095,22 @@ void Entity::onLoseWitness(Network::Channel* pChannel)
 	//INFO_MSG(fmt::format("{}::onLoseWitness: {}.\n", 
 	//	this->scriptName(), this->id()));
 
-	KBE_ASSERT(this->clientEntityCall() != NULL && this->hasWitness());
+	if (!isReal()) 
+	{
+		//此处有可能没有witness，比如传送期间为ghost状态时调用giveClientTo
+		DEBUG_MSG(fmt::format("{}::onLoseWitness: {}, entity is ghost!\n",
+			this->scriptName(), this->id()));
+
+		GhostManager* gm = Cellapp::getSingleton().pGhostManager();
+		if (gm)
+		{
+			Network::Bundle* pBundle = gm->createSendBundle(realCell());
+			pBundle->newMessage(CellappInterface::onLoseWitness);
+			(*pBundle) << this->id();
+			gm->pushMessage(realCell(), pBundle);
+		}
+		return;
+	}
 
 	clientEntityCall()->addr(Network::Address::NONE);
 	Py_DECREF(clientEntityCall());
