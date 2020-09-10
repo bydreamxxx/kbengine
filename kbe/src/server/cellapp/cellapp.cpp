@@ -1251,6 +1251,29 @@ void Cellapp::_onCreateCellEntityFromBaseapp(std::string& entityType, ENTITY_ID 
 void Cellapp::onDestroyCellEntityFromBaseapp(Network::Channel* pChannel, ENTITY_ID eid)
 {
 	// DEBUG_MSG("Cellapp::onDestroyCellEntityFromBaseapp:entityID=%d.\n", eid);
+	Entity* pEntity = pEntities_->find(eid);
+	if (pEntity == NULL) 
+	{
+		ERROR_MSG(fmt::format("Cellapp::onDestroyCellEntityFromBaseapp: entityID {} not found.\n", eid));
+		return;
+	}
+
+	if (!pEntity->isReal())
+	{
+		DEBUG_MSG(fmt::format("{}::onDestroyCellEntityFromBaseapp: {}, entity is ghost!\n",
+			pEntity->scriptName(), pEntity->id()));
+
+		GhostManager* gm = Cellapp::getSingleton().pGhostManager();
+		if (gm)
+		{
+			Network::Bundle* pBundle = gm->createSendBundle(pEntity->realCell());
+			pBundle->newMessage(CellappInterface::onDestroyCellEntityFromBaseapp);
+			(*pBundle) << pEntity->id();
+			gm->pushMessage(pEntity->realCell(), pBundle);
+		}
+		return;
+	}
+
 	destroyEntity(eid, true);
 }
 
