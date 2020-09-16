@@ -344,6 +344,22 @@
 					<increment>1	</increment>	<!-- 取值范围 1 - 65535 -->
 				</auto_increment>
 			</default>			
+			<!--
+			<abc>
+				<acrossDB>	true	</acrossDB>
+
+				<type> mysql </type>
+				<host> 172.16.6.227 </host>
+				<port> 3306 </port>
+				<databaseName> ue4demo </databaseName>
+				<numConnections> 5 </numConnections>
+				<auth>
+					<username> django </username>
+					<password> pwd123456 </password>
+					<encrypt>false</encrypt>
+				</auth>
+			</abc>
+			-->
 		</databaseInterfaces>
 		
 		<!-- 账号系统
