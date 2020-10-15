@@ -21,6 +21,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "datatypes.h"
 #include "resmgr/resmgr.h"
+#include "common/utils.h"
 
 namespace KBEngine{
 
@@ -111,12 +112,12 @@ std::vector< std::string > DataTypes::getBaseTypeNames()
 //-------------------------------------------------------------------------------------
 bool DataTypes::loadTypes(std::string& file)
 {
-	SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes(file).c_str()));
+	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(file).c_str());
 	return loadTypes(xml);
 }
 
 //-------------------------------------------------------------------------------------
-bool DataTypes::loadTypes(SmartPointer<XML>& xml)
+bool DataTypes::loadTypes(std::unique_ptr<XML>& xml)
 {
 	if (xml == NULL || !xml->isGood())
 		return false;

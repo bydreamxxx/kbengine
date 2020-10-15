@@ -22,6 +22,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KBE_DATA_TYPES_H
 #define KBE_DATA_TYPES_H
 
+#include <memory>
+
 #include "common/common.h"
 #if KBE_PLATFORM == PLATFORM_WIN32
 #pragma warning (disable : 4910)
@@ -59,7 +61,7 @@ public:
 	static bool validTypeName(const std::string& typeName);
 
 	static bool loadTypes(std::string& file);
-	static bool loadTypes(SmartPointer<XML>& xml);
+	static bool loadTypes(std::unique_ptr<XML>& xml);
 
 	static const DATATYPE_MAP& dataTypes() { return dataTypes_; }
 	static const UID_DATATYPE_MAP& uid_dataTypes() { return uid_dataTypes_; }
