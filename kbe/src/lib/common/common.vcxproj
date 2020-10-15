@@ -214,6 +214,7 @@
     <ClInclude Include="tasks.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="timestamp.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
