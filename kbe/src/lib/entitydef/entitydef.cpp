@@ -35,11 +35,11 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 namespace KBEngine{
-std::vector<ScriptDefModulePtr>	EntityDef::__scriptModules;
-std::vector<ScriptDefModulePtr>	EntityDef::__oldScriptModules;
+EntityDef::SCRIPT_MODULES EntityDef::__scriptModules;
+EntityDef::SCRIPT_MODULES EntityDef::__oldScriptModules;
 
-std::map<std::string, ENTITY_SCRIPT_UID> EntityDef::__scriptTypeMappingUType;
-std::map<std::string, ENTITY_SCRIPT_UID> EntityDef::__oldScriptTypeMappingUType;
+EntityDef::SCRIPT_MODULE_UID_MAP EntityDef::__scriptTypeMappingUType;
+EntityDef::SCRIPT_MODULE_UID_MAP EntityDef::__oldScriptTypeMappingUType;
 
 COMPONENT_TYPE EntityDef::__loadComponentType;
 std::vector<PyTypeObject*> EntityDef::__scriptBaseTypes;
@@ -87,7 +87,7 @@ bool EntityDef::finalise(bool isReload)
 
 	if(!isReload)
 	{
-		std::vector<ScriptDefModulePtr>::iterator iter = EntityDef::__scriptModules.begin();
+		auto iter = EntityDef::__scriptModules.begin();
 		for(; iter != EntityDef::__scriptModules.end(); ++iter)
 		{
 			(*iter)->finalise();
@@ -126,8 +126,7 @@ void EntityDef::reload(bool fullReload)
 		EntityDef::__oldScriptModules.clear();
 		EntityDef::__oldScriptTypeMappingUType.clear();
 
-		std::vector<ScriptDefModulePtr>::iterator iter = EntityDef::__scriptModules.begin();
-		for(; iter != EntityDef::__scriptModules.end(); ++iter)
+		for(auto iter = EntityDef::__scriptModules.begin(); iter != EntityDef::__scriptModules.end(); ++iter)
 		{
 			__oldScriptModules.push_back((*iter));
 			__oldScriptTypeMappingUType[(*iter)->getName()] = (*iter)->getUType();
