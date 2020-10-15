@@ -112,12 +112,12 @@ std::vector< std::string > DataTypes::getBaseTypeNames()
 //-------------------------------------------------------------------------------------
 bool DataTypes::loadTypes(std::string& file)
 {
-	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(file).c_str());
+	auto xml = KBE_MAKE_SHARED<XML>(Resmgr::getSingleton().matchRes(file).c_str());
 	return loadTypes(xml);
 }
 
 //-------------------------------------------------------------------------------------
-bool DataTypes::loadTypes(std::unique_ptr<XML>& xml)
+bool DataTypes::loadTypes(std::shared_ptr<XML>& xml)
 {
 	if (xml == NULL || !xml->isGood())
 		return false;
@@ -151,7 +151,7 @@ bool DataTypes::loadTypes(std::unique_ptr<XML>& xml)
 			{
 				FixedDictType* fixedDict = new FixedDictType;
 				
-				if(fixedDict->initialize(xml.get(), childNode, aliasName))
+				if(fixedDict->initialize(xml, childNode, aliasName))
 				{
 					addDataType(aliasName, fixedDict);
 				}
@@ -168,7 +168,7 @@ bool DataTypes::loadTypes(std::unique_ptr<XML>& xml)
 			{
 				FixedArrayType* fixedArray = new FixedArrayType;
 				
-				if(fixedArray->initialize(xml.get(), childNode, aliasName))
+				if(fixedArray->initialize(xml, childNode, aliasName))
 				{
 					addDataType(aliasName, fixedArray);
 				}

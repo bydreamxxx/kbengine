@@ -190,7 +190,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 	// 开始遍历所有的entity节点
 	XML_FOR_BEGIN(node)
 	{
-		std::string moduleName = xml.get()->getKey(node);
+		std::string moduleName = xml->getKey(node);
 		__scriptTypeMappingUType[moduleName] = utype;
 		ScriptDefModule* pScriptModule = new ScriptDefModule(moduleName, utype++);
 		EntityDef::__scriptModules.push_back(pScriptModule);
@@ -488,7 +488,7 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 		std::string interfaceName = defxml->getKey(interfaceNode);
 		std::string interfacefile = defFilePath + "interfaces/" + interfaceName + ".def";
 		auto interfaceXml(KBE_MAKE_SHARED<XML>());
-		if(!interfaceXml.get()->openSection(interfacefile.c_str()))
+		if(!interfaceXml->openSection(interfacefile.c_str()))
 			return false;
 
 		TiXmlNode* interfaceRootNode = interfaceXml->getRootNode();
@@ -760,7 +760,7 @@ bool EntityDef::loadDefPropertys(const std::string& moduleName,
 				if(strType == "ARRAY")
 				{
 					FixedArrayType* dataType1 = new FixedArrayType();
-					if(dataType1->initialize(xml.get(), typeNode, moduleName + "_" + name))
+					if(dataType1->initialize(xml, typeNode, moduleName + "_" + name))
 						dataType = dataType1;
 					else
 						return false;
@@ -975,7 +975,7 @@ bool EntityDef::loadDefCellMethods(const std::string& moduleName,
 						if(strType == "ARRAY")
 						{
 							FixedArrayType* dataType1 = new FixedArrayType();
-							if(dataType1->initialize(xml.get(), typeNode, moduleName + "_" + name))
+							if(dataType1->initialize(xml, typeNode, moduleName + "_" + name))
 								dataType = dataType1;
 						}
 						else
@@ -1118,7 +1118,7 @@ bool EntityDef::loadDefBaseMethods(const std::string& moduleName, std::shared_pt
 						if(strType == "ARRAY")
 						{
 							FixedArrayType* dataType1 = new FixedArrayType();
-							if(dataType1->initialize(xml.get(), typeNode, moduleName + "_" + name))
+							if(dataType1->initialize(xml, typeNode, moduleName + "_" + name))
 								dataType = dataType1;
 						}
 						else
@@ -1257,7 +1257,7 @@ bool EntityDef::loadDefClientMethods(const std::string& moduleName, std::shared_
 						if(strType == "ARRAY")
 						{
 							FixedArrayType* dataType1 = new FixedArrayType();
-							if(dataType1->initialize(xml.get(), typeNode, moduleName + "_" + name))
+							if(dataType1->initialize(xml, typeNode, moduleName + "_" + name))
 								dataType = dataType1;
 						}
 						else
