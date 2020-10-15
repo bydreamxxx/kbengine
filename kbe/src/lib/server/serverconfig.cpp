@@ -25,6 +25,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "resmgr/resmgr.h"
 #include "common/kbekey.h"
 #include "common/kbeversion.h"
+#include "common/utils.h"
 
 #ifndef CODE_INLINE
 #include "serverconfig.inl"
@@ -70,7 +71,7 @@ ServerConfig::~ServerConfig()
 bool ServerConfig::loadConfig(std::string fileName)
 {
 	TiXmlNode* node = NULL, *rootNode = NULL;
-	SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes(fileName).c_str()));
+	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName).c_str());
 
 	if(!xml->isGood())
 	{
