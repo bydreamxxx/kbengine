@@ -18,6 +18,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "fixed_messages.h"
+#include "common/utils.h"
 #include "xml/xml.h"	
 #include "resmgr/resmgr.h"	
 
@@ -53,8 +54,7 @@ bool FixedMessages::loadConfig(std::string fileName, bool notFoundError)
 
 	TiXmlNode* node = NULL, *rootNode = NULL;
 
-	SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes(fileName).c_str()));
-
+	auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName).c_str()) };
 	if(!xml->isGood())
 	{
 		if (notFoundError)
