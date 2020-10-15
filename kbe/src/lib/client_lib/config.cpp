@@ -20,12 +20,16 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "config.h"
+
+#include <memory>
+
 #include "network/common.h"
 #include "network/address.h"
 #include "resmgr/resmgr.h"
 #include "entitydef/entitydef.h"
 #include "server/serverconfig.h"
 #include "common/kbeversion.h"
+#include "common/utils.h"
 
 namespace KBEngine{
 KBE_SINGLETON_INIT(Config);
@@ -375,14 +379,12 @@ void Config::writeAccountName(const char* name)
 		return;
 
 	TiXmlNode* rootNode = NULL;
-	XML* xml = new XML(Resmgr::getSingleton().matchRes(fileName_).c_str());
+	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName_).c_str());
 
 	if(!xml->isGood())
 	{
 		ERROR_MSG(fmt::format("Config::writeAccountName: load {} is failed!\n",
 			fileName_.c_str()));
-
-		SAFE_RELEASE(xml);
 		return;
 	}
 
@@ -393,7 +395,6 @@ void Config::writeAccountName(const char* name)
 	}
 
 	xml->getTxdoc()->SaveFile(fileName_.c_str());
-	SAFE_RELEASE(xml);
 }
 
 //-------------------------------------------------------------------------------------		
