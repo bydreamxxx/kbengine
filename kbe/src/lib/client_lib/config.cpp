@@ -61,7 +61,7 @@ bool Config::loadConfig(std::string fileName)
 	fileName_ = fileName;
 	TiXmlNode* rootNode = NULL;
 
-	auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName_).c_str())};
+	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName_).c_str());
 	if(!xml->isGood())
 	{
 		ERROR_MSG(fmt::format("Config::loadConfig: load {} is failed!\n",

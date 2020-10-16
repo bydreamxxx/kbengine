@@ -1520,7 +1520,7 @@ bool ServerConfig::loadConfig(std::string fileName)
 
 	if(email_service_config.size() > 0)
 	{
-		auto emailxml{KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(email_service_config).c_str())};
+		auto emailxml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(email_service_config).c_str());
 		if(!emailxml->isGood())
 		{
 			ERROR_MSG(fmt::format("ServerConfig::loadConfig: load {} is failed!\n",

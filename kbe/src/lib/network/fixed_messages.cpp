@@ -54,7 +54,7 @@ bool FixedMessages::loadConfig(std::string fileName, bool notFoundError)
 
 	TiXmlNode* node = NULL, *rootNode = NULL;
 
-	auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName).c_str()) };
+	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName).c_str());
 	if(!xml->isGood())
 	{
 		if (notFoundError)
