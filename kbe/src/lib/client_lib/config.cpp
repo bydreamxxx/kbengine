@@ -20,9 +20,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "config.h"
-
-#include <memory>
-
 #include "network/common.h"
 #include "network/address.h"
 #include "resmgr/resmgr.h"
@@ -63,8 +60,8 @@ bool Config::loadConfig(std::string fileName)
 {
 	fileName_ = fileName;
 	TiXmlNode* rootNode = NULL;
-	SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes(fileName_).c_str()));
 
+	auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName_).c_str())};
 	if(!xml->isGood())
 	{
 		ERROR_MSG(fmt::format("Config::loadConfig: load {} is failed!\n",
