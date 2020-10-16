@@ -20,9 +20,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "entitydef.h"
-
-#include <memory>
-
 #include "scriptdef_module.h"
 #include "datatypes.h"
 #include "common.h"
