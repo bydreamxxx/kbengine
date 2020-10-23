@@ -306,22 +306,7 @@ void PacketReader::mergeFragmentMessage(Packet* pPacket)
 
 		case FRAGMENT_DATA_MESSAGE_BODY:		// 消息内容信息不全
 			pFragmentStream_ = MemoryStream::createPoolObject(OBJECTPOOL_POINT);
-			
-			try 
-			{
-				pFragmentStream_->append(pFragmentDatas_, currMsgLen_);
-			}
-			catch (MemoryStreamWriteOverflow) 
-			{
-				ERROR_MSG(fmt::format("PacketReader::mergeFragmentMessage:stream overflow! channel[{}], currMsgID={}, currMsgLen={}.\n",
-					pChannel_->c_str(), currMsgID_, currMsgLen_));
-
-				MemoryStream::reclaimPoolObject(pFragmentStream_);
-				pFragmentStream_ = NULL;
-				currMsgID_ = 0;
-				currMsgLen_ = 0;
-			}
-
+			pFragmentStream_->append(pFragmentDatas_, currMsgLen_);
 			break;
 
 		default:
