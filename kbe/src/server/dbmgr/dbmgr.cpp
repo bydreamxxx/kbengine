@@ -124,9 +124,19 @@ bool Dbmgr::canShutdown()
 			thread::ThreadPool* pThreadPool = DBUtil::pThreadPool(bditer->first);
 			KBE_ASSERT(pThreadPool);
 
-			INFO_MSG(fmt::format("Dbmgr::canShutdown(): Wait for the task to complete, dbInterface={}, tasks{}=[{}], threads={}/{}, threadpoolDestroyed={}!\n",
-				bditer->first, bditer->second.size(), bditer->second.getTasksinfos(), (pThreadPool->currentThreadCount() - pThreadPool->currentFreeThreadCount()),
-				pThreadPool->currentThreadCount(), pThreadPool->isDestroyed()));
+			std::string logStr = fmt::format("Dbmgr::canShutdown(): Wait for the task to complete, dbInterface={}, tasks{}=[{}], threads={}/{}, threadpoolDestroyed={}!\n",
+				bditer->first, bditer->second.size(), bditer->second.getTasksinfos(), (pThreadPool->currentThreadCount() - pThreadPool->currentFreeThreadCount()), 
+				pThreadPool->currentThreadCount(), pThreadPool->isDestroyed());
+
+			//为了避免logger接收日志时消息长度超过memerystream的长度限制，这里提前检测，超过时不打印task详细信息。因为后续INFO_MSG中还会添加一些字段，这里冗余1000个字节。
+			if (logStr.length() > (KBEngine::MemoryStream::MAX_SIZE - 1000))
+			{ 
+				logStr = fmt::format("Dbmgr::canShutdown(): Wait for large task to complete, dbInterface={}, tasks num={}, threads={}/{}, threadpoolDestroyed={}!\n",
+					bditer->first, bditer->second.size(), (pThreadPool->currentThreadCount() - pThreadPool->currentFreeThreadCount()),
+					pThreadPool->currentThreadCount(), pThreadPool->isDestroyed());	
+			}
+
+			INFO_MSG(logStr);
 
 			return false;
 		}
