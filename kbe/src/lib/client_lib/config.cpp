@@ -26,7 +26,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "entitydef/entitydef.h"
 #include "server/serverconfig.h"
 #include "common/kbeversion.h"
-#include "common/utils.h"
 
 namespace KBEngine{
 KBE_SINGLETON_INIT(Config);
@@ -60,8 +59,8 @@ bool Config::loadConfig(std::string fileName)
 {
 	fileName_ = fileName;
 	TiXmlNode* rootNode = NULL;
+	SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes(fileName_).c_str()));
 
-	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName_).c_str());
 	if(!xml->isGood())
 	{
 		ERROR_MSG(fmt::format("Config::loadConfig: load {} is failed!\n",
@@ -376,12 +375,14 @@ void Config::writeAccountName(const char* name)
 		return;
 
 	TiXmlNode* rootNode = NULL;
-	auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes(fileName_).c_str());
+	XML* xml = new XML(Resmgr::getSingleton().matchRes(fileName_).c_str());
 
 	if(!xml->isGood())
 	{
 		ERROR_MSG(fmt::format("Config::writeAccountName: load {} is failed!\n",
 			fileName_.c_str()));
+
+		SAFE_RELEASE(xml);
 		return;
 	}
 
@@ -392,6 +393,7 @@ void Config::writeAccountName(const char* name)
 	}
 
 	xml->getTxdoc()->SaveFile(fileName_.c_str());
+	SAFE_RELEASE(xml);
 }
 
 //-------------------------------------------------------------------------------------		

@@ -22,8 +22,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KBE_DATA_TYPE_H
 #define KBE_DATA_TYPE_H
 
-#include <memory>
-
 #include "common/common.h"
 #if KBE_PLATFORM == PLATFORM_WIN32
 #pragma warning (disable : 4910)
@@ -81,7 +79,7 @@ public:
 		return pyobj;
 	}
 		
-	virtual bool initialize(std::shared_ptr<XML> xml, TiXmlNode* node);
+	virtual bool initialize(XML* xml, TiXmlNode* node);
 
 	virtual PyObject* parseDefaultStr(std::string defaultVal) = 0;
 
@@ -667,7 +665,7 @@ public:
 
 	PyObject* parseDefaultStr(std::string defaultVal);
 
-	bool initialize(std::shared_ptr<XML> xml, TiXmlNode* node, const std::string& parentName);
+	bool initialize(XML* xml, TiXmlNode* node, const std::string& parentName);
 
 	const char* getName(void) const{ return "ARRAY";}
 
@@ -723,7 +721,7 @@ public:
 	PyObject* createFromStreamEx(MemoryStream* mstream, bool onlyPersistents);
 
 	PyObject* parseDefaultStr(std::string defaultVal);
-	bool initialize(std::shared_ptr<XML> xml, TiXmlNode* node, std::string& parentName);
+	bool initialize(XML* xml, TiXmlNode* node, std::string& parentName);
 	
 	/**	
 		当传入的这个pyobj并不是当前类型时则按照当前类型创建出一个obj

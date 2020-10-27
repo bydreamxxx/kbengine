@@ -22,8 +22,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KBE_ENTITYDEF_H
 #define KBE_ENTITYDEF_H
 
-#include <memory>
-
 #include "common/common.h"
 #include "common/md5.h"
 #if KBE_PLATFORM == PLATFORM_WIN32
@@ -70,57 +68,57 @@ public:
 		std::vector<PyTypeObject*>& scriptBaseTypes);
 
 	static bool loadAllDefDescriptions(const std::string& moduleName, 
-		std::shared_ptr<XML> defxml, 
+		XML* defxml, 
 		TiXmlNode* defNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadDefPropertys(const std::string& moduleName, 
-		std::shared_ptr<XML> xml,
+		XML* xml, 
 		TiXmlNode* defPropertyNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadDefCellMethods(const std::string& moduleName, 
-		std::shared_ptr<XML> xml,
+		XML* xml, 
 		TiXmlNode* defMethodNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadDefBaseMethods(const std::string& moduleName, 
-		std::shared_ptr<XML> xml,
+		XML* xml, 
 		TiXmlNode* defMethodNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadDefClientMethods(const std::string& moduleName, 
-		std::shared_ptr<XML> xml,
+		XML* xml, 
 		TiXmlNode* defMethodNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadInterfaces(const std::string& defFilePath, 
 		const std::string& moduleName, 
-		std::shared_ptr<XML> defxml,
+		XML* defxml, 
 		TiXmlNode* defNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadParentClass(const std::string& defFilePath, 
 		const std::string& moduleName, 
-		std::shared_ptr<XML> defxml,
+		XML* defxml, 
 		TiXmlNode* defNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadDefInfo(const std::string& defFilePath, 
 		const std::string& moduleName, 
-		std::shared_ptr<XML> defxml,
+		XML* defxml, 
 		TiXmlNode* defNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadDetailLevelInfo(const std::string& defFilePath, 
 		const std::string& moduleName, 
-		std::shared_ptr<XML> defxml,
+		XML* defxml, 
 		TiXmlNode* defNode, 
 		ScriptDefModule* pScriptModule);
 
 	static bool loadVolatileInfo(const std::string& defFilePath, 
 		const std::string& moduleName, 
-		std::shared_ptr<XML> defxml,
+		XML* defxml, 
 		TiXmlNode* defNode, 
 		ScriptDefModule* pScriptModule);
 

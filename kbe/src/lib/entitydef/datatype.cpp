@@ -125,7 +125,7 @@ bool DataType::finalise()
 }
 
 //-------------------------------------------------------------------------------------
-bool DataType::initialize(std::shared_ptr<XML> xml, TiXmlNode* node)
+bool DataType::initialize(XML* xml, TiXmlNode* node)
 {
 	return true;
 }
@@ -1670,7 +1670,7 @@ PyObject* FixedArrayType::createNewFromObj(PyObject* pyobj)
 }
 
 //-------------------------------------------------------------------------------------
-bool FixedArrayType::initialize(std::shared_ptr<XML> xml, TiXmlNode* node, const std::string& parentName)
+bool FixedArrayType::initialize(XML* xml, TiXmlNode* node, const std::string& parentName)
 {
 	dataType_ = NULL;
 
@@ -1994,7 +1994,7 @@ PyObject* FixedDictType::createNewFromObj(PyObject* pyobj)
 }
 
 //-------------------------------------------------------------------------------------
-bool FixedDictType::initialize(std::shared_ptr<XML> xml, TiXmlNode* node, std::string& parentName)
+bool FixedDictType::initialize(XML* xml, TiXmlNode* node, std::string& parentName)
 {
 	TiXmlNode* propertiesNode = xml->enterNode(node, "Properties");
 	if(propertiesNode == NULL)

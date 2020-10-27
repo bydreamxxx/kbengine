@@ -26,7 +26,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyscript/py_memorystream.h"
 #include "resmgr/resmgr.h"
 #include "common/smartpointer.h"
-#include "common/utils.h"
 #include "entitydef/volatileinfo.h"
 #include "entitydef/entity_call.h"
 #include "entitydef/entitycall_cross_server.h"
@@ -175,7 +174,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		return false;
 
 	// 打开这个entities.xml文件
-	auto xml = KBE_MAKE_UNIQUE<XML>();
+	SmartPointer<XML> xml(new XML());
 	if(!xml->openSection(entitiesFile.c_str()))
 		return false;
 	
@@ -187,13 +186,13 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 	// 开始遍历所有的entity节点
 	XML_FOR_BEGIN(node)
 	{
-		std::string moduleName = xml->getKey(node);
+		std::string moduleName = xml.get()->getKey(node);
 		__scriptTypeMappingUType[moduleName] = utype;
 		ScriptDefModule* pScriptModule = new ScriptDefModule(moduleName, utype++);
 		EntityDef::__scriptModules.push_back(pScriptModule);
 
 		std::string deffile = defFilePath + moduleName + ".def";
-		auto defxml = KBE_MAKE_SHARED<XML>();
+		SmartPointer<XML> defxml(new XML());
 
 		if(!defxml->openSection(deffile.c_str()))
 			return false;
@@ -206,7 +205,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		}
 
 		// 加载def文件中的定义
-		if(!loadDefInfo(defFilePath, moduleName, defxml, defNode, pScriptModule))
+		if(!loadDefInfo(defFilePath, moduleName, defxml.get(), defNode, pScriptModule))
 		{
 			ERROR_MSG(fmt::format("EntityDef::initialize: failed to load entity({}) module!\n",
 				moduleName.c_str()));
@@ -215,7 +214,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		}
 		
 		// 尝试在主entity文件中加载detailLevel数据
-		if(!loadDetailLevelInfo(defFilePath, moduleName, defxml, defNode, pScriptModule))
+		if(!loadDetailLevelInfo(defFilePath, moduleName, defxml.get(), defNode, pScriptModule))
 		{
 			ERROR_MSG(fmt::format("EntityDef::initialize: failed to load entity({}) DetailLevelInfo!\n",
 				moduleName.c_str()));
@@ -247,7 +246,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadDefInfo(const std::string& defFilePath, 
 							const std::string& moduleName, 
-							std::shared_ptr<XML> defxml,
+							XML* defxml, 
 							TiXmlNode* defNode, 
 							ScriptDefModule* pScriptModule)
 {
@@ -302,7 +301,7 @@ bool EntityDef::loadDefInfo(const std::string& defFilePath,
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadDetailLevelInfo(const std::string& defFilePath, 
 									const std::string& moduleName, 
-									std::shared_ptr<XML> defxml,
+									XML* defxml, 
 									TiXmlNode* defNode, 
 									ScriptDefModule* pScriptModule)
 {
@@ -369,7 +368,7 @@ bool EntityDef::loadDetailLevelInfo(const std::string& defFilePath,
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadVolatileInfo(const std::string& defFilePath, 
 									const std::string& moduleName, 
-									std::shared_ptr<XML> defxml,
+									XML* defxml, 
 									TiXmlNode* defNode, 
 									ScriptDefModule* pScriptModule)
 {
@@ -450,7 +449,7 @@ bool EntityDef::loadVolatileInfo(const std::string& defFilePath,
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadInterfaces(const std::string& defFilePath, 
 							   const std::string& moduleName, 
-							   std::shared_ptr<XML> defxml, 
+							   XML* defxml, 
 							   TiXmlNode* defNode, 
 							   ScriptDefModule* pScriptModule)
 {
@@ -484,8 +483,8 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 
 		std::string interfaceName = defxml->getKey(interfaceNode);
 		std::string interfacefile = defFilePath + "interfaces/" + interfaceName + ".def";
-		auto interfaceXml = KBE_MAKE_SHARED<XML>();
-		if(!interfaceXml->openSection(interfacefile.c_str()))
+		SmartPointer<XML> interfaceXml(new XML());
+		if(!interfaceXml.get()->openSection(interfacefile.c_str()))
 			return false;
 
 		TiXmlNode* interfaceRootNode = interfaceXml->getRootNode();
@@ -495,7 +494,7 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 			return true;
 		}
 
-		if(!loadAllDefDescriptions(moduleName, interfaceXml, interfaceRootNode, pScriptModule))
+		if(!loadAllDefDescriptions(moduleName, interfaceXml.get(), interfaceRootNode, pScriptModule))
 		{
 			ERROR_MSG(fmt::format("EntityDef::initialize: interface[{}] error!\n", 
 				interfaceName.c_str()));
@@ -504,7 +503,7 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 		}
 
 		// 尝试加载detailLevel数据
-		if(!loadDetailLevelInfo(defFilePath, moduleName, interfaceXml, interfaceRootNode, pScriptModule))
+		if(!loadDetailLevelInfo(defFilePath, moduleName, interfaceXml.get(), interfaceRootNode, pScriptModule))
 		{
 			ERROR_MSG(fmt::format("EntityDef::loadInterfaces: failed to load entity:{} DetailLevelInfo.\n",
 				moduleName.c_str()));
@@ -513,7 +512,7 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 		}
 
 		// 遍历所有的interface， 并将他们的方法和属性加入到模块中
-		if(!loadInterfaces(defFilePath, moduleName, interfaceXml, interfaceRootNode, pScriptModule))
+		if(!loadInterfaces(defFilePath, moduleName, interfaceXml.get(), interfaceRootNode, pScriptModule))
 		{
 			ERROR_MSG(fmt::format("EntityDef::loadInterfaces: failed to load entity:{} interface.\n",
 				moduleName.c_str()));
@@ -530,7 +529,7 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadParentClass(const std::string& defFilePath, 
 								const std::string& moduleName, 
-								std::shared_ptr<XML> defxml, 
+								XML* defxml, 
 								TiXmlNode* defNode, 
 								ScriptDefModule* pScriptModule)
 {
@@ -541,7 +540,7 @@ bool EntityDef::loadParentClass(const std::string& defFilePath,
 	std::string parentClassName = defxml->getKey(parentClassNode);
 	std::string parentClassfile = defFilePath + parentClassName + ".def";
 	
-	auto parentClassXml = KBE_MAKE_SHARED<XML>();
+	SmartPointer<XML> parentClassXml(new XML());
 	if(!parentClassXml->openSection(parentClassfile.c_str()))
 		return false;
 	
@@ -553,7 +552,7 @@ bool EntityDef::loadParentClass(const std::string& defFilePath,
 	}
 
 	// 加载def文件中的定义
-	if(!loadDefInfo(defFilePath, parentClassName, parentClassXml, parentClassdefNode, pScriptModule))
+	if(!loadDefInfo(defFilePath, parentClassName, parentClassXml.get(), parentClassdefNode, pScriptModule))
 	{
 		ERROR_MSG(fmt::format("EntityDef::loadParentClass: failed to load entity:{} parentClass.\n",
 			moduleName.c_str()));
@@ -566,9 +565,9 @@ bool EntityDef::loadParentClass(const std::string& defFilePath,
 
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadAllDefDescriptions(const std::string& moduleName, 
-										std::shared_ptr<XML> defxml,
-										TiXmlNode* defNode, 
-										ScriptDefModule* pScriptModule)
+									  XML* defxml, 
+									  TiXmlNode* defNode, 
+									  ScriptDefModule* pScriptModule)
 {
 	// 加载属性描述
 	if(!loadDefPropertys(moduleName, defxml, defxml->enterNode(defNode, "Properties"), pScriptModule))
@@ -657,7 +656,7 @@ bool EntityDef::validDefPropertyName(const std::string& name)
 
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadDefPropertys(const std::string& moduleName, 
-								 std::shared_ptr<XML> xml, 
+								 XML* xml, 
 								 TiXmlNode* defPropertyNode, 
 								 ScriptDefModule* pScriptModule)
 {
@@ -940,7 +939,7 @@ bool EntityDef::loadDefPropertys(const std::string& moduleName,
 
 //-------------------------------------------------------------------------------------
 bool EntityDef::loadDefCellMethods(const std::string& moduleName, 
-								   std::shared_ptr<XML> xml, 
+								   XML* xml, 
 								   TiXmlNode* defMethodNode, 
 								   ScriptDefModule* pScriptModule)
 {
@@ -1084,7 +1083,7 @@ bool EntityDef::loadDefCellMethods(const std::string& moduleName,
 }
 
 //-------------------------------------------------------------------------------------
-bool EntityDef::loadDefBaseMethods(const std::string& moduleName, std::shared_ptr<XML> xml, 
+bool EntityDef::loadDefBaseMethods(const std::string& moduleName, XML* xml, 
 								   TiXmlNode* defMethodNode, ScriptDefModule* pScriptModule)
 {
 	if(defMethodNode)
@@ -1227,7 +1226,7 @@ bool EntityDef::loadDefBaseMethods(const std::string& moduleName, std::shared_pt
 }
 
 //-------------------------------------------------------------------------------------
-bool EntityDef::loadDefClientMethods(const std::string& moduleName, std::shared_ptr<XML> xml, 
+bool EntityDef::loadDefClientMethods(const std::string& moduleName, XML* xml, 
 									 TiXmlNode* defMethodNode, ScriptDefModule* pScriptModule)
 {
 	if(defMethodNode)
@@ -1574,7 +1573,7 @@ bool EntityDef::loadAllScriptModules(std::string entitiesPath,
 {
 	std::string entitiesFile = entitiesPath + "entities.xml";
 
-	auto xml = KBE_MAKE_UNIQUE<XML>();
+	SmartPointer<XML> xml(new XML());
 	if(!xml->openSection(entitiesFile.c_str()))
 		return false;
 
@@ -1584,7 +1583,7 @@ bool EntityDef::loadAllScriptModules(std::string entitiesPath,
 
 	XML_FOR_BEGIN(node)
 	{
-		std::string moduleName = xml->getKey(node);
+		std::string moduleName = xml.get()->getKey(node);
 		ScriptDefModule* pScriptModule = findScriptModule(moduleName.c_str());
 
 		PyObject* pyModule = 
