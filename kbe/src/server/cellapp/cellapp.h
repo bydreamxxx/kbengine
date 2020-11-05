@@ -73,7 +73,7 @@ public:
 	void finalise();
 
 	virtual bool canShutdown();
-	virtual void onShutdown(bool first);
+	virtual void onShutdown(bool first, bool last = false);
 
 	void destroyObjPool();
 

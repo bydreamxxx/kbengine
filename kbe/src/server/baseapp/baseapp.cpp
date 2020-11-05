@@ -288,9 +288,9 @@ void Baseapp::onShutdownBegin()
 }
 
 //-------------------------------------------------------------------------------------	
-void Baseapp::onShutdown(bool first)
+void Baseapp::onShutdown(bool first, bool last)
 {
-	EntityApp<Entity>::onShutdown(first);
+	EntityApp<Entity>::onShutdown(first, last);
 
 	if(first)
 	{
@@ -300,37 +300,70 @@ void Baseapp::onShutdown(bool first)
 			const_cast<char*>("i"), 1, false);
 	}
 
-	Components::COMPONENTS& cellapp_components = Components::getSingleton().getComponents(CELLAPP_TYPE);
-	if(cellapp_components.size() == 0)
+	//加此分支是为了与cellapp处理一致
+	if (last) 
 	{
-		int count = g_serverConfig.getBaseApp().perSecsDestroyEntitySize;
-		Entities<Entity>::ENTITYS_MAP& entities =  this->pEntities()->getEntities();
+		Entities<Entity>::ENTITYS_MAP& entities = this->pEntities()->getEntities();
 
-		while(count > 0 && entities.size() > 0)
+		while (entities.size() > 0)
 		{
 			std::vector<ENTITY_ID> vecs;
-			
+
 			Entities<Entity>::ENTITYS_MAP::iterator iter = entities.begin();
-			for(; iter != entities.end(); ++iter)
+			for (; iter != entities.end(); ++iter)
 			{
 				//if(static_cast<Entity*>(iter->second.get())->hasDB() && 
 				//	static_cast<Entity*>(iter->second.get())->cellEntityCall() == NULL)
 				{
 					vecs.push_back(static_cast<Entity*>(iter->second.get())->id());
-
-					if(--count == 0)
-						break;
 				}
 			}
 
 			std::vector<ENTITY_ID>::iterator iter1 = vecs.begin();
-			for(; iter1 != vecs.end(); ++iter1)
+			for (; iter1 != vecs.end(); ++iter1)
 			{
 				Entity* e = this->findEntity((*iter1));
-				if(!e)
+				if (!e)
 					continue;
-				
+
 				this->destroyEntity((*iter1), true);
+			}
+		}
+	}
+	else 
+	{
+		Components::COMPONENTS& cellapp_components = Components::getSingleton().getComponents(CELLAPP_TYPE);
+		if (cellapp_components.size() == 0)
+		{
+			int count = g_serverConfig.getBaseApp().perSecsDestroyEntitySize;
+			Entities<Entity>::ENTITYS_MAP& entities = this->pEntities()->getEntities();
+
+			while (count > 0 && entities.size() > 0)
+			{
+				std::vector<ENTITY_ID> vecs;
+
+				Entities<Entity>::ENTITYS_MAP::iterator iter = entities.begin();
+				for (; iter != entities.end(); ++iter)
+				{
+					//if(static_cast<Entity*>(iter->second.get())->hasDB() && 
+					//	static_cast<Entity*>(iter->second.get())->cellEntityCall() == NULL)
+					{
+						vecs.push_back(static_cast<Entity*>(iter->second.get())->id());
+
+						if (--count == 0)
+							break;
+					}
+				}
+
+				std::vector<ENTITY_ID>::iterator iter1 = vecs.begin();
+				for (; iter1 != vecs.end(); ++iter1)
+				{
+					Entity* e = this->findEntity((*iter1));
+					if (!e)
+						continue;
+
+					this->destroyEntity((*iter1), true);
+				}
 			}
 		}
 	}

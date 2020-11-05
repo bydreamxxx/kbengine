@@ -122,7 +122,7 @@ void ServerApp::onShutdownBegin()
 }
 
 //-------------------------------------------------------------------------------------
-void ServerApp::onShutdown(bool first)
+void ServerApp::onShutdown(bool first, bool last)
 {
 }
 

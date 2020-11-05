@@ -94,7 +94,7 @@ public:
 	
 	virtual bool canShutdown();
 	virtual void onShutdownBegin();
-	virtual void onShutdown(bool first);
+	virtual void onShutdown(bool first, bool last = false);
 	virtual void onShutdownEnd();
 
 	virtual bool initializeWatcher();

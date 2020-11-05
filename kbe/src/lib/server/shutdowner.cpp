@@ -62,7 +62,7 @@ void Shutdowner::shutdown(float period, float tickPeriod, Network::EventDispatch
 		
 		INFO_MSG( "Shutdowner::onShutdown: shutting down\n" );
 		pShutdownHandler_->setShuttingdown(ShutdownHandler::SHUTDOWN_STATE_RUNNING);
-		pShutdownHandler_->onShutdown(true);
+		pShutdownHandler_->onShutdown(true, true);
 		
 		INFO_MSG( "Shutdowner::onShutdownEnd: shutting down\n" );
 		pShutdownHandler_->setShuttingdown(ShutdownHandler::SHUTDOWN_STATE_END);

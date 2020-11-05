@@ -45,7 +45,7 @@ public:
 	virtual ~ShutdownHandler(){}
 	
 	virtual void onShutdownBegin() = 0;
-	virtual void onShutdown(bool first) = 0;
+	virtual void onShutdown(bool first, bool last = false) = 0;
 	virtual void onShutdownEnd() = 0;
 	
 	virtual bool canShutdown(){ return true; }

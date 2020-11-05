@@ -120,7 +120,7 @@ public:
 	virtual void onIdentityillegal(COMPONENT_TYPE componentType, COMPONENT_ID componentID, uint32 pid, const char* pAddr);
 
 	virtual void onShutdownBegin();
-	virtual void onShutdown(bool first);
+	virtual void onShutdown(bool first, bool last = false);
 	virtual void onShutdownEnd();
 
 	/** ÍøÂç½Ó¿Ú
