@@ -26,13 +26,13 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 namespace KBEngine {
 
 template<class T, class... Args>
-std::unique_ptr<T> kbe_make_unique(Args... args) {
-	return std::unique_ptr<T>(new T(std::forward<T>(args)...));
+std::unique_ptr<T> kbe_make_unique(Args&&... args) {
+	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 template<class T, class... Args>
-std::shared_ptr<T> kbe_make_shared(Args... args) {
-	return std::shared_ptr<T>(new T(std::forward<T>(args)...));
+std::shared_ptr<T> kbe_make_shared(Args&&... args) {
+	return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 #define	KBE_MAKE_UNIQUE kbe_make_unique
