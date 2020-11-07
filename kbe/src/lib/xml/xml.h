@@ -65,7 +65,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include "helper/debug_helper.h"
 #include "common/common.h"
-#include "common/smartpointer.h"
 #include "dependencies/tinyxml/tinyxml.h"
 
 namespace KBEngine{
@@ -79,7 +78,7 @@ namespace KBEngine{
 #define XML_FOR_END(node)																\
 	}while((node = node->NextSibling()));												\
 			
-class  XML : public RefCountable
+class  XML
 {
 public:
 	XML(void):
