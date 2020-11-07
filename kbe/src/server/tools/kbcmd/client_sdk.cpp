@@ -22,6 +22,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "client_sdk.h"
 #include "client_sdk_unity.h"	
 #include "client_sdk_ue4.h"
+#include "common/utils.h"
 #include "entitydef/entitydef.h"
 #include "entitydef/scriptdef_module.h"
 #include "entitydef/property.h"
@@ -356,8 +357,8 @@ bool ClientSDK::writeServerErrorDescrsModule()
 
 	{
 		TiXmlNode *rootNode = NULL;
-		SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str()));
 
+		auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str()) };
 		if (!xml->isGood())
 		{
 			ERROR_MSG(fmt::format("ClientSDK::writeServerErrorDescrsModule: load {} is failed!\n",
@@ -387,8 +388,8 @@ bool ClientSDK::writeServerErrorDescrsModule()
 		if (f)
 		{
 			fclose(f);
-			SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str()));
 
+			auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str()) };
 			if (xml->isGood())
 			{
 				rootNode = xml->getRootNode();
