@@ -303,7 +303,7 @@ void ScriptDefModule::autoMatchCompOwn()
 	std::string entitiesFile = Resmgr::getSingleton().getPyUserScriptsPath() + "entities.xml";
 
 	// 打开这个entities.xml文件
-	auto xml{ KBE_MAKE_UNIQUE<XML>() };
+	auto xml = KBE_MAKE_UNIQUE<XML>();
 	if(!xml->openSection(entitiesFile.c_str()) || !xml->isGood())
 		return;
 	

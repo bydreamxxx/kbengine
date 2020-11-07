@@ -111,7 +111,7 @@ std::vector< std::string > DataTypes::getBaseTypeNames()
 //-------------------------------------------------------------------------------------
 bool DataTypes::loadTypes(std::string& file)
 {
-	auto xml{ KBE_MAKE_SHARED<XML>(Resmgr::getSingleton().matchRes(file).c_str()) };
+	auto xml = KBE_MAKE_SHARED<XML>(Resmgr::getSingleton().matchRes(file).c_str());
 	return loadTypes(xml);
 }
 

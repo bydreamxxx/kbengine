@@ -175,7 +175,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		return false;
 
 	// 打开这个entities.xml文件
-	auto xml{ KBE_MAKE_UNIQUE<XML>() };
+	auto xml = KBE_MAKE_UNIQUE<XML>();
 	if(!xml->openSection(entitiesFile.c_str()))
 		return false;
 	
@@ -194,7 +194,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 
 		std::string deffile = defFilePath + moduleName + ".def";
 
-		auto defxml{ KBE_MAKE_SHARED<XML>() };
+		auto defxml = KBE_MAKE_SHARED<XML>();
 		if(!defxml->openSection(deffile.c_str()))
 			return false;
 
@@ -485,7 +485,7 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 		std::string interfaceName = defxml->getKey(interfaceNode);
 		std::string interfacefile = defFilePath + "interfaces/" + interfaceName + ".def";
 
-		auto interfaceXml{ KBE_MAKE_SHARED<XML>() };
+		auto interfaceXml = KBE_MAKE_SHARED<XML>();
 		if(!interfaceXml->openSection(interfacefile.c_str()))
 			return false;
 
@@ -542,7 +542,7 @@ bool EntityDef::loadParentClass(const std::string& defFilePath,
 	std::string parentClassName = defxml->getKey(parentClassNode);
 	std::string parentClassfile = defFilePath + parentClassName + ".def";
 	
-	auto parentClassXml{ KBE_MAKE_SHARED<XML>() };
+	auto parentClassXml = KBE_MAKE_SHARED<XML>();
 	if(!parentClassXml->openSection(parentClassfile.c_str()))
 		return false;
 	
@@ -1575,7 +1575,7 @@ bool EntityDef::loadAllScriptModules(std::string entitiesPath,
 {
 	std::string entitiesFile = entitiesPath + "entities.xml";
 
-	auto xml{ KBE_MAKE_UNIQUE<XML>() };
+	auto xml = KBE_MAKE_UNIQUE<XML>();
 	if(!xml->openSection(entitiesFile.c_str()))
 		return false;
 

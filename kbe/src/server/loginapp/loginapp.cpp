@@ -1514,7 +1514,7 @@ void Loginapp::importServerErrorsDescr(Network::Channel* pChannel)
 		{
 			TiXmlNode *rootNode = NULL;
 
-			auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str()) };
+			auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str());
 			if (!xml->isGood())
 			{
 				ERROR_MSG(fmt::format("ServerConfig::loadConfig: load {} failed!\n",
@@ -1548,7 +1548,7 @@ void Loginapp::importServerErrorsDescr(Network::Channel* pChannel)
 			{
 				fclose(f);
 
-				auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str()) };
+				auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str());
 				if (xml->isGood())
 				{
 					rootNode = xml->getRootNode();

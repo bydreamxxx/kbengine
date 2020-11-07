@@ -254,7 +254,7 @@ std::string MessageHandlers::getDigestStr()
 		{
 			TiXmlNode *rootNode = NULL;
 
-			auto xml{KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str())};
+			auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str());
 			if (!xml->isGood())
 			{
 				ERROR_MSG(fmt::format("MessageHandlers::getDigestStr(): load {} is failed!\n",
@@ -299,7 +299,7 @@ std::string MessageHandlers::getDigestStr()
 			{
 				fclose(f);
 
-				auto xml{KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str())};
+				auto xml = KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str());
 				if (xml->isGood())
 				{
 					rootNode = xml->getRootNode();
