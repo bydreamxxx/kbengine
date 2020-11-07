@@ -26,6 +26,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyscript/py_memorystream.h"
 #include "resmgr/resmgr.h"
 #include "common/smartpointer.h"
+#include "common/utils.h"
 #include "entitydef/volatileinfo.h"
 #include "entitydef/entity_call.h"
 #include "entitydef/entitycall_cross_server.h"
@@ -174,7 +175,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		return false;
 
 	// 打开这个entities.xml文件
-	SmartPointer<XML> xml(new XML());
+	auto xml{ KBE_MAKE_UNIQUE<XML>() };
 	if(!xml->openSection(entitiesFile.c_str()))
 		return false;
 	
@@ -186,14 +187,14 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 	// 开始遍历所有的entity节点
 	XML_FOR_BEGIN(node)
 	{
-		std::string moduleName = xml.get()->getKey(node);
+		std::string moduleName = xml->getKey(node);
 		__scriptTypeMappingUType[moduleName] = utype;
 		ScriptDefModule* pScriptModule = new ScriptDefModule(moduleName, utype++);
 		EntityDef::__scriptModules.push_back(pScriptModule);
 
 		std::string deffile = defFilePath + moduleName + ".def";
-		SmartPointer<XML> defxml(new XML());
 
+		auto defxml{ KBE_MAKE_SHARED<XML>() };
 		if(!defxml->openSection(deffile.c_str()))
 			return false;
 
@@ -483,8 +484,9 @@ bool EntityDef::loadInterfaces(const std::string& defFilePath,
 
 		std::string interfaceName = defxml->getKey(interfaceNode);
 		std::string interfacefile = defFilePath + "interfaces/" + interfaceName + ".def";
-		SmartPointer<XML> interfaceXml(new XML());
-		if(!interfaceXml.get()->openSection(interfacefile.c_str()))
+
+		auto interfaceXml{ KBE_MAKE_SHARED<XML>() };
+		if(!interfaceXml->openSection(interfacefile.c_str()))
 			return false;
 
 		TiXmlNode* interfaceRootNode = interfaceXml->getRootNode();
@@ -540,7 +542,7 @@ bool EntityDef::loadParentClass(const std::string& defFilePath,
 	std::string parentClassName = defxml->getKey(parentClassNode);
 	std::string parentClassfile = defFilePath + parentClassName + ".def";
 	
-	SmartPointer<XML> parentClassXml(new XML());
+	auto parentClassXml{ KBE_MAKE_SHARED<XML>() };
 	if(!parentClassXml->openSection(parentClassfile.c_str()))
 		return false;
 	
@@ -1573,7 +1575,7 @@ bool EntityDef::loadAllScriptModules(std::string entitiesPath,
 {
 	std::string entitiesFile = entitiesPath + "entities.xml";
 
-	SmartPointer<XML> xml(new XML());
+	auto xml{ KBE_MAKE_UNIQUE<XML>() };
 	if(!xml->openSection(entitiesFile.c_str()))
 		return false;
 
@@ -1583,7 +1585,7 @@ bool EntityDef::loadAllScriptModules(std::string entitiesPath,
 
 	XML_FOR_BEGIN(node)
 	{
-		std::string moduleName = xml.get()->getKey(node);
+		std::string moduleName = xml->getKey(node);
 		ScriptDefModule* pScriptModule = findScriptModule(moduleName.c_str());
 
 		PyObject* pyModule = 

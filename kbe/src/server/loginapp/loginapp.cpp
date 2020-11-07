@@ -31,6 +31,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "network/message_handler.h"
 #include "thread/threadpool.h"
 #include "common/kbeversion.h"
+#include "common/utils.h"
 #include "server/components.h"
 #include "server/telnet_server.h"
 #include "server/sendmail_threadtasks.h"
@@ -1512,8 +1513,8 @@ void Loginapp::importServerErrorsDescr(Network::Channel* pChannel)
 
 		{
 			TiXmlNode *rootNode = NULL;
-			SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str()));
 
+			auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors_defaults.xml").c_str()) };
 			if (!xml->isGood())
 			{
 				ERROR_MSG(fmt::format("ServerConfig::loadConfig: load {} failed!\n",
@@ -1546,8 +1547,8 @@ void Loginapp::importServerErrorsDescr(Network::Channel* pChannel)
 			if (f)
 			{
 				fclose(f);
-				SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str()));
 
+				auto xml{ KBE_MAKE_UNIQUE<XML>(Resmgr::getSingleton().matchRes("server/server_errors.xml").c_str()) };
 				if (xml->isGood())
 				{
 					rootNode = xml->getRootNode();

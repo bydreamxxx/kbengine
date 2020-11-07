@@ -24,6 +24,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "datatypes.h"
 #include "common.h"
 #include "common/smartpointer.h"
+#include "common/utils.h"
 #include "entitydef/entity_call.h"
 #include "resmgr/resmgr.h"
 #include "pyscript/script.h"
@@ -302,7 +303,7 @@ void ScriptDefModule::autoMatchCompOwn()
 	std::string entitiesFile = Resmgr::getSingleton().getPyUserScriptsPath() + "entities.xml";
 
 	// 打开这个entities.xml文件
-	SmartPointer<XML> xml(new XML());
+	auto xml{ KBE_MAKE_UNIQUE<XML>() };
 	if(!xml->openSection(entitiesFile.c_str()) || !xml->isGood())
 		return;
 	
@@ -318,7 +319,7 @@ void ScriptDefModule::autoMatchCompOwn()
 	// 开始遍历所有的entity节点
 	XML_FOR_BEGIN(node)
 	{
-		std::string moduleName = xml.get()->getKey(node);
+		std::string moduleName = xml->getKey(node);
 		if(name_ == moduleName)
 		{
 			const char* val = node->ToElement()->Attribute("hasClient");

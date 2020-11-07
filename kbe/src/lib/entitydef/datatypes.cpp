@@ -111,12 +111,12 @@ std::vector< std::string > DataTypes::getBaseTypeNames()
 //-------------------------------------------------------------------------------------
 bool DataTypes::loadTypes(std::string& file)
 {
-	SmartPointer<XML> xml(new XML(Resmgr::getSingleton().matchRes(file).c_str()));
+	auto xml{ KBE_MAKE_SHARED<XML>(Resmgr::getSingleton().matchRes(file).c_str()) };
 	return loadTypes(xml);
 }
 
 //-------------------------------------------------------------------------------------
-bool DataTypes::loadTypes(SmartPointer<XML>& xml)
+bool DataTypes::loadTypes(std::shared_ptr<XML> xml)
 {
 	if (xml == NULL || !xml->isGood())
 		return false;

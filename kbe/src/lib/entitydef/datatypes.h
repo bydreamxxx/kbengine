@@ -31,6 +31,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "datatype.h"
 #include "xml/xml.h"	
 #include "common/smartpointer.h"
+#include "common/utils.h"
 
 namespace KBEngine{
 typedef SmartPointer<DataType> DataTypePtr;
@@ -59,7 +60,7 @@ public:
 	static bool validTypeName(const std::string& typeName);
 
 	static bool loadTypes(std::string& file);
-	static bool loadTypes(SmartPointer<XML>& xml);
+	static bool loadTypes(std::shared_ptr<XML> xml);
 
 	static const DATATYPE_MAP& dataTypes() { return dataTypes_; }
 	static const UID_DATATYPE_MAP& uid_dataTypes() { return uid_dataTypes_; }
