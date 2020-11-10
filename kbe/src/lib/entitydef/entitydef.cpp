@@ -25,7 +25,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "common.h"
 #include "pyscript/py_memorystream.h"
 #include "resmgr/resmgr.h"
-#include "common/smartpointer.h"
 #include "common/utils.h"
 #include "entitydef/volatileinfo.h"
 #include "entitydef/entity_call.h"
@@ -189,7 +188,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 	{
 		std::string moduleName = xml->getKey(node);
 		__scriptTypeMappingUType[moduleName] = utype;
-		ScriptDefModule* pScriptModule = new ScriptDefModule(moduleName, utype++);
+		auto pScriptModule = KBE_MAKE_SHARED<ScriptDefModule>(moduleName, utype++);
 		EntityDef::__scriptModules.push_back(pScriptModule);
 
 		std::string deffile = defFilePath + moduleName + ".def";
@@ -206,7 +205,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		}
 
 		// 加载def文件中的定义
-		if(!loadDefInfo(defFilePath, moduleName, defxml.get(), defNode, pScriptModule))
+		if(!loadDefInfo(defFilePath, moduleName, defxml.get(), defNode, pScriptModule.get()))
 		{
 			ERROR_MSG(fmt::format("EntityDef::initialize: failed to load entity({}) module!\n",
 				moduleName.c_str()));
@@ -215,7 +214,7 @@ bool EntityDef::initialize(std::vector<PyTypeObject*>& scriptBaseTypes,
 		}
 		
 		// 尝试在主entity文件中加载detailLevel数据
-		if(!loadDetailLevelInfo(defFilePath, moduleName, defxml.get(), defNode, pScriptModule))
+		if(!loadDetailLevelInfo(defFilePath, moduleName, defxml.get(), defNode, pScriptModule.get()))
 		{
 			ERROR_MSG(fmt::format("EntityDef::initialize: failed to load entity({}) DetailLevelInfo!\n",
 				moduleName.c_str()));

@@ -35,7 +35,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "math/math.h"
 #include "pyscript/scriptobject.h"
 #include "xml/xml.h"
-#include "common/refcountable.h"
 
 
 namespace KBEngine{
@@ -43,7 +42,7 @@ namespace KBEngine{
 /**
 	描述一个脚本def模块
 */
-class ScriptDefModule : public RefCountable
+class ScriptDefModule
 {
 public:
 	typedef std::map<std::string, PropertyDescription*> PROPERTYDESCRIPTION_MAP;

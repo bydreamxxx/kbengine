@@ -23,7 +23,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "entitydef.h"
 #include "datatypes.h"
 #include "common.h"
-#include "common/smartpointer.h"
 #include "common/utils.h"
 #include "entitydef/entity_call.h"
 #include "resmgr/resmgr.h"

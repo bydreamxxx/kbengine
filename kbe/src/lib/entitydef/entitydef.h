@@ -22,6 +22,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KBE_ENTITYDEF_H
 #define KBE_ENTITYDEF_H
 
+#include <memory>
+
 #include "common/common.h"
 #include "common/md5.h"
 #if KBE_PLATFORM == PLATFORM_WIN32
@@ -34,13 +36,12 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "math/math.h"
 #include "pyscript/scriptobject.h"
 #include "xml/xml.h"	
-#include "common/smartpointer.h"
 
 
 namespace KBEngine{
 
 class ScriptDefModule;
-typedef SmartPointer<ScriptDefModule> ScriptDefModulePtr;
+typedef std::shared_ptr<ScriptDefModule> ScriptDefModulePtr;
 
 class EntityDef
 {
