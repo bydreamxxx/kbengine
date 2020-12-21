@@ -24,6 +24,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 // common include
 #include "helper/debug_helper.h"
 #include "common/common.h"
+#include "common/task.h"
 // #define NDEBUG
 // windows include	
 #if KBE_PLATFORM == PLATFORM_WIN32

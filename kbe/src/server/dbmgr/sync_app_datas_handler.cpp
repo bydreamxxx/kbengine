@@ -18,7 +18,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "dbmgr.h"
 #include "sync_app_datas_handler.h"
 #include "entitydef/scriptdef_module.h"
 #include "entitydef/entity_macro.h"
@@ -28,11 +27,14 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "network/channel.h"
 #include "server/components.h"
 
+#include "dbmgr/dbmgr.h"
 #include "baseapp/baseapp_interface.h"
 #include "cellapp/cellapp_interface.h"
 #include "baseappmgr/baseappmgr_interface.h"
 #include "cellappmgr/cellappmgr_interface.h"
 #include "loginapp/loginapp_interface.h"
+
+#include <algorithm>
 
 namespace KBEngine{	
 
@@ -59,15 +61,14 @@ SyncAppDatasHandler::~SyncAppDatasHandler()
 void SyncAppDatasHandler::pushApp(COMPONENT_ID cid, COMPONENT_ORDER startGroupOrder, COMPONENT_ORDER startGlobalOrder)
 {
 	lastRegAppTime_ = timestamp();
-	std::vector<ComponentInitInfo>::iterator iter = apps_.begin();
-	for(; iter != apps_.end(); ++iter)
-	{
-		if((*iter).cid == cid)
-		{
-			ERROR_MSG(fmt::format("SyncAppDatasHandler::pushApp: cid({}) is exist!\n", cid));
-			return;
-		}
-	}
+
+	std::for_each(std::begin(apps_), std::end(apps_),
+		[cid](auto& info) {
+			if (info.cid == cid){
+				ERROR_MSG(fmt::format("SyncAppDatasHandler::pushApp: cid({}) is exist!\n", cid));
+				return;
+			}
+		});
 
 	ComponentInitInfo cinfo;
 	cinfo.cid = cid;
