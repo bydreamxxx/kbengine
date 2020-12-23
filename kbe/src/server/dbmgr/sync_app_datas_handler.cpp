@@ -63,7 +63,7 @@ void SyncAppDatasHandler::pushApp(COMPONENT_ID cid, COMPONENT_ORDER startGroupOr
 	lastRegAppTime_ = timestamp();
 
 	std::for_each(std::begin(apps_), std::end(apps_),
-		[cid](auto& info) {
+		[cid](ComponentInitInfo& info) {
 			if (info.cid == cid){
 				ERROR_MSG(fmt::format("SyncAppDatasHandler::pushApp: cid({}) is exist!\n", cid));
 				return;
