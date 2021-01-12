@@ -993,8 +993,11 @@ void DebugHelper::debug_msg(const std::string& s)
 	if(canLogFile_)
 		KBE_LOG4CXX_DEBUG(g_logger, s);
 #endif
-
-	onMessage(KBELOG_DEBUG, s.c_str(), (uint32)s.size());
+	// 不处理级别低的日志信息
+	if (g_logger->isDebugEnabled())
+	{
+		onMessage(KBELOG_DEBUG, s.c_str(), (uint32)s.size());
+	}
 }
 
 //-------------------------------------------------------------------------------------
