@@ -681,7 +681,7 @@ E* EntityApp<E>::createEntity(const char* entityType, PyObject* params,
 	}
 	else
 	{
-		INFO_MSG(fmt::format("EntityApp::createEntity: new {0} {1}\n", entityType, id));
+		DEBUG_MSG(fmt::format("EntityApp::createEntity: new {0} {1}\n", entityType, id));
 	}
 
 	return entity;
