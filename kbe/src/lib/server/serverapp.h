@@ -118,6 +118,10 @@ public:
 	virtual void onAddComponent(const Components::ComponentInfos* pInfos);
 	virtual void onRemoveComponent(const Components::ComponentInfos* pInfos);
 	virtual void onIdentityillegal(COMPONENT_TYPE componentType, COMPONENT_ID componentID, uint32 pid, const char* pAddr);
+	virtual void onAllComponentFound();
+
+	// 维持组件连接的timer触发通知app
+	virtual void onComponentActiveTickTimeout();
 
 	virtual void onShutdownBegin();
 	virtual void onShutdown(bool first, bool last = false);
@@ -134,6 +138,11 @@ public:
 	COMPONENT_ORDER groupOrder() const { return startGroupOrder_; }
 
 	/** 网络接口
+		dbmgr 注册到 centermgr 成功
+	*/
+	virtual void onRegisterCentermgr(Network::Channel* pChannel, COMPONENT_ORDER centerID);
+
+	/** 网络接口
 		注册一个新激活的baseapp或者cellapp或者dbmgr
 		通常是一个新的app被启动了， 它需要向某些组件注册自己。
 	*/
@@ -146,7 +155,7 @@ public:
 	/** 网络接口
 		某个app向本app告知处于活动状态。
 	*/
-	void onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID);
+	virtual void onAppActiveTick(Network::Channel* pChannel, COMPONENT_TYPE componentType, COMPONENT_ID componentID);
 	
 	/** 网络接口
 		请求断开服务器的连接

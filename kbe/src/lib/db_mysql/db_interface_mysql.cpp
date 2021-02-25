@@ -144,14 +144,16 @@ static void initializeWatcher()
 
 size_t DBInterfaceMysql::sql_max_allowed_packet_ = 0;
 //-------------------------------------------------------------------------------------
-DBInterfaceMysql::DBInterfaceMysql(const char* name, std::string characterSet, std::string collation) :
+DBInterfaceMysql::DBInterfaceMysql(const char* name, std::string characterSet, std::string collation, std::string autoIncrementOffset, std::string autoIncrementIncrement) :
 DBInterface(name),
 pMysql_(NULL),
 hasLostConnection_(false),
 inTransaction_(false),
 lock_(NULL, false),
 characterSet_(characterSet),
-collation_(collation)
+collation_(collation),
+autoIncrementOffset_(autoIncrementOffset),
+autoIncrementIncrement_(autoIncrementIncrement)
 {
 	lock_.pdbi(this);
 }
@@ -255,7 +257,7 @@ __RECONNECT:
 				return false;
 			}
 		}
-
+		
 		if (mysql_set_character_set(mysql(), characterSet_.c_str()) != 0)
 		{
 			ERROR_MSG(fmt::format("DBInterfaceMysql::attach: Could not set client connection character set to {}\n", characterSet_));
@@ -265,11 +267,21 @@ __RECONNECT:
 		// 不需要关闭自动提交，底层会START TRANSACTION之后再COMMIT
 		// mysql_autocommit(mysql(), 0);
 
-		char characterset_sql[MAX_BUF];
-		kbe_snprintf(characterset_sql, MAX_BUF, "ALTER DATABASE CHARACTER SET %s COLLATE %s", 
-			characterSet_.c_str(), collation_.c_str());
+		if (!(g_kbeSrvConfig.dbInterface(name())->acrossDB))
+		{
+			char characterset_sql[MAX_BUF];
+			kbe_snprintf(characterset_sql, MAX_BUF, "ALTER DATABASE CHARACTER SET %s COLLATE %s", 
+				characterSet_.c_str(), collation_.c_str());
 
-		query(&characterset_sql[0], strlen(characterset_sql), false);
+			query(&characterset_sql[0], strlen(characterset_sql), false);
+
+			char autoIncrement_sql[MAX_BUF];
+			kbe_snprintf(autoIncrement_sql, MAX_BUF, "set global auto_increment_increment = %s", autoIncrementIncrement_.c_str());
+			query(autoIncrement_sql, strlen(autoIncrement_sql), true);
+			memset(autoIncrement_sql, 0, MAX_BUF);
+			kbe_snprintf(autoIncrement_sql, MAX_BUF, "set global auto_increment_offset = %s", autoIncrementOffset_.c_str());
+			query(autoIncrement_sql, strlen(autoIncrement_sql), true);
+		}
 	}
 	catch (std::exception& e)
 	{
@@ -341,6 +353,9 @@ bool DBInterfaceMysql::checkEnvironment()
 //-------------------------------------------------------------------------------------
 bool DBInterfaceMysql::createDatabaseIfNotExist()
 {
+	if ((g_kbeSrvConfig.dbInterface(name())->acrossDB))
+		return false;
+	
 	std::string querycmd = fmt::format("create database {}", db_name_);
 	query(querycmd.c_str(), querycmd.size(), false);
 	return true;

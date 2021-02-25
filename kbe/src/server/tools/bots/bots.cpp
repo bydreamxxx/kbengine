@@ -655,6 +655,16 @@ void Bots::onLoginBaseappFailed(Network::Channel * pChannel, SERVER_ERROR_CODE f
 }
 
 //-------------------------------------------------------------------------------------	
+void Bots::onLoginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
+{
+	ClientObject* pClient = findClient(pChannel);
+	if (pClient)
+	{
+		pClient->onLoginBaseappSuccessfully(pChannel, s);
+	}
+}
+
+//-------------------------------------------------------------------------------------	
 void Bots::onReloginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
 {
 	ClientObject* pClient = findClient(pChannel);
@@ -1211,6 +1221,16 @@ void Bots::onAppActiveTickCB(Network::Channel* pChannel)
 	if (pClient)
 	{
 		pClient->onAppActiveTickCB(pChannel);
+	}
+}
+
+//-------------------------------------------------------------------------------------
+void Bots::acrossServerReady(Network::Channel * pChannel, MemoryStream& s)
+{
+	ClientObject* pClient = findClient(pChannel);
+	if (pClient)
+	{
+		pClient->acrossServerReady(pChannel, s);
 	}
 }
 

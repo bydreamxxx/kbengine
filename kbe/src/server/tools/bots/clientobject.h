@@ -107,6 +107,11 @@ public:
 	*/
 	virtual void onLoginSuccessfully(Network::Channel * pChannel, MemoryStream& s);
 
+	/** 网络接口
+		登陆baseapp成功
+	*/
+	virtual void onLoginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s);
+
 	virtual void onLoginBaseappFailed(Network::Channel * pChannel, SERVER_ERROR_CODE failedcode);
 
 	virtual void onLogin(Network::Bundle* pBundle);

@@ -468,6 +468,12 @@ int ClientApp::processOnce(bool shouldIdle)
 }
 
 //-------------------------------------------------------------------------------------
+void ClientApp::acrossServerReady(Network::Channel * pChannel, MemoryStream& s)
+{
+	ClientObjectBase::acrossServerReady(pChannel, s);
+}
+
+//-------------------------------------------------------------------------------------
 void ClientApp::onTargetChanged()
 { 
 	// 所有脚本都加载完毕
@@ -748,6 +754,12 @@ void ClientApp::onLoginBaseappFailed(Network::Channel * pChannel, SERVER_ERROR_C
 {
 	ClientObjectBase::onLoginBaseappFailed(pChannel, failedcode);
 	canReset_ = true;
+}
+
+//-------------------------------------------------------------------------------------	
+void ClientApp::onLoginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
+{
+	ClientObjectBase::onLoginBaseappSuccessfully(pChannel, s);
 }
 
 //-------------------------------------------------------------------------------------	

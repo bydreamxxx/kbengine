@@ -55,7 +55,10 @@ public:
 	EntityCall(ScriptDefModule* pScriptModule, const Network::Address* pAddr, COMPONENT_ID componentID, 
 		ENTITY_ID eid, ENTITYCALL_TYPE type);
 
-	~EntityCall();
+	EntityCall(PyTypeObject* scriptType, ScriptDefModule* pScriptModule, const Network::Address* pAddr, COMPONENT_ID componentID,
+		ENTITY_ID eid, ENTITYCALL_TYPE type);
+
+	virtual ~EntityCall();
 	
 	/** 
 		脚本请求获取属性或者方法 
@@ -68,7 +71,7 @@ public:
 	PyObject* tp_repr();
 	PyObject* tp_str();
 	
-	void c_str(char* s, size_t size);
+	virtual void c_str(char* s, size_t size);
 
 	/** 
 		unpickle方法 

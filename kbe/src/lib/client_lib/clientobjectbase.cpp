@@ -750,6 +750,13 @@ void ClientObjectBase::onReloginBaseappFailed(Network::Channel * pChannel, SERVE
 }
 
 //-------------------------------------------------------------------------------------	
+void ClientObjectBase::onLoginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
+{
+	s >> rndUUID_;
+	INFO_MSG(fmt::format("ClientObjectBase::onLoginBaseappSuccessfully! name={}, rndUUID={}.\n", name_, rndUUID_));
+}
+
+//-------------------------------------------------------------------------------------	
 void ClientObjectBase::onReloginBaseappSuccessfully(Network::Channel * pChannel, MemoryStream& s)
 {
 	s >> rndUUID_;
@@ -1148,6 +1155,11 @@ void ClientObjectBase::onUpdatePropertys_(ENTITY_ID eid, MemoryStream& s)
 	}
 
 	entity->onUpdatePropertys(s);
+}
+
+void ClientObjectBase::acrossServerReady(Network::Channel * pChannel, MemoryStream& s)
+{
+	ERROR_MSG("ClientObjectBase::acrossServerReady: .\n");
 }
 
 //-------------------------------------------------------------------------------------

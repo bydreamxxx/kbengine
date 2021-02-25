@@ -21,6 +21,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "components.h"
 #include "serverapp.h"
 #include "network/channel.h"
+#include "entitydef/entity_call.h"
+#include "entitydef/entitycall_cross_server.h"
 
 #include "../../server/dbmgr/dbmgr_interface.h"
 
@@ -118,7 +120,7 @@ void GlobalDataClient::onDataChanged(PyObject* key, PyObject* value, bool isDele
 	std::string skey = script::Pickler::pickle(key, 0);
 	std::string sval = "";
 
-	if(value)
+	if (value)
 		sval = script::Pickler::pickle(value, 0);
 
 	Components::COMPONENTS& channels = Components::getSingleton().getComponents(serverComponentType_);

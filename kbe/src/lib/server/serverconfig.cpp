@@ -71,7 +71,7 @@ bool ServerConfig::loadConfig(std::string fileName)
 	
 	if(xml->getRootNode() == NULL)
 	{
-		// root½ÚµãÏÂÃ»ÓĞ×Ó½ÚµãÁË
+		// rootèŠ‚ç‚¹ä¸‹æ²¡æœ‰å­èŠ‚ç‚¹äº†
 		return true;
 	}
 
@@ -114,7 +114,7 @@ bool ServerConfig::loadConfig(std::string fileName)
 					{
 						Network::g_trace_packet_disables.push_back(c);
 						
-						// ²»debug¼ÓÃÜ°ü
+						// ä¸debugåŠ å¯†åŒ…
 						if(c == "Encrypted::packets")
 							Network::g_trace_encrypted_packet = false;
 					}
@@ -870,9 +870,15 @@ bool ServerConfig::loadConfig(std::string fileName)
 					if (node)
 						pDBInfo->isPure = xml->getValStr(node) == "true";
 
-					// Ä¬ÈÏ¿â²»ÔÊĞíÊÇ´¿¾»¿â£¬ÒıÇæĞèÒª´´½¨ÊµÌå±í
+					// é»˜è®¤åº“ä¸å…è®¸æ˜¯çº¯å‡€åº“ï¼Œå¼•æ“éœ€è¦åˆ›å»ºå®ä½“è¡¨
 					if (name == "default")
 						pDBInfo->isPure = false;
+
+					node = xml->enterNode(interfaceNode, "acrossDB");
+					if (node)
+						pDBInfo->acrossDB = xml->getValStr(node) == "true";
+					if (name == "default")	// é»˜è®¤åº“ä¸å…è®¸æ˜¯è·¨æœæ•°æ®åº“
+						pDBInfo->acrossDB = false;
 
 					node = xml->enterNode(interfaceNode, "type");
 					if(node != NULL)
@@ -937,10 +943,26 @@ bool ServerConfig::loadConfig(std::string fileName)
 
 					if (pDBInfo->db_unicodeString_collation.size() == 0)
 						pDBInfo->db_unicodeString_collation = "utf8_bin";
-	
+
+					node = xml->enterNode(interfaceNode, "auto_increment");
+					if (node != NULL)
+					{
+						TiXmlNode* childnode = xml->enterNode(node, "offset");
+						if (childnode)
+						{
+							pDBInfo->auto_increment_offset = xml->getValStr(childnode);
+						}
+
+						childnode = xml->enterNode(node, "increment");
+						if (childnode)
+						{
+							pDBInfo->auto_increment_increment = xml->getValStr(childnode);
+						}
+					}
+
 					if (pDBInfo == &dbinfo)
 					{
-						// ¼ì²é²»ÄÜÔÚ²»Í¬µÄ½Ó¿ÚÖĞÊ¹ÓÃÏàÍ¬µÄÊı¾İ¿âÓëÏàÍ¬µÄ±í
+						// æ£€æŸ¥ä¸èƒ½åœ¨ä¸åŒçš„æ¥å£ä¸­ä½¿ç”¨ç›¸åŒçš„æ•°æ®åº“ä¸ç›¸åŒçš„è¡¨
 						std::vector<DBInterfaceInfo>::iterator dbinfo_iter = _dbmgrInfo.dbInterfaceInfos.begin();
 						for (; dbinfo_iter != _dbmgrInfo.dbInterfaceInfos.end(); ++dbinfo_iter)
 						{
@@ -1329,6 +1351,55 @@ bool ServerConfig::loadConfig(std::string fileName)
 		}
 	}
 
+	rootNode = xml->getRootNode("centermgr");
+	if (rootNode != NULL)
+	{
+		node = xml->enterNode(rootNode, "internalInterface");
+		if (node != NULL)
+			strncpy((char*)&_centerMgrInfo.internalInterface, xml->getValStr(node).c_str(), MAX_NAME - 1);
+
+		node = xml->enterNode(rootNode, "externalInterface");
+		if (node != NULL)
+			strncpy((char*)&_centerMgrInfo.externalInterface, xml->getValStr(node).c_str(), MAX_NAME - 1);
+
+		node = xml->enterNode(rootNode, "externalAddress");
+		if (node != NULL)
+			strncpy((char*)&_centerMgrInfo.externalAddress, xml->getValStr(node).c_str(), MAX_NAME - 1);
+
+		node = xml->enterNode(rootNode, "externalPorts_min");
+		if (node != NULL)
+			_centerMgrInfo.externalPorts_min = xml->getValInt(node);
+
+		node = xml->enterNode(rootNode, "externalPorts_max");
+		if (node != NULL)
+			_centerMgrInfo.externalPorts_max = xml->getValInt(node);
+		if (_centerMgrInfo.externalPorts_min < 0)
+			_centerMgrInfo.externalPorts_min = 0;
+		if (_centerMgrInfo.externalPorts_max < _centerMgrInfo.externalPorts_min)
+			_centerMgrInfo.externalPorts_max = _centerMgrInfo.externalPorts_min;
+
+		node = xml->enterNode(rootNode, "addresses");
+		if (node)
+		{
+			do
+			{
+				if (TiXmlNode::TINYXML_COMMENT == node->Type())
+					continue;
+
+				if (node->FirstChild() != NULL)
+				{
+					std::string c = node->FirstChild()->Value();
+					c = strutil::kbe_trim(c);
+					if (c.size() > 0)
+					{
+						_centerMgrInfo.connect_center_addresses.push_back(c);
+					}
+				}
+			} while ((node = node->NextSibling()));
+		}
+	}
+
+
 	if(email_service_config.size() > 0)
 	{
 		SmartPointer<XML> emailxml(new XML(Resmgr::getSingleton().matchRes(email_service_config).c_str()));
@@ -1461,7 +1532,7 @@ uint32 ServerConfig::tcp_SOMAXCONN(COMPONENT_TYPE componentType)
 //-------------------------------------------------------------------------------------	
 void ServerConfig::_updateEmailInfos()
 {
-	// Èç¹ûĞ¡ÓÚ64Ôò±íÊ¾Ä¿Ç°»¹ÊÇÃ÷ÎÄÃÜÂë
+	// ÃˆÃ§Â¹Ã»ÃÂ¡Ã“Ãš64Ã”Ã²Â±Ã­ÃŠÂ¾Ã„Â¿Ã‡Â°Â»Â¹ÃŠÃ‡ÃƒÃ·ÃÃ„ÃƒÃœÃ‚Ã«
 	if(emailServerInfo_.password.size() < 64)
 	{
 		WARNING_MSG(fmt::format("ServerConfig::loadConfig: email password(email_service.xml) is not encrypted!\nplease use password(rsa):\n{}\n"
@@ -1706,6 +1777,37 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 			infostr += (fmt::format("\tcomponentID : {}\n", info.componentID));
 		}
 	}
+	else if (componentType == CENTERMGR_TYPE)
+	{
+		ENGINE_COMPONENT_INFO& info = getCenterMgr();
+		info.internalAddr = const_cast<Network::Address*>(&internalAddr);
+		info.externalAddr = const_cast<Network::Address*>(&externalAddr);
+		info.componentID = componentID;
+
+		if (isPrint)
+		{
+			INFO_MSG("server-configs:\n");
+			INFO_MSG(fmt::format("\tinternalAddr : {}\n", internalAddr.c_str()));
+			INFO_MSG(fmt::format("\texternalAddr : {}\n", externalAddr.c_str()));
+			if (strlen(info.externalAddress) > 0)
+			{
+				INFO_MSG(fmt::format("\texternalCustomAddr : {}\n", info.externalAddress));
+			}
+
+			INFO_MSG(fmt::format("\tcomponentID : {}\n", info.componentID));
+
+			infostr += "server-configs:\n";
+			infostr += (fmt::format("\tinternalAddr : {}\n", internalAddr.c_str()));
+			infostr += (fmt::format("\texternalAddr : {}\n", externalAddr.c_str()));
+
+			if (strlen(info.externalAddress) > 0)
+			{
+				infostr += (fmt::format("\texternalCustomAddr : {}\n", info.externalAddress));
+			}
+
+			infostr += (fmt::format("\tcomponentID : {}\n", info.componentID));
+		}
+	}
 
 #if KBE_PLATFORM == PLATFORM_WIN32
 	if(infostr.size() > 0)
@@ -1716,5 +1818,25 @@ void ServerConfig::updateInfos(bool isPrint, COMPONENT_TYPE componentType, COMPO
 #endif
 }
 
-//-------------------------------------------------------------------------------------		
+//-------------------------------------------------------------------------------------
+std::string ServerConfig::getDBInterfaceNameByDBInfo(const char *ip, const char *dbName)
+{
+	ENGINE_COMPONENT_INFO &dbinfo = getDBMgr();
+
+	std::vector<DBInterfaceInfo>::iterator iter = dbinfo.dbInterfaceInfos.begin();
+	for (; iter != dbinfo.dbInterfaceInfos.end(); iter++)
+	{
+		if (strcmp(iter->db_ip, ip) == 0)
+		{
+			if(strcmp(iter->db_name, dbName) == 0)
+			{ 
+				return iter->name;
+			}
+		}
+	}
+
+	return "";
+}
+
+//-------------------------------------------------------------------------------------
 }

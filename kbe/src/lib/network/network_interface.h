@@ -91,7 +91,7 @@ public:
 	void sendIfDelayed(Channel & channel);
 	void delayedSend(Channel & channel);
 	
-	bool good() const{ return (!pExtListenerReceiver_ || extEndpoint_.good()) && (intEndpoint_.good()); }
+	bool good() const{ return (!pExtListenerReceiver_ || extEndpoint_.good()) && (!pIntListenerReceiver_ || intEndpoint_.good()); }
 
 	void onChannelTimeOut(Channel * pChannel);
 	
