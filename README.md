@@ -20,6 +20,8 @@
 
 - Telnet console 功能扩展和完善  
 
+- 加入对跨服玩法的原生功能支持，新增组件 centermgr
+
 --- 
 KBEngine
 ========
