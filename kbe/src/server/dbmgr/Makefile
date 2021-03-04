@@ -20,8 +20,8 @@ MY_LIBS =		\
 	thread		\
 	db_interface\
 	db_mysql	\
-	db_redis	\
-	db_mongodb
+	db_redis	
+#	db_mongodb
 
 BUILD_TIME_FILE = main
 USE_PYTHON = 1
