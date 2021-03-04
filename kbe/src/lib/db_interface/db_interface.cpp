@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 This source file is part of KBEngine
 For the latest info, see http://www.kbengine.org/
 
@@ -25,7 +25,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "common/kbekey.h"
 #include "db_mysql/db_interface_mysql.h"
 #include "db_redis/db_interface_redis.h"
-#include "db_mongodb/db_interface_mongodb.h"
+//#include "db_mongodb/db_interface_mongodb.h"
 #include "server/serverconfig.h"
 #include "thread/threadpool.h"
 
@@ -106,7 +106,7 @@ bool DBUtil::initialize()
 
 		if ((*dbinfo_iter).db_passwordEncrypt)
 		{
-			// Èç¹ûĞ¡ÓÚ64Ôò±íÃ÷µ±Ç°ÊÇÃ÷ÎÄÃÜÂëÅäÖÃ
+			// å¦‚æœå°äº64åˆ™è¡¨æ˜å½“å‰æ˜¯æ˜æ–‡å¯†ç é…ç½®
 			if (strlen((*dbinfo_iter).db_password) < 64)
 			{
 				WARNING_MSG(fmt::format("DBUtil::initialize: db({}) password is not encrypted!\nplease use password(rsa):\n{}\n",
@@ -172,10 +172,10 @@ DBInterface* DBUtil::createInterface(const std::string& name, bool showinfo)
 	{
 		dbinterface = new DBInterfaceRedis(name.c_str());
 	}
-	else if (strcmp(pDBInfo->db_type, "mongodb") == 0)
-	{
-		dbinterface = new DBInterfaceMongodb(name.c_str());
-	}
+	//else if (strcmp(pDBInfo->db_type, "mongodb") == 0)
+	//{
+	//	dbinterface = new DBInterfaceMongodb(name.c_str());
+	//}
 
 	if(dbinterface == NULL)
 	{
@@ -241,10 +241,10 @@ bool DBUtil::initInterface(DBInterface* pdbi)
 	{
 		DBInterfaceRedis::initInterface(pdbi);
 	}
-	else if (strcmp(pDBInfo->db_type, "mongodb") == 0)
-	{
-		DBInterfaceMongodb::initInterface(pdbi);
-	}
+	//else if (strcmp(pDBInfo->db_type, "mongodb") == 0)
+	//{
+	//	DBInterfaceMongodb::initInterface(pdbi);
+	//}
 	
 	thread::ThreadPool* pThreadPool = pThreadPoolMaps_[pdbi->name()];
 	KBE_ASSERT(pThreadPool);
