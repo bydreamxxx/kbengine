@@ -218,4 +218,11 @@ INLINE bool ServerConfig::getDBInfoByInterfaceName(const char *interfaceName, st
 }
 
 //-------------------------------------------------------------------------------------		
+INLINE bool ServerConfig::IsCrossServerEnable()
+{
+	return getCenterMgr().isCrossServerEnable;
+}
+
+
+//-------------------------------------------------------------------------------------	
 }

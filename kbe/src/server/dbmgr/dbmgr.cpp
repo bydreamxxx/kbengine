@@ -207,8 +207,7 @@ void Dbmgr::onAllComponentFound()
 //-------------------------------------------------------------------------------------
 bool Dbmgr::isCentermgrEnable()
 {
-	// TODO: 检查配置是否启用了 centermgr
-	return true;
+	return g_serverConfig.IsCrossServerEnable();
 }
 
 //-------------------------------------------------------------------------------------
@@ -239,7 +238,7 @@ void Dbmgr::findCentermgr()
 	bool success = false;
 	for (int itry = 0; itry < 3; ++itry)
 	{
-		INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 99999999));
+		INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr try count({})\n", itry));
 		fd_set	frds, fwds;
 		FD_ZERO(&frds);
 		FD_ZERO(&fwds);
@@ -248,14 +247,11 @@ void Dbmgr::findCentermgr()
 
 		if (ep->connect() == -1)
 		{
-			INFO_MSG(fmt::format("Components::findCentermgr: connect({}) centermgr result({})\n", ep->c_str(), 77777777));
 			if (select((*ep) + 1, &frds, &fwds, NULL, &tv) > 0)
 			{
-				INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({}) \n", 1111111));
 				if (FD_ISSET((*ep), &frds) || FD_ISSET((*ep), &fwds))
 				{
 					ep->connect();
-					INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({}) \n", 333333));
 					int error = kbe_lasterror();
 #if KBE_PLATFORM == PLATFORM_WIN32
 					if (error == WSAEISCONN || error == 0)
@@ -263,7 +259,7 @@ void Dbmgr::findCentermgr()
 					if (error == EISCONN)
 #endif
 					{
-						INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 555555));
+						INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr success\n"));
 						success = true;
 						break;
 					}
@@ -276,7 +272,7 @@ void Dbmgr::findCentermgr()
 		}
 		else
 		{
-			INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr result({})\n", 22222));
+			INFO_MSG(fmt::format("Components::findCentermgr: connect centermgr success\n"));
 			success = true;
 			break;
 		}

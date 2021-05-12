@@ -1473,6 +1473,10 @@ bool ServerConfig::loadConfig(std::string fileName)
 	rootNode = xml->getRootNode("centermgr");
 	if (rootNode != NULL)
 	{
+		node = xml->enterNode(rootNode, "enable");
+		if (node != NULL)
+			_centerMgrInfo.isCrossServerEnable = (xml->getValStr(node) == "true");
+
 		node = xml->enterNode(rootNode, "internalInterface");
 		if (node != NULL)
 			strncpy((char*)&_centerMgrInfo.internalInterface, xml->getValStr(node).c_str(), MAX_NAME - 1);
