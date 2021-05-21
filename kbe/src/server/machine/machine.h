@@ -58,7 +58,7 @@ public:
 
 	~Machine();
 	
-	bool run();
+	virtual bool run() override;
 	
 	bool findBroadcastInterface();
 
@@ -98,10 +98,10 @@ public:
 	void handleTimeout(TimerHandle handle, void * arg);
 
 	/* 初始化相关接口 */
-	bool initializeBegin();
-	bool inInitialize();
-	bool initializeEnd();
-	void finalise();
+	virtual bool initializeBegin() override;
+	virtual bool inInitialize() override;
+	virtual bool initializeEnd() override;
+	virtual void finalise() override;
 	bool initNetwork();
 
 	/** 网络接口
@@ -113,8 +113,8 @@ public:
 
 	/** 信号处理
 	*/
-	virtual bool installSignals();
-	virtual void onSignalled(int sigNum);
+	virtual bool installSignals() override;
+	virtual void onSignalled(int sigNum) override;
 
 #if KBE_PLATFORM != PLATFORM_WIN32
 	/**
