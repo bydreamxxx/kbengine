@@ -187,8 +187,8 @@ typedef struct EngineComponentInfo
 	char internalInterface[MAX_NAME];						// 内部网卡接口名称
 	char externalInterface[MAX_NAME];						// 外部网卡接口名称
 	char externalAddress[MAX_NAME];							// 外部IP地址
-	int32 externalPorts_min;								// 对外socket端口使用指定范围
-	int32 externalPorts_max;
+	int32 externalTcpPorts_min;								// 对外socket端口使用指定范围
+	int32 externalTcpPorts_max;
 
 	std::vector<DBInterfaceInfo> dbInterfaceInfos;			// 数据库接口
 	bool notFoundAccountAutoCreate;							// 登录合法时游戏数据库找不到游戏账号则自动创建

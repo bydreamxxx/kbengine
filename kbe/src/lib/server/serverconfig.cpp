@@ -653,18 +653,18 @@ bool ServerConfig::loadConfig(std::string fileName)
 		if(node != NULL)
 			strncpy((char*)&_baseAppInfo.externalAddress, xml->getValStr(node).c_str(), MAX_NAME - 1);
 
-		node = xml->enterNode(rootNode, "externalPorts_min");
+		node = xml->enterNode(rootNode, "externalTcpPorts_min");
 		if(node != NULL)	
-			_baseAppInfo.externalPorts_min = xml->getValInt(node);
+			_baseAppInfo.externalTcpPorts_min = xml->getValInt(node);
 
-		node = xml->enterNode(rootNode, "externalPorts_max");
+		node = xml->enterNode(rootNode, "externalTcpPorts_max");
 		if(node != NULL)	
-			_baseAppInfo.externalPorts_max = xml->getValInt(node);
+			_baseAppInfo.externalTcpPorts_max = xml->getValInt(node);
 
-		if(_baseAppInfo.externalPorts_min < 0)
-			_baseAppInfo.externalPorts_min = 0;
-		if(_baseAppInfo.externalPorts_max < _baseAppInfo.externalPorts_min)
-			_baseAppInfo.externalPorts_max = _baseAppInfo.externalPorts_min;
+		if(_baseAppInfo.externalTcpPorts_min < 0)
+			_baseAppInfo.externalTcpPorts_min = 0;
+		if(_baseAppInfo.externalTcpPorts_max < _baseAppInfo.externalTcpPorts_min)
+			_baseAppInfo.externalTcpPorts_max = _baseAppInfo.externalTcpPorts_min;
 
 		node = xml->enterNode(rootNode, "archivePeriod");
 		if(node != NULL)
@@ -1196,18 +1196,18 @@ bool ServerConfig::loadConfig(std::string fileName)
 		if(node != NULL)
 			strncpy((char*)&_loginAppInfo.externalAddress, xml->getValStr(node).c_str(), MAX_NAME - 1);
 
-		node = xml->enterNode(rootNode, "externalPorts_min");
+		node = xml->enterNode(rootNode, "externalTcpPorts_min");
 		if(node != NULL)	
-			_loginAppInfo.externalPorts_min = xml->getValInt(node);
+			_loginAppInfo.externalTcpPorts_min = xml->getValInt(node);
 
-		node = xml->enterNode(rootNode, "externalPorts_max");
+		node = xml->enterNode(rootNode, "externalTcpPorts_max");
 		if(node != NULL)	
-			_loginAppInfo.externalPorts_max = xml->getValInt(node);
+			_loginAppInfo.externalTcpPorts_max = xml->getValInt(node);
 
-		if(_loginAppInfo.externalPorts_min < 0)
-			_loginAppInfo.externalPorts_min = 0;
-		if(_loginAppInfo.externalPorts_max < _loginAppInfo.externalPorts_min)
-			_loginAppInfo.externalPorts_max = _loginAppInfo.externalPorts_min;
+		if(_loginAppInfo.externalTcpPorts_min < 0)
+			_loginAppInfo.externalTcpPorts_min = 0;
+		if(_loginAppInfo.externalTcpPorts_max < _loginAppInfo.externalTcpPorts_min)
+			_loginAppInfo.externalTcpPorts_max = _loginAppInfo.externalTcpPorts_min;
 
 		node = xml->enterNode(rootNode, "SOMAXCONN");
 		if(node != NULL){
@@ -1270,18 +1270,18 @@ bool ServerConfig::loadConfig(std::string fileName)
 		if(node != NULL)
 			strncpy((char*)&_kbMachineInfo.externalInterface, xml->getValStr(node).c_str(), MAX_NAME - 1);
 
-		node = xml->enterNode(rootNode, "externalPorts_min");
+		node = xml->enterNode(rootNode, "externalTcpPorts_min");
 		if(node != NULL)	
-			_kbMachineInfo.externalPorts_min = xml->getValInt(node);
+			_kbMachineInfo.externalTcpPorts_min = xml->getValInt(node);
 
-		node = xml->enterNode(rootNode, "externalPorts_max");
+		node = xml->enterNode(rootNode, "externalTcpPorts_max");
 		if(node != NULL)	
-			_kbMachineInfo.externalPorts_max = xml->getValInt(node);
+			_kbMachineInfo.externalTcpPorts_max = xml->getValInt(node);
 
-		if(_kbMachineInfo.externalPorts_min < 0)
-			_kbMachineInfo.externalPorts_min = 0;
-		if(_kbMachineInfo.externalPorts_max < _kbMachineInfo.externalPorts_min)
-			_kbMachineInfo.externalPorts_max = _kbMachineInfo.externalPorts_min;
+		if(_kbMachineInfo.externalTcpPorts_min < 0)
+			_kbMachineInfo.externalTcpPorts_min = 0;
+		if(_kbMachineInfo.externalTcpPorts_max < _kbMachineInfo.externalTcpPorts_min)
+			_kbMachineInfo.externalTcpPorts_max = _kbMachineInfo.externalTcpPorts_min;
 
 		node = xml->enterNode(rootNode, "SOMAXCONN");
 		if(node != NULL){
@@ -1489,17 +1489,17 @@ bool ServerConfig::loadConfig(std::string fileName)
 		if (node != NULL)
 			strncpy((char*)&_centerMgrInfo.externalAddress, xml->getValStr(node).c_str(), MAX_NAME - 1);
 
-		node = xml->enterNode(rootNode, "externalPorts_min");
+		node = xml->enterNode(rootNode, "externalTcpPorts_min");
 		if (node != NULL)
-			_centerMgrInfo.externalPorts_min = xml->getValInt(node);
+			_centerMgrInfo.externalTcpPorts_min = xml->getValInt(node);
 
-		node = xml->enterNode(rootNode, "externalPorts_max");
+		node = xml->enterNode(rootNode, "externalTcpPorts_max");
 		if (node != NULL)
-			_centerMgrInfo.externalPorts_max = xml->getValInt(node);
-		if (_centerMgrInfo.externalPorts_min < 0)
-			_centerMgrInfo.externalPorts_min = 0;
-		if (_centerMgrInfo.externalPorts_max < _centerMgrInfo.externalPorts_min)
-			_centerMgrInfo.externalPorts_max = _centerMgrInfo.externalPorts_min;
+			_centerMgrInfo.externalTcpPorts_max = xml->getValInt(node);
+		if (_centerMgrInfo.externalTcpPorts_min < 0)
+			_centerMgrInfo.externalTcpPorts_min = 0;
+		if (_centerMgrInfo.externalTcpPorts_max < _centerMgrInfo.externalTcpPorts_min)
+			_centerMgrInfo.externalTcpPorts_max = _centerMgrInfo.externalTcpPorts_min;
 
 		node = xml->enterNode(rootNode, "addresses");
 		if (node)
