@@ -628,7 +628,9 @@
 		-->
 		<externalTcpPorts_min> 20015 </externalTcpPorts_min>					<!-- Type: Integer -->
 		<externalTcpPorts_max> 20019 </externalTcpPorts_max>					<!-- Type: Integer -->
-
+		<externalUdpPorts_min> 20005 </externalUdpPorts_min>			<!-- Type: Integer -->
+		<externalUdpPorts_max> 20009 </externalUdpPorts_max>			<!-- Type: Integer -->
+		
 		<!-- 自动存档的时间周期(秒)
 			（Automatic archiving time period(secs)） 
 		-->
@@ -780,6 +782,8 @@
 		-->
 		<externalTcpPorts_min> 20013 </externalTcpPorts_min>					<!-- Type: Integer -->
 		<externalTcpPorts_max> 0 </externalTcpPorts_max>						<!-- Type: Integer -->
+		<externalUdpPorts_min> -1 </externalUdpPorts_min>				<!-- Type: Integer -->
+		<externalUdpPorts_max> -1 </externalUdpPorts_max>				<!-- Type: Integer -->
 		
 		<!-- 加密登录信息
 			(The encrypted user login information)
@@ -829,6 +833,8 @@
 		-->
 		<externalTcpPorts_min> 20099 </externalTcpPorts_min>					<!-- Type: Integer -->
 		<externalTcpPorts_max> 0 </externalTcpPorts_max>						<!-- Type: Integer -->
+		<externalUdpPorts_min> 0 </externalUdpPorts_min>				<!-- Type: Integer -->
+		<externalUdpPorts_max> 0 </externalUdpPorts_max>				<!-- Type: Integer -->
 		
 		<!-- 服务组使用多台硬件组成网络，在某些网络环境由于路由器的设置不允许UDP广播造成跨物理机组网不成功时
 			可在此填入所有相关物理机的地址，引擎将会向具体的地址发送探测包来完成组网。
@@ -865,6 +871,8 @@
 		-->
 		<externalTcpPorts_min> 23001 </externalTcpPorts_min>					<!-- Type: Integer -->
 		<externalTcpPorts_max> 0 </externalTcpPorts_max>					<!-- Type: Integer -->
+		<externalUdpPorts_min> 0 </externalUdpPorts_min>				<!-- Type: Integer -->
+		<externalUdpPorts_max> 0 </externalUdpPorts_max>				<!-- Type: Integer -->
 		
 		<!-- 参与跨服的服务器组连接 centermgr 组件的 ip 地址，当前为 DBMgr 所在主机的ip地址
 		-->
