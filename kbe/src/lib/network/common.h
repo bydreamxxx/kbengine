@@ -58,6 +58,18 @@ extern int8 g_channelExternalEncryptType;
 // listen监听队列最大值
 extern uint32 g_SOMAXCONN;
 
+// UDP参数
+extern uint32 g_rudp_intWritePacketsQueueSize;
+extern uint32 g_rudp_intReadPacketsQueueSize;
+extern uint32 g_rudp_extWritePacketsQueueSize;
+extern uint32 g_rudp_extReadPacketsQueueSize;
+extern uint32 g_rudp_tickInterval;
+extern uint32 g_rudp_minRTO;
+extern uint32 g_rudp_mtu;
+extern uint32 g_rudp_missAcksResend;
+extern bool g_rudp_congestionControl;
+extern bool g_rudp_nodelay;
+
 // Certificate file required for HTTPS/WSS/SSL communication
 extern std::string g_sslCertificate;
 extern std::string g_sslPrivateKey;
