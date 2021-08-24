@@ -27,7 +27,8 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "network/address.h"
 #include "network/event_dispatcher.h"
 #include "network/packet_receiver.h"
-#include "network/listener_receiver.h"
+//#include "network/listener_receiver.h"
+#include "network/listener_tcp_receiver.h"
 #include "network/channel.h"
 #include "network/packet.h"
 #include "network/delayed_channels.h"
@@ -57,7 +58,7 @@ NetworkInterface::NetworkInterface(Network::EventDispatcher * pDispatcher,
 {
 	if(extlisteningPort_min != -1)
 	{
-		pExtListenerReceiver_ = new ListenerReceiver(extEndpoint_, Channel::EXTERNAL, *this);
+		pExtListenerReceiver_ = new ListenerTcpReceiver(extEndpoint_, Channel::EXTERNAL, *this);
 
 		this->initialize("EXTERNAL", htons(extlisteningPort_min), htons(extlisteningPort_max),
 			extlisteningInterface, &extEndpoint_, pExtListenerReceiver_, extrbuffer, extwbuffer);
@@ -72,7 +73,7 @@ NetworkInterface::NetworkInterface(Network::EventDispatcher * pDispatcher,
 
 	if (intlisteningPort_min != -1)
 	{
-		pIntListenerReceiver_ = new ListenerReceiver(intEndpoint_, Channel::INTERNAL, *this);
+		pIntListenerReceiver_ = new ListenerTcpReceiver(intEndpoint_, Channel::INTERNAL, *this);
 
 		this->initialize("INTERNAL", htons(intlisteningPort_min), htons(intlisteningPort_max),
 			intlisteningInterface, &intEndpoint_, pIntListenerReceiver_, intrbuffer, intwbuffer);

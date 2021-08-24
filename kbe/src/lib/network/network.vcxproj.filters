@@ -114,6 +114,9 @@
     <ClCompile Include="http_utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="listener_tcp_receiver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="address.h">
@@ -219,6 +222,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="websocket_packet_reader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="listener_tcp_receiver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

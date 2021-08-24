@@ -43,11 +43,12 @@ public:
 	ListenerReceiver(EndPoint & endpoint, Channel::Traits traits, NetworkInterface & networkInterface);
 	~ListenerReceiver();
 
-private:
 	virtual int handleInputNotification(int fd);
+
+protected:
 	EventDispatcher & dispatcher();
 
-private:
+protected:
 	EndPoint & endpoint_;
 	Channel::Traits traits_;
 	NetworkInterface & networkInterface_;

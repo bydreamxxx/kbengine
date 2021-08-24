@@ -188,6 +188,7 @@
     <ClCompile Include="http_utility.cpp" />
     <ClCompile Include="interface_defs.cpp" />
     <ClCompile Include="listener_receiver.cpp" />
+    <ClCompile Include="listener_tcp_receiver.cpp" />
     <ClCompile Include="network_stats.cpp" />
     <ClCompile Include="message_handler.cpp" />
     <ClCompile Include="network_interface.cpp" />
@@ -223,6 +224,7 @@
     <ClInclude Include="interface_defs.h" />
     <ClInclude Include="interfaces.h" />
     <ClInclude Include="listener_receiver.h" />
+    <ClInclude Include="listener_tcp_receiver.h" />
     <ClInclude Include="network_stats.h" />
     <ClInclude Include="message_handler.h" />
     <ClInclude Include="network_interface.h" />
