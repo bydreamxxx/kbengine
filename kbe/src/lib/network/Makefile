@@ -16,7 +16,7 @@ SRCS =					\
 	interface_defs		\
 	message_handler		\
 	listener_receiver	\
-	listener_tcp_reciever	\
+	listener_tcp_receiver	\
 	network_stats		\
 	network_interface	\
 	packet_filter		\
