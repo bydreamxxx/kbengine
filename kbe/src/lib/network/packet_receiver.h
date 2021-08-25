@@ -57,17 +57,16 @@ public:
 public:
 	PacketReceiver();
 	PacketReceiver(EndPoint & endpoint, NetworkInterface & networkInterface);
-	virtual ~PacketReceiver();
+	virtual ~PacketReceiver() = default;
 
 	virtual Reason processPacket(Channel* pChannel, Packet * pPacket);
 	virtual Reason processFilteredPacket(Channel* pChannel, Packet * pPacket) = 0;
 	EventDispatcher& dispatcher();
 
-	void onReclaimObject()
+	void onReclaimObject() noexcept override
 	{
 		pEndpoint_ = NULL;
 		pChannel_ = NULL;
-		pNetworkInterface_ = NULL;
 	}
 
 	virtual PacketReceiver::PACKET_RECEIVER_TYPE type() const
@@ -75,16 +74,16 @@ public:
 		return TCP_PACKET_RECEIVER;
 	}
 
-	void pEndPoint(EndPoint* pEndpoint) { 
+	void pEndPoint(EndPoint* pEndpoint) noexcept { 
 		pEndpoint_ = pEndpoint; 
 		pChannel_ = NULL;
 	}
 
-	EndPoint* pEndPoint() const { 
+	EndPoint* pEndPoint() const noexcept {
 		return pEndpoint_; 
 	}
 
-	virtual int handleInputNotification(int fd);
+	int handleInputNotification(int fd) override;
 
 	virtual Channel* getChannel();
 
