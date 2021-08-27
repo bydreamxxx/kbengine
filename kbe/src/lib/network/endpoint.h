@@ -89,7 +89,6 @@ public:
 	
 	INLINE int send(const void * gramData, int gramSize);
 	void send(Bundle * pBundle);
-	void sendto(Bundle * pBundle, u_int16_t networkPort, u_int32_t networkAddr = BROADCAST);
 
 	INLINE int recv(void * gramData, int gramSize);
 	bool recvAll(void * gramData, int gramSize);
@@ -122,8 +121,11 @@ public:
 	INLINE const char * c_str() const;
 	INLINE int getremotehostname(std::string * name) const;
 	
+	INLINE int sendto(void* gramData, int gramSize);
 	INLINE int sendto(void * gramData, int gramSize, u_int16_t networkPort, u_int32_t networkAddr = BROADCAST);
 	INLINE int sendto(void * gramData, int gramSize, struct sockaddr_in & sin);
+	void sendto(Bundle* pBundle, u_int16_t networkPort, u_int32_t networkAddr = BROADCAST);
+
 	INLINE int recvfrom(void * gramData, int gramSize, u_int16_t * networkPort, u_int32_t * networkAddr);
 	INLINE int recvfrom(void * gramData, int gramSize, struct sockaddr_in & sin);
 	
@@ -132,6 +134,12 @@ public:
 	INLINE void addr(u_int16_t newNetworkPort, u_int32_t newNetworkAddress);
 
 	bool waitSend();
+
+	void setSocketRef(KBESOCKET s)
+	{
+		socket_ = s;
+		isRefSocket_ = true;
+	}
 
 	bool setupSSL(int sslVersion, Packet* pPacket);
 	bool destroySSL();
@@ -145,6 +153,8 @@ protected:
 	Address address_;
 	SSL* sslHandle_;
 	SSL_CTX* sslContext_;
+
+	bool isRefSocket_;
 };
 
 }

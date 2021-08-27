@@ -36,6 +36,8 @@ socket_(-1)
 		address_.port = networkPort;
 	}
 
+	isRefSocket_ = false;
+
 	sslHandle_ = NULL;
 	sslContext_ = NULL;
 }
@@ -226,7 +228,14 @@ INLINE int EndPoint::close()
 #endif
 
 	if (socket_ == invalidSocket)
+		return 0;
+
+	// UDP模式下， socket是服务器listen的fd
+	// socket为引用模式
+	if (isRefSocket_)
 	{
+		this->setFileDescriptor(invalidSocket);
+		isRefSocket_ = false;
 		return 0;
 	}
 
@@ -330,6 +339,17 @@ INLINE int EndPoint::sendto(void * gramData, int gramSize,
 	sin.sin_addr.s_addr = networkAddr;
 
 	return this->sendto(gramData, gramSize, sin);
+}
+
+INLINE int EndPoint::sendto(void * gramData, int gramSize)
+{
+	sockaddr_in	sin;
+	sin.sin_family = AF_INET;
+	sin.sin_port = address_.port;
+	sin.sin_addr.s_addr = address_.ip;
+
+	return ::sendto(socket_, (char*)gramData, gramSize,
+		0, (sockaddr*)&sin, sizeof(sin));
 }
 
 INLINE int EndPoint::sendto(void * gramData, int gramSize,
