@@ -186,9 +186,11 @@
     <ClCompile Include="event_poller.cpp" />
     <ClCompile Include="fixed_messages.cpp" />
     <ClCompile Include="http_utility.cpp" />
+    <ClCompile Include="ikcp.c" />
     <ClCompile Include="interface_defs.cpp" />
     <ClCompile Include="listener_receiver.cpp" />
     <ClCompile Include="listener_tcp_receiver.cpp" />
+    <ClCompile Include="listener_udp_receiver.cpp" />
     <ClCompile Include="network_stats.cpp" />
     <ClCompile Include="message_handler.cpp" />
     <ClCompile Include="network_interface.cpp" />
@@ -221,10 +223,12 @@
     <ClInclude Include="event_poller.h" />
     <ClInclude Include="fixed_messages.h" />
     <ClInclude Include="http_utility.h" />
+    <ClInclude Include="ikcp.h" />
     <ClInclude Include="interface_defs.h" />
     <ClInclude Include="interfaces.h" />
     <ClInclude Include="listener_receiver.h" />
     <ClInclude Include="listener_tcp_receiver.h" />
+    <ClInclude Include="listener_udp_receiver.h" />
     <ClInclude Include="network_stats.h" />
     <ClInclude Include="message_handler.h" />
     <ClInclude Include="network_interface.h" />
@@ -253,6 +257,8 @@
     <None Include="error_reporter.inl" />
     <None Include="event_dispatcher.inl" />
     <None Include="listener_receiver.inl" />
+    <None Include="listener_tcp_receiver.inl" />
+    <None Include="listener_udp_receiver.inl" />
     <None Include="network_interface.inl" />
     <None Include="packet_filter.inl" />
     <None Include="packet_receiver.inl" />

@@ -17,6 +17,7 @@ SRCS =					\
 	message_handler		\
 	listener_receiver	\
 	listener_tcp_receiver	\
+	listener_udp_receiver	\
 	network_stats		\
 	network_interface	\
 	packet_filter		\
