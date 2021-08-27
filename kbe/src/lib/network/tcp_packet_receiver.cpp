@@ -107,7 +107,7 @@ bool TCPPacketReceiver::processRecv(bool expectingPacket)
 
 		if(rstate == PacketReceiver::RECV_STATE_INTERRUPT)
 		{
-			onGetError(pChannel, fmt::format("TCPPacketReceiver::processRecv(): errno={}\n", kbe_lasterror()));
+			onGetError(pChannel, fmt::format("TCPPacketReceiver::processRecv(): error={}\n", kbe_lasterror()));
 			return false;
 		}
 

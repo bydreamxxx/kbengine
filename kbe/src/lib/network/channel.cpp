@@ -75,13 +75,13 @@ void Channel::destroyObjPool()
 //-------------------------------------------------------------------------------------
 size_t Channel::getPoolObjectBytes()
 {
-	size_t bytes = sizeof(pNetworkInterface_) + sizeof(traits_) + sizeof(protocoltype_) +
+	size_t bytes = sizeof(pNetworkInterface_) + sizeof(traits_) + sizeof(protocoltype_) + sizeof(protocolSubtype_) +
 		sizeof(id_) + sizeof(inactivityTimerHandle_) + sizeof(inactivityExceptionPeriod_) + 
 		sizeof(lastReceivedTime_) + sizeof(lastTickBufferedReceives_) + sizeof(pPacketReader_) + (bundles_.size() * sizeof(Bundle*)) +
 		+ sizeof(flags_) + sizeof(numPacketsSent_) + sizeof(numPacketsReceived_) + sizeof(numBytesSent_) + sizeof(numBytesReceived_)
 		+ sizeof(lastTickBytesReceived_) + sizeof(lastTickBytesSent_) + sizeof(pFilter_) + sizeof(pEndPoint_) + sizeof(pPacketReceiver_) + sizeof(pPacketSender_)
 		+ sizeof(proxyID_) + strextra_.size() + sizeof(channelType_)
-		+ sizeof(componentID_) + sizeof(pMsgHandlers_) + condemnReason_.size();
+		+ sizeof(componentID_) + sizeof(pMsgHandlers_) + condemnReason_.size() + sizeof(kcpUpdateTimerHandle_) + sizeof(pKCP_) + sizeof(hasSetNextKcpUpdate_);
 
 	return bytes;
 }
@@ -106,11 +106,12 @@ void Channel::onEabledPoolObject()
 
 //-------------------------------------------------------------------------------------
 Channel::Channel(NetworkInterface & networkInterface,
-		const EndPoint * pEndPoint, Traits traits, ProtocolType pt,
+		const EndPoint * pEndPoint, Traits traits, ProtocolType pt, ProtocolSubType spt,
 		PacketFilterPtr pFilter, ChannelID id):
 	pNetworkInterface_(NULL),
 	traits_(traits),
 	protocoltype_(pt),
+	protocolSubtype_(spt),
 	id_(id),
 	inactivityTimerHandle_(),
 	inactivityExceptionPeriod_(0),
@@ -134,10 +135,13 @@ Channel::Channel(NetworkInterface & networkInterface,
 	componentID_(UNKNOWN_COMPONENT_TYPE),
 	pMsgHandlers_(NULL),
 	flags_(0),
+	pKCP_(NULL),
+	kcpUpdateTimerHandle_(),
+	hasSetNextKcpUpdate_(false),
 	condemnReason_()
 {
 	this->clearBundle();
-	initialize(networkInterface, pEndPoint, traits, pt, pFilter, id);
+	initialize(networkInterface, pEndPoint, traits, pt, spt, pFilter, id);
 }
 
 //-------------------------------------------------------------------------------------
@@ -145,6 +149,7 @@ Channel::Channel():
 	pNetworkInterface_(NULL),
 	traits_(EXTERNAL),
 	protocoltype_(PROTOCOL_TCP),
+	protocolSubtype_(SUB_PROTOCOL_DEFAULT),
 	id_(0),
 	inactivityTimerHandle_(),
 	inactivityExceptionPeriod_(0),
@@ -169,6 +174,9 @@ Channel::Channel():
 	componentID_(UNKNOWN_COMPONENT_TYPE),
 	pMsgHandlers_(NULL),
 	flags_(0),
+	pKCP_(NULL),
+	kcpUpdateTimerHandle_(),
+	hasSetNextKcpUpdate_(false),
 	condemnReason_()
 {
 	this->clearBundle();
@@ -186,11 +194,13 @@ bool Channel::initialize(NetworkInterface & networkInterface,
 		const EndPoint * pEndPoint, 
 		Traits traits, 
 		ProtocolType pt, 
+		ProtocolSubType spt,
 		PacketFilterPtr pFilter, 
 		ChannelID id)
 {
 	id_ = id;
 	protocoltype_ = pt;
+	protocolSubtype_ = spt;
 	traits_ = traits;
 	pFilter_ = pFilter;
 	pNetworkInterface_ = &networkInterface;
@@ -275,6 +285,98 @@ uint32 Channel::getRTT()
 		return 0;
 
 	return pEndPoint()->getRTT();
+}
+
+//-------------------------------------------------------------------------------------
+bool Channel::init_kcp()
+{
+	static IUINT32 convID = 1;
+
+	// 防止溢出，理论上正常使用不会用完
+	KBE_ASSERT(convID != 0);
+
+	if (id_ == 0)
+		id_ = convID++;
+
+	pKCP_ = ikcp_create((IUINT32)id_, (void*)this);
+	pKCP_->output = &Channel::kcp_output;
+
+	// 配置窗口大小：平均延迟200ms，每20ms发送一个包，
+	// 而考虑到丢包重发，设置最大收发窗口为128
+	int sndwnd = this->isExternal() ? Network::g_rudp_extWritePacketsQueueSize : Network::g_rudp_intWritePacketsQueueSize;
+	int rcvwnd = this->isExternal() ? Network::g_rudp_extReadPacketsQueueSize : Network::g_rudp_intReadPacketsQueueSize;
+
+	// nodelay-启用以后若干常规加速将启动
+	// interval为内部处理时钟，默认设置为 10ms
+	// resend为快速重传指标，设置为2
+	// nc为是否禁用常规流控，这里禁止
+	int nodelay = Network::g_rudp_nodelay ? 1 : 0;
+	int interval = Network::g_rudp_tickInterval;
+	int resend = Network::g_rudp_missAcksResend;
+	int disableNC = (!Network::g_rudp_congestionControl) ? 1 : 0;
+	int minrto = Network::g_rudp_minRTO;
+
+	if (this->isExternal() && Network::g_rudp_mtu > 0 && Network::g_rudp_mtu < (PACKET_MAX_SIZE_UDP * 4))
+	{
+		ikcp_setmtu(pKCP_, Network::g_rudp_mtu);
+	}
+	else
+	{
+		uint32 mtu = PACKET_MAX_SIZE_UDP - 72;
+		if (pKCP_->mtu != mtu)
+			ikcp_setmtu(pKCP_, mtu);
+	}
+
+	ikcp_wndsize(pKCP_, sndwnd, rcvwnd);
+	ikcp_nodelay(pKCP_, nodelay, interval, resend, disableNC);
+	pKCP_->rx_minrto = minrto;
+
+	pKCP_->writelog = &Channel::kcp_writeLog;
+
+	/*
+	pKCP_->logmask |= (IKCP_LOG_OUTPUT | IKCP_LOG_INPUT | IKCP_LOG_SEND | IKCP_LOG_RECV | IKCP_LOG_IN_DATA | IKCP_LOG_IN_ACK |
+		IKCP_LOG_IN_PROBE | IKCP_LOG_IN_WINS | IKCP_LOG_OUT_DATA | IKCP_LOG_OUT_ACK | IKCP_LOG_OUT_PROBE | IKCP_LOG_OUT_WINS);
+	*/
+
+	hasSetNextKcpUpdate_ = false;
+	addKcpUpdate();
+	return true;
+}
+
+
+//-------------------------------------------------------------------------------------
+bool Channel::fina_kcp()
+{
+	if (!pKCP_)
+		return true;
+
+	ikcp_release(pKCP_);
+	pKCP_ = NULL;
+
+	if (kcpUpdateTimerHandle_.isSet())
+		kcpUpdateTimerHandle_.cancel();
+
+	hasSetNextKcpUpdate_ = false;
+	return true;
+}
+
+//-------------------------------------------------------------------------------------
+void Channel::kcp_writeLog(const char* log, struct IKCPCB* kcp, void* user)
+{
+
+}
+
+//-------------------------------------------------------------------------------------
+int Channel::kcp_output(const char* buf, int len, ikcpcb* kcp, void* user)
+{
+	return 0;
+}
+
+
+//-------------------------------------------------------------------------------------
+void Channel::addKcpUpdate(int64 microseconds)
+{
+
 }
 
 //-------------------------------------------------------------------------------------

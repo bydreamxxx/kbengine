@@ -35,6 +35,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "network/bundle.h"
 #include "network/interfaces.h"
 #include "network/packet_filter.h"
+#include "network/ikcp.h"
 
 namespace KBEngine { 
 namespace Network
@@ -93,7 +94,8 @@ public:
 	Channel(NetworkInterface & networkInterface, 
 		const EndPoint * pEndPoint, 
 		Traits traits, 
-		ProtocolType pt = PROTOCOL_TCP, 
+		ProtocolType pt = PROTOCOL_TCP,
+		ProtocolSubType spt = SUB_PROTOCOL_DEFAULT,
 		PacketFilterPtr pFilter = NULL, 
 		ChannelID id = CHANNEL_ID_NULL);
 
@@ -223,6 +225,7 @@ public:
 		const EndPoint * pEndPoint, 
 		Traits traits, 
 		ProtocolType pt = PROTOCOL_TCP, 
+		ProtocolSubType spt = SUB_PROTOCOL_DEFAULT,
 		PacketFilterPtr pFilter = NULL, 
 		ChannelID id = CHANNEL_ID_NULL);
 
@@ -232,7 +235,22 @@ public:
 		return channelType_;;
 	}
 
+	bool init_kcp();
+	bool fina_kcp();
+	void kcpUpdate();
+	void addKcpUpdate(int64 microseconds = 1);
+
+	ProtocolType protocoltype() const { return protocoltype_; }
+	ProtocolSubType protocolSubtype() const { return protocolSubtype_; }
+
+	void protocoltype(ProtocolType v) { protocoltype_ = v; }
+	void protocolSubtype(ProtocolSubType v) { protocolSubtype_ = v; }
+
 	uint32 getRTT();
+
+private:
+	static int kcp_output(const char* buf, int len, ikcpcb* kcp, void* user);
+	static void kcp_writeLog(const char* log, struct IKCPCB* kcp, void* user);
 
 private:
 
@@ -249,6 +267,7 @@ private:
 	NetworkInterface * 			pNetworkInterface_;
 	Traits						traits_;
 	ProtocolType				protocoltype_;
+	ProtocolSubType				protocolSubtype_;
 		
 	ChannelID					id_;
 	
@@ -293,6 +312,10 @@ private:
 	KBEngine::Network::MessageHandlers* pMsgHandlers_;
 
 	uint32						flags_;
+
+	ikcpcb*						pKCP_;
+	TimerHandle					kcpUpdateTimerHandle_;
+	bool						hasSetNextKcpUpdate_;
 
 	std::string					condemnReason_;
 };

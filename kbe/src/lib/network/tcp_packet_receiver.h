@@ -50,9 +50,9 @@ public:
 	static void reclaimPoolObject(TCPPacketReceiver* obj);
 	static void destroyObjPool();
 	
-	TCPPacketReceiver():PacketReceiver(){}
+	TCPPacketReceiver() noexcept:PacketReceiver(){}
 	TCPPacketReceiver(EndPoint & endpoint, NetworkInterface & networkInterface);
-	~TCPPacketReceiver();
+	virtual ~TCPPacketReceiver();
 
 	Reason processFilteredPacket(Channel* pChannel, Packet * pPacket);
 
