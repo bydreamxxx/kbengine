@@ -76,7 +76,7 @@ Channel* PacketSender::getChannel()
 //-------------------------------------------------------------------------------------
 int PacketSender::handleOutputNotification(int fd)
 {
-	processSend(NULL);
+	processSend(NULL, 0);
 	return 0;
 }
 

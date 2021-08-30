@@ -145,6 +145,7 @@ public:
 	void stopSend();
 
 	void send(Bundle * pBundle = NULL);
+	void sendto(bool reliable = true, Bundle* pBundle = nullptr);
 	void delayedSend();
 
 

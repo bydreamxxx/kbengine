@@ -105,7 +105,7 @@ void TCPPacketSender::onGetError(Channel* pChannel, const std::string& err)
 }
 
 //-------------------------------------------------------------------------------------
-bool TCPPacketSender::processSend(Channel* pChannel)
+bool TCPPacketSender::processSend(Channel* pChannel, int userarg)
 {
 	bool noticed = pChannel == NULL;
 

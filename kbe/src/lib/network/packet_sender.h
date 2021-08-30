@@ -40,26 +40,48 @@ class EventDispatcher;
 class PacketSender : public OutputNotificationHandler, public PoolObject
 {
 public:
+	enum PACKET_SENDER_TYPE
+	{
+		TCP_PACKET_SENDER = 0,
+		UDP_PACKET_SENDER = 1
+	};
+
+public:
 	PacketSender();
 	PacketSender(EndPoint & endpoint, NetworkInterface & networkInterface);
 	virtual ~PacketSender();
 
 	EventDispatcher& dispatcher();
 
-	void onReclaimObject()
+	void onReclaimObject() override
 	{
 		pEndpoint_ = NULL;
 		pChannel_ = NULL;
 		pNetworkInterface_ = NULL;
 	}
 
-	void pEndPoint(EndPoint* pEndpoint) {
+	void pEndPoint(EndPoint* pEndpoint) noexcept {
 		pChannel_ = NULL;
 		pEndpoint_ = pEndpoint; 
 	}
 
-	EndPoint* pEndPoint() const { 
+	EndPoint* pEndPoint() const noexcept{ 
 		return pEndpoint_; 
+	}
+
+	NetworkInterface* pNetworkInterface() const noexcept
+	{
+		return pNetworkInterface_;
+	}
+
+	void pNetworkInterface(NetworkInterface* v) noexcept
+	{
+		pNetworkInterface_ = v;
+	}
+
+	virtual PACKET_SENDER_TYPE type() const noexcept
+	{
+		return TCP_PACKET_SENDER;
 	}
 
 	virtual int handleOutputNotification(int fd);
@@ -71,7 +93,7 @@ public:
 
 	virtual Channel* getChannel();
 
-	virtual bool processSend(Channel* pChannel) = 0;
+	virtual bool processSend(Channel* pChannel, int userarg) = 0;
 
 protected:
 	EndPoint* pEndpoint_;

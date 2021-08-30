@@ -363,13 +363,19 @@ bool Channel::fina_kcp()
 //-------------------------------------------------------------------------------------
 void Channel::kcp_writeLog(const char* log, struct IKCPCB* kcp, void* user)
 {
-
+	Channel* pChannel = (Channel*)user;
+	DEBUG_MSG(fmt::format("Channel::kcp_writeLog: {}, addr={}\n", log, pChannel->c_str()));
 }
 
 //-------------------------------------------------------------------------------------
 int Channel::kcp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
-	return 0;
+	Channel* pChannel = (Channel*)user;
+
+	if (pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
+		return -1;
+
+	return 0; //((class KCPPacketSender*)pChannel->pPacketSender())->kcp_output(buf, len, kcp, pChannel);
 }
 
 
@@ -623,7 +629,7 @@ void Channel::send(Bundle * pBundle)
 		if(pPacketSender_ == NULL)
 			pPacketSender_ = new TCPPacketSender(*pEndPoint_, *pNetworkInterface_);
 
-		pPacketSender_->processSend(this);
+		pPacketSender_->processSend(this, 0);
 
 		// 如果不能立即发送到系统缓冲区，那么交给poller处理
 		if(bundles_.size() > 0 && condemn() == 0 && !isDestroyed())
@@ -690,6 +696,48 @@ void Channel::send(Bundle * pBundle)
 					(void*)this, this->c_str(), bundleBytes, g_intSendWindowBytesOverflow));
 			}
 		}
+	}
+}
+
+void Channel::sendto(bool reliable, Bundle *pBundle) 
+{
+	KBE_ASSERT(protocoltype_ == PROTOCOL_UDP);
+
+	if (isDestroyed()) 
+	{
+		ERROR_MSG(fmt::format("channel::sendto({}): channel has destroyed.\n",
+			this->c_str()));
+
+		this->clearBundle();
+
+		if (pBundle)
+			Network::Bundle::reclaimPoolObject(pBundle);
+
+		return;
+	}
+
+	if (condemn() > 0)
+	{
+		if (pBundle)
+			Network::Bundle::reclaimPoolObject(pBundle);
+
+		return;
+	}
+
+	if (pBundle)
+	{
+		pBundle->pChannel(this);
+		pBundle->finiMessage(true);
+		bundles_.push_back(pBundle);
+	}
+
+	uint32 bundleSize = (uint32)bundles_.size();
+	if (bundleSize == 0)
+		return;
+
+	if (pPacketReader() == NULL)
+	{
+
 	}
 }
 
