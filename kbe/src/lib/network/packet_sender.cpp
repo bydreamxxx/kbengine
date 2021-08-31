@@ -81,7 +81,7 @@ int PacketSender::handleOutputNotification(int fd)
 }
 
 //-------------------------------------------------------------------------------------
-Reason PacketSender::processPacket(Channel* pChannel, Packet * pPacket)
+Reason PacketSender::processPacket(Channel* pChannel, Packet * pPacket, int userarg)
 {
 	if (pChannel != NULL)
 	{
