@@ -87,11 +87,11 @@ Reason PacketSender::processPacket(Channel* pChannel, Packet * pPacket, int user
 	{
 		if (pChannel->pFilter())
 		{
-			return pChannel->pFilter()->send(pChannel, *this, pPacket);
+			return pChannel->pFilter()->send(pChannel, *this, pPacket, userarg);
 		}
 	}
 
-	return this->processFilterPacket(pChannel, pPacket);
+	return this->processFilterPacket(pChannel, pPacket, userarg);
 }
 
 //-------------------------------------------------------------------------------------

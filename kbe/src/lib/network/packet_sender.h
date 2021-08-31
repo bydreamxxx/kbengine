@@ -87,7 +87,7 @@ public:
 	virtual int handleOutputNotification(int fd);
 
 	virtual Reason processPacket(Channel* pChannel, Packet * pPacket, int userarg);
-	virtual Reason processFilterPacket(Channel* pChannel, Packet * pPacket) = 0;
+	virtual Reason processFilterPacket(Channel* pChannel, Packet * pPacket, int userarg) = 0;
 
 	static Reason checkSocketErrors(const EndPoint * pEndpoint);
 

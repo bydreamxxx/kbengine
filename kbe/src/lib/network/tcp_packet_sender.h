@@ -59,7 +59,7 @@ public:
 	virtual bool processSend(Channel* pChannel, int userarg);
 
 protected:
-	virtual Reason processFilterPacket(Channel* pChannel, Packet * pPacket);
+	Reason processFilterPacket(Channel* pChannel, Packet * pPacket, int userarg) override;
 
 	uint8 sendfailCount_;
 };

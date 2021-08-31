@@ -209,7 +209,7 @@ bool TCPPacketSender::processSend(Channel* pChannel, int userarg)
 }
 
 //-------------------------------------------------------------------------------------
-Reason TCPPacketSender::processFilterPacket(Channel* pChannel, Packet * pPacket)
+Reason TCPPacketSender::processFilterPacket(Channel* pChannel, Packet * pPacket, int userarg)
 {
 	if(pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
 	{
