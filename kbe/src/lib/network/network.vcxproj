@@ -205,6 +205,7 @@
     <ClCompile Include="tcp_packet_sender.cpp" />
     <ClCompile Include="udp_packet.cpp" />
     <ClCompile Include="udp_packet_receiver.cpp" />
+    <ClCompile Include="udp_packet_sender.cpp" />
     <ClCompile Include="websocket_packet_filter.cpp" />
     <ClCompile Include="websocket_packet_reader.cpp" />
     <ClCompile Include="websocket_protocol.cpp" />
@@ -245,6 +246,7 @@
     <ClInclude Include="tcp_packet_sender.h" />
     <ClInclude Include="udp_packet.h" />
     <ClInclude Include="udp_packet_receiver.h" />
+    <ClInclude Include="udp_packet_sender.h" />
     <ClInclude Include="websocket_packet_filter.h" />
     <ClInclude Include="websocket_packet_reader.h" />
     <ClInclude Include="websocket_protocol.h" />
@@ -269,6 +271,7 @@
     <None Include="tcp_packet_sender.inl" />
     <None Include="udp_packet.inl" />
     <None Include="udp_packet_receiver.inl" />
+    <None Include="udp_packet_sender.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

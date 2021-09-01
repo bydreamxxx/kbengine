@@ -32,6 +32,7 @@ SRCS =					\
 	tcp_packet_sender	\
 	udp_packet			\
 	udp_packet_receiver	\
+	udp_packet_sender	\
 	ikcp			\
 	websocket_packet_reader	\
 	websocket_packet_filter	\
