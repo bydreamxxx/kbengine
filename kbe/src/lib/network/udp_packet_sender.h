@@ -29,6 +29,12 @@ public:
 	UDPPacketSender(class EndPoint& endpoint, class NetworkInterface& networkInterface);
 	~UDPPacketSender() = default;
 
+	UDPPacketSender(const UDPPacketSender&) = default;
+	UDPPacketSender& operator=(const UDPPacketSender&) = default;
+
+	UDPPacketSender(UDPPacketSender&&) = default;
+	UDPPacketSender& operator=(UDPPacketSender&&) = default;
+
 	bool processSend(Channel* pChannel, int userarg) override;
 
 	PacketSender::PACKET_SENDER_TYPE type() const noexcept
