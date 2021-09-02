@@ -37,7 +37,7 @@ public:
 
 	bool processSend(Channel* pChannel, int userarg) override;
 
-	PacketSender::PACKET_SENDER_TYPE type() const noexcept
+	PacketSender::PACKET_SENDER_TYPE type() const noexcept override
 	{
 		return UDP_PACKET_SENDER;
 	}
