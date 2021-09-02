@@ -188,6 +188,7 @@
     <ClCompile Include="http_utility.cpp" />
     <ClCompile Include="ikcp.c" />
     <ClCompile Include="interface_defs.cpp" />
+    <ClCompile Include="kcp_packet_sender.cpp" />
     <ClCompile Include="listener_receiver.cpp" />
     <ClCompile Include="listener_tcp_receiver.cpp" />
     <ClCompile Include="listener_udp_receiver.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="ikcp.h" />
     <ClInclude Include="interface_defs.h" />
     <ClInclude Include="interfaces.h" />
+    <ClInclude Include="kcp_packet_sender.h" />
     <ClInclude Include="listener_receiver.h" />
     <ClInclude Include="listener_tcp_receiver.h" />
     <ClInclude Include="listener_udp_receiver.h" />
@@ -258,6 +260,7 @@
     <None Include="endpoint.inl" />
     <None Include="error_reporter.inl" />
     <None Include="event_dispatcher.inl" />
+    <None Include="kcp_packet_sender.inl" />
     <None Include="listener_receiver.inl" />
     <None Include="listener_tcp_receiver.inl" />
     <None Include="listener_udp_receiver.inl" />

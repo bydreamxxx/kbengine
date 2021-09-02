@@ -222,6 +222,10 @@ public:
 
 	bool waitSend();
 
+	ikcpcb* pKCP() const {
+		return pKCP_;
+	}
+
 	bool initialize(NetworkInterface & networkInterface, 
 		const EndPoint * pEndPoint, 
 		Traits traits, 
