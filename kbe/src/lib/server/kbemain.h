@@ -158,7 +158,8 @@ inline bool checkComponentID(COMPONENT_TYPE componentType)
 
 template <class SERVER_APP>
 int kbeMainT(int argc, char * argv[], COMPONENT_TYPE componentType, 
-			int32 extlisteningPort_min = -1, int32 extlisteningPort_max = -1, const char * extlisteningInterface = "",
+			int32 extlisteningPort_min = -1, int32 extlisteningPort_max = -1, 
+			int32 extlisteningUdpPort_min = -1, int32 extlisteningUdpPort_max = -1, const char * extlisteningInterface = "",
 			int32 intlisteningPort_min = 0, int32 intlisteningPort_max = 0, const char * intlisteningInterface = "")
 {
 	int getuid = getUserUID();
@@ -197,7 +198,8 @@ int kbeMainT(int argc, char * argv[], COMPONENT_TYPE componentType,
 	Network::g_SOMAXCONN = g_kbeSrvConfig.tcp_SOMAXCONN(g_componentType);
 
 	Network::NetworkInterface networkInterface(&dispatcher, 
-		extlisteningPort_min, extlisteningPort_max, extlisteningInterface, 
+		extlisteningPort_min, extlisteningPort_max, 
+		extlisteningUdpPort_min, extlisteningUdpPort_max, extlisteningInterface,
 		channelCommon.extReadBufferSize, channelCommon.extWriteBufferSize,
 		intlisteningPort_min, intlisteningPort_max, intlisteningInterface,
 		channelCommon.intReadBufferSize, channelCommon.intWriteBufferSize);
@@ -205,7 +207,7 @@ int kbeMainT(int argc, char * argv[], COMPONENT_TYPE componentType,
 	DebugHelper::getSingleton().pNetworkInterface(&networkInterface);
 
 	g_kbeSrvConfig.updateInfos(true, componentType, g_componentID, 
-			networkInterface.intaddr(), networkInterface.extaddr());
+			networkInterface.intTcpAddr(), networkInterface.extTcpAddr());
 	
 	if (getuid <= 0)
 	{

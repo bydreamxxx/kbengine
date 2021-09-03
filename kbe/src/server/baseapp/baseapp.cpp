@@ -873,15 +873,15 @@ void Baseapp::onGetEntityAppFromDbmgr(Network::Channel* pChannel, int32 uid, std
 		(*pBundle).newMessage(BaseappInterface::onRegisterNewApp);
 		BaseappInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), 
 			getUserUID(), getUsername(), BASEAPP_TYPE, componentID_, startGlobalOrder_, startGroupOrder_,
-			this->networkInterface().intaddr().ip, this->networkInterface().intaddr().port, 
-			this->networkInterface().extaddr().ip, this->networkInterface().extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+			this->networkInterface().intTcpAddr().ip, this->networkInterface().intTcpAddr().port, 
+			this->networkInterface().extTcpAddr().ip, this->networkInterface().extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 		break;
 	case CELLAPP_TYPE:
 		(*pBundle).newMessage(CellappInterface::onRegisterNewApp);
 		CellappInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), 
 			getUserUID(), getUsername(), BASEAPP_TYPE, componentID_, startGlobalOrder_, startGroupOrder_,
-			this->networkInterface().intaddr().ip, this->networkInterface().intaddr().port, 
-			this->networkInterface().extaddr().ip, this->networkInterface().extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+			this->networkInterface().intTcpAddr().ip, this->networkInterface().intTcpAddr().port, 
+			this->networkInterface().extTcpAddr().ip, this->networkInterface().extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 		break;
 	default:
 		KBE_ASSERT(false && "no support!\n");
@@ -3642,9 +3642,9 @@ void Baseapp::receiveAcrossServerRequest(Network::Channel * pChannel, KBEngine::
 	}
 	else
 	{
-		(*bundle) << inet_ntoa((struct in_addr&)networkInterface().extaddr().ip);
+		(*bundle) << inet_ntoa((struct in_addr&)networkInterface().extTcpAddr().ip);
 	}
-	(*bundle) << ntohs(this->networkInterface().extaddr().port);
+	(*bundle) << ntohs(this->networkInterface().extTcpAddr().port);
 	pChannel->send(bundle);
 
 	PendingLoginMgr::AcrossPLInfos *infos = new PendingLoginMgr::AcrossPLInfos;
@@ -3802,10 +3802,10 @@ void Baseapp::registerPendingLogin(Network::Channel* pChannel, KBEngine::MemoryS
 	}
 	else
 	{
-		(*pBundle) << inet_ntoa((struct in_addr&)networkInterface().extaddr().ip);
+		(*pBundle) << inet_ntoa((struct in_addr&)networkInterface().extTcpAddr().ip);
 	}
 
-	(*pBundle) << this->networkInterface().extaddr().port;
+	(*pBundle) << this->networkInterface().extTcpAddr().port;
 	pChannel->send(pBundle);
 
 	PendingLoginMgr::PLInfos* ptinfos = new PendingLoginMgr::PLInfos;

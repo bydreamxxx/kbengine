@@ -652,7 +652,7 @@ void Loginapp::onReqCreateMailAccountResult(Network::Channel* pChannel, MemorySt
 			if(strlen((const char*)&g_kbeSrvConfig.getLoginApp().externalAddress) > 0)
 				http_host = g_kbeSrvConfig.getLoginApp().externalAddress;
 			else
-				http_host = inet_ntoa((struct in_addr&)Loginapp::getSingleton().networkInterface().extaddr().ip);
+				http_host = inet_ntoa((struct in_addr&)Loginapp::getSingleton().networkInterface().extTcpAddr().ip);
 		}
 		else
 		{
@@ -808,7 +808,7 @@ void Loginapp::onReqAccountResetPasswordCB(Network::Channel* pChannel, std::stri
 			if(strlen((const char*)&g_kbeSrvConfig.getLoginApp().externalAddress) > 0)
 				http_host = g_kbeSrvConfig.getLoginApp().externalAddress;
 			else
-				http_host = inet_ntoa((struct in_addr&)Loginapp::getSingleton().networkInterface().extaddr().ip);
+				http_host = inet_ntoa((struct in_addr&)Loginapp::getSingleton().networkInterface().extTcpAddr().ip);
 		}
 		else
 		{
@@ -849,7 +849,7 @@ void Loginapp::onReqAccountBindEmailAllocCallbackLoginapp(Network::Channel* pCha
 		if (strlen((const char*)&g_kbeSrvConfig.getLoginApp().externalAddress) > 0)
 			http_host = g_kbeSrvConfig.getLoginApp().externalAddress;
 		else
-			http_host = inet_ntoa((struct in_addr&)Loginapp::getSingleton().networkInterface().extaddr().ip);
+			http_host = inet_ntoa((struct in_addr&)Loginapp::getSingleton().networkInterface().extTcpAddr().ip);
 	}
 	else
 	{

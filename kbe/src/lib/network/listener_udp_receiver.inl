@@ -1,8 +1,7 @@
 
 namespace KBEngine {
-	namespace Network
-	{
+namespace Network
+{
 
-
-	}
-}
+}	// end namespace KBEngine
+}	// end namespace Network

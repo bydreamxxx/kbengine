@@ -543,8 +543,8 @@ bool InterfacesHandler_Interfaces::reconnect()
 	InterfacesInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(),
 		g_componentType, g_componentID,
 		g_componentGlobalOrder, g_componentGroupOrder,
-		Dbmgr::getSingleton().networkInterface().intaddr().ip, Dbmgr::getSingleton().networkInterface().intaddr().port,
-		Dbmgr::getSingleton().networkInterface().extaddr().ip, Dbmgr::getSingleton().networkInterface().extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+		Dbmgr::getSingleton().networkInterface().intTcpAddr().ip, Dbmgr::getSingleton().networkInterface().intTcpAddr().port,
+		Dbmgr::getSingleton().networkInterface().extTcpAddr().ip, Dbmgr::getSingleton().networkInterface().extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 
 	pInterfacesChannel->send(pBundle);
 

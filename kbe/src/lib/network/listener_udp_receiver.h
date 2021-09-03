@@ -12,22 +12,24 @@
 #include "network/listener_receiver.h"
 
 namespace KBEngine {
-	namespace Network
-	{
-		class ListenerUdpReceiver : public ListenerReceiver
-		{
-		public:
-			ListenerUdpReceiver(class EndPoint& endpoint, Channel::Traits traits, class NetworkInterface& networkInterface);
-			virtual ~ListenerUdpReceiver();
+namespace Network
+{
 
-		 int handleInputNotification(int fd) override;
+class ListenerUdpReceiver : public ListenerReceiver
+{
+public:
+	ListenerUdpReceiver(class EndPoint& endpoint, Channel::Traits traits, class NetworkInterface& networkInterface);
+	virtual ~ListenerUdpReceiver();
 
-		protected:
-			class UDPPacketReceiver* pUDPPacketReceiver_;
+	int handleInputNotification(int fd) override;
 
-		};
-	}
-}
+protected:
+	class UDPPacketReceiver* pUDPPacketReceiver_;
+
+};
+
+}	// end namespace KBEngine
+}	// end namespace Network
 
 #ifdef CODE_INLINE
 #include "listener_udp_receiver.inl"

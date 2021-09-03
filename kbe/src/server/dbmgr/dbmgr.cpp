@@ -303,8 +303,8 @@ void Dbmgr::findCentermgr()
 			Network::Bundle* pBundle = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 			(*pBundle).newMessage(CentermgrInterface::onAppRegister);
 			CentermgrInterface::onAppRegisterArgs7::staticAddToBundle((*pBundle), componentType_, componentID_,
-				networkInterface_.intaddr().ip, networkInterface_.intaddr().port,
-				networkInterface_.extaddr().ip, networkInterface_.extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+				networkInterface_.intTcpAddr().ip, networkInterface_.intTcpAddr().port,
+				networkInterface_.extTcpAddr().ip, networkInterface_.extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			pChannel->send(pBundle);
 
 			centermgrInfo_ = new Components::ComponentInfos;
