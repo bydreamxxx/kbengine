@@ -137,17 +137,23 @@ public:
 	Bundle* createSendBundle();
 	void clearBundle();
 
-	INLINE void pushBundle(Bundle* pBundle);
-
 	int32 bundlesLength();
 
-	bool sending() const { return (flags_ & FLAG_SENDING) > 0;}
+	INLINE void pushBundle(Bundle* pBundle);
+	
+	bool sending() const;
 	void stopSend();
 
 	void send(Bundle * pBundle = NULL);
-	void sendto(bool reliable = true, Bundle* pBundle = nullptr);
-	void delayedSend();
+	void sendto(bool reliable = true, Bundle* pBundle = NULL);
+	void sendCheck(uint32 bundleSize);
 
+	void delayedSend();
+	bool waitSend();
+
+	ikcpcb* pKCP() const {
+		return pKCP_;
+	}
 
 	INLINE PacketReader* pPacketReader() const;
 	INLINE PacketSender* pPacketSender() const;
@@ -220,12 +226,6 @@ public:
 	KBEngine::Network::MessageHandlers* pMsgHandlers() const { return pMsgHandlers_; }
 	void pMsgHandlers(KBEngine::Network::MessageHandlers* pMsgHandlers) { pMsgHandlers_ = pMsgHandlers; }
 
-	bool waitSend();
-
-	ikcpcb* pKCP() const {
-		return pKCP_;
-	}
-
 	bool initialize(NetworkInterface & networkInterface, 
 		const EndPoint * pEndPoint, 
 		Traits traits, 
@@ -261,7 +261,8 @@ private:
 
 	enum TimeOutType
 	{
-		TIMEOUT_INACTIVITY_CHECK
+		TIMEOUT_INACTIVITY_CHECK = 0,
+		KCP_UPDATE = 1
 	};
 
 	virtual void handleTimeout(TimerHandle, void * pUser);

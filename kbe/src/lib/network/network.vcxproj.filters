@@ -129,6 +129,12 @@
     <ClCompile Include="kcp_packet_sender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="kcp_packet_reader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kcp_packet_receiver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="address.h">
@@ -251,6 +257,12 @@
     <ClInclude Include="kcp_packet_sender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="kcp_packet_reader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kcp_packet_receiver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -312,6 +324,9 @@
       <Filter>Inline Files</Filter>
     </None>
     <None Include="kcp_packet_sender.inl">
+      <Filter>Inline Files</Filter>
+    </None>
+    <None Include="kcp_packet_receiver.inl">
       <Filter>Inline Files</Filter>
     </None>
   </ItemGroup>

@@ -35,10 +35,14 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "network/udp_packet_receiver.h"
 #include "network/tcp_packet.h"
 #include "network/udp_packet.h"
+#include "network/kcp_packet_sender.h"
+#include "network/kcp_packet_receiver.h"
+#include "network/kcp_packet_reader.h"
 #include "network/message_handler.h"
 #include "network/network_stats.h"
 #include "helper/profile.h"
 #include "common/ssl.h"
+
 
 namespace KBEngine { 
 namespace Network
@@ -232,26 +236,63 @@ bool Channel::initialize(NetworkInterface & networkInterface,
 		// 需要发送数据时再注册
 		// pPacketSender_ = new TCPPacketSender(*pEndPoint_, *pNetworkInterface_);
 		// pNetworkInterface_->dispatcher().registerWriteFileDescriptor(*pEndPoint_, pPacketSender_);
+
+		if (pPacketSender_ && pPacketSender_->type() != PacketSender::TCP_PACKET_SENDER)
+		{
+			KCPPacketSender::reclaimPoolObject((KCPPacketSender*)pPacketSender_);
+			pPacketSender_ = NULL;
+		}
 	}
 	else
 	{
-		if(pPacketReceiver_)
+		if (protocolSubtype_ == SUB_PROTOCOL_KCP)
 		{
-			if(pPacketReceiver_->type() == PacketReceiver::TCP_PACKET_RECEIVER)
+			if (pPacketReceiver_)
 			{
-				SAFE_RELEASE(pPacketReceiver_);
+				if (pPacketReceiver_->type() == PacketReceiver::TCP_PACKET_RECEIVER)
+				{
+					SAFE_RELEASE(pPacketReceiver_);
+					pPacketReceiver_ = new KCPPacketReceiver(*pEndPoint_, *pNetworkInterface_);
+				}
+			}
+			else
+			{
+				pPacketReceiver_ = new KCPPacketReceiver(*pEndPoint_, *pNetworkInterface_);
+			}
+
+			if (!init_kcp())
+			{
+				KBE_ASSERT(false);
+				return false;
+			}
+		}
+		else 
+		{
+			if (pPacketReceiver_)
+			{
+				if (pPacketReceiver_->type() == PacketReceiver::TCP_PACKET_RECEIVER)
+				{
+					SAFE_RELEASE(pPacketReceiver_);
+					pPacketReceiver_ = new UDPPacketReceiver(*pEndPoint_, *pNetworkInterface_);
+				}
+			}
+			else
+			{
 				pPacketReceiver_ = new UDPPacketReceiver(*pEndPoint_, *pNetworkInterface_);
 			}
 		}
-		else
-		{
-			pPacketReceiver_ = new UDPPacketReceiver(*pEndPoint_, *pNetworkInterface_);
-		}
 
 		KBE_ASSERT(pPacketReceiver_->type() == PacketReceiver::UDP_PACKET_RECEIVER);
+
+		if (pPacketSender_ && pPacketSender_->type() != PacketSender::UDP_PACKET_SENDER)
+		{
+			TCPPacketSender::reclaimPoolObject((TCPPacketSender*)pPacketSender_);
+			pPacketSender_ = NULL;
+		}
 	}
 
 	pPacketReceiver_->pEndPoint(pEndPoint_);
+
 	if(pPacketSender_)
 		pPacketSender_->pEndPoint(pEndPoint_);
 
@@ -281,6 +322,9 @@ bool Channel::finalise()
 //-------------------------------------------------------------------------------------
 uint32 Channel::getRTT()
 {
+	if (protocolSubtype_ == SUB_PROTOCOL_KCP && pKCP_)
+		return (uint32)(pKCP_->rx_srtt/* BSD标准，毫秒 */) * 1000;
+
 	if (!pEndPoint())
 		return 0;
 
@@ -288,6 +332,24 @@ uint32 Channel::getRTT()
 }
 
 //-------------------------------------------------------------------------------------
+IUINT32 createNewKCPID(IUINT32 arrayIndex)
+{
+	IUINT32 sessionID = 0;
+
+	IUINT32 index = arrayIndex;
+	index <<= 16;
+
+	sessionID |= index;
+
+	IUINT32 rnd = 0;
+
+	srand(getSystemTime());
+	rnd = (IUINT32)(rand() << 16);
+
+	sessionID |= rnd;
+	return sessionID;
+}
+
 bool Channel::init_kcp()
 {
 	static IUINT32 convID = 1;
@@ -375,14 +437,54 @@ int Channel::kcp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 	if (pChannel->condemn() == Channel::FLAG_CONDEMN_AND_DESTROY)
 		return -1;
 
-	return 0; //((class KCPPacketSender*)pChannel->pPacketSender())->kcp_output(buf, len, kcp, pChannel);
+	return ((KCPPacketSender*)pChannel->pPacketSender())->kcp_output(buf, len, kcp, pChannel);
 }
-
 
 //-------------------------------------------------------------------------------------
 void Channel::addKcpUpdate(int64 microseconds)
 {
+	//AUTO_SCOPED_PROFILE("addKcpUpdate");
 
+	if (microseconds <= 1)
+	{
+		// 避免send等操作导致多次添加和取消timer
+		if (!hasSetNextKcpUpdate_)
+			hasSetNextKcpUpdate_ = true;
+		else
+			return;
+	}
+	else
+	{
+		hasSetNextKcpUpdate_ = false;
+	}
+
+	if (kcpUpdateTimerHandle_.isSet())
+	{
+		kcpUpdateTimerHandle_.cancel();
+	}
+
+	kcpUpdateTimerHandle_ = this->dispatcher().addTimer(microseconds, this, (void*)KCP_UPDATE);
+}
+
+//-------------------------------------------------------------------------------------
+void Channel::kcpUpdate()
+{
+	//AUTO_SCOPED_PROFILE("kcpUpdate");
+
+	uint32 current = kbe_clock();
+	ikcp_update(pKCP_, current);
+
+	uint32 nextUpdateKcpTime = ikcp_check(pKCP_, current) - current;
+
+	if (nextUpdateKcpTime > 0)
+	{
+		addKcpUpdate(nextUpdateKcpTime * 1000);
+	}
+	else
+	{
+		kcpUpdateTimerHandle_.cancel();
+		hasSetNextKcpUpdate_ = false;
+	}
 }
 
 //-------------------------------------------------------------------------------------
@@ -493,6 +595,11 @@ void Channel::clearState( bool warnOnDiscard /*=false*/ )
 	if (pPacketReader_)
 		pPacketReader_->reset();
 
+	if (!fina_kcp())
+	{
+		KBE_ASSERT(false);
+	}
+
 	flags_ = 0;
 	pFilter_ = NULL;
 
@@ -579,14 +686,82 @@ void Channel::handleTimeout(TimerHandle, void * arg)
 
 			break;
 		}
+		case KCP_UPDATE:
+		{
+			kcpUpdate();
+			break;
+		}
 		default:
 			break;
 	}
 }
 
+void Channel::sendto(bool reliable, Bundle* pBundle)
+{
+	KBE_ASSERT(protocoltype_ == PROTOCOL_UDP);
+
+	if (isDestroyed())
+	{
+		ERROR_MSG(fmt::format("Channel::sendto({}): channel has destroyed.\n",
+			this->c_str()));
+
+		this->clearBundle();
+
+		if (pBundle)
+			Network::Bundle::reclaimPoolObject(pBundle);
+
+		return;
+	}
+
+	if (condemn() > 0)
+	{
+		if (pBundle)
+			Network::Bundle::reclaimPoolObject(pBundle);
+
+		return;
+	}
+
+	if (pBundle)
+	{
+		pBundle->pChannel(this);
+		pBundle->finiMessage(true);
+		bundles_.push_back(pBundle);
+	}
+
+	uint32 bundleSize = (uint32)bundles_.size();
+	if (bundleSize == 0)
+		return;
+
+	if (pPacketSender_ == NULL)
+	{
+		pPacketSender_ = KCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
+		pPacketSender_->pEndPoint(pEndPoint_);
+		pPacketSender_->pNetworkInterface(pNetworkInterface_);
+	}
+	else
+	{
+		if (pPacketSender_->type() != PacketSender::UDP_PACKET_SENDER)
+		{
+			TCPPacketSender::reclaimPoolObject((TCPPacketSender*)pPacketSender_);
+			pPacketSender_ = KCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
+			pPacketSender_->pEndPoint(pEndPoint_);
+			pPacketSender_->pNetworkInterface(pNetworkInterface_);
+		}
+	}
+
+	pPacketSender_->processSend(this, reliable ? 1 : 0);
+	sendCheck(bundleSize);
+}
+
 //-------------------------------------------------------------------------------------
 void Channel::send(Bundle * pBundle)
 {
+	if (protocoltype_ == PROTOCOL_UDP)
+	{
+		sendto(true, pBundle);
+		return;
+	}
+
 	if (isDestroyed())
 	{
 		ERROR_MSG(fmt::format("Channel::send({}): channel has destroyed.\n", 
@@ -626,8 +801,22 @@ void Channel::send(Bundle * pBundle)
 
 	if(!sending())
 	{
-		if(pPacketSender_ == NULL)
-			pPacketSender_ = new TCPPacketSender(*pEndPoint_, *pNetworkInterface_);
+		if (pPacketSender_ == NULL)
+		{
+			pPacketSender_ = TCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
+			pPacketSender_->pEndPoint(pEndPoint_);
+			pPacketSender_->pNetworkInterface(pNetworkInterface_);
+		}
+		else
+		{
+			if (pPacketSender_->type() != PacketSender::TCP_PACKET_SENDER)
+			{
+				KCPPacketSender::reclaimPoolObject((KCPPacketSender*)pPacketSender_);
+				pPacketSender_ = TCPPacketSender::createPoolObject(OBJECTPOOL_POINT);
+				pPacketSender_->pEndPoint(pEndPoint_);
+				pPacketSender_->pNetworkInterface(pNetworkInterface_);
+			}
+		}
 
 		pPacketSender_->processSend(this, 0);
 
@@ -639,32 +828,38 @@ void Channel::send(Bundle * pBundle)
 		}
 	}
 
-	if(this->isExternal())
+	sendCheck(bundleSize);
+}
+
+//-------------------------------------------------------------------------------------
+void Channel::sendCheck(uint32 bundleSize)
+{
+	if (this->isExternal())
 	{
 		if (Network::g_sendWindowMessagesOverflowCritical > 0 && bundleSize > Network::g_sendWindowMessagesOverflowCritical)
 		{
-			WARNING_MSG(fmt::format("Channel::send[{:p}]: external channel({}), send-window bufferedMessages has overflowed({} > {}).\n",
+			WARNING_MSG(fmt::format("Channel::sendCheck[{:p}]: external channel({}), send-window bufferedMessages has overflowed({} > {}).\n",
 				(void*)this, this->c_str(), bundleSize, Network::g_sendWindowMessagesOverflowCritical));
 
 			if (Network::g_extSendWindowMessagesOverflow > 0 &&
-				bundleSize >  Network::g_extSendWindowMessagesOverflow)
+				bundleSize > Network::g_extSendWindowMessagesOverflow)
 			{
-				ERROR_MSG(fmt::format("Channel::send[{:p}]: external channel({}), send-window bufferedMessages has overflowed({} > {}), Try adjusting the kbengine[_defs].xml->windowOverflow->send->messages.\n",
+				ERROR_MSG(fmt::format("Channel::sendCheck[{:p}]: external channel({}), send-window bufferedMessages has overflowed({} > {}), Try adjusting the kbengine[_defs].xml->windowOverflow->send->messages.\n",
 					(void*)this, this->c_str(), bundleSize, Network::g_extSendWindowMessagesOverflow));
 
-				this->condemn("Channel::send: send-window bufferedMessages has overflowed!");
+				this->condemn("Channel::sendCheck: send-window bufferedMessages has overflowed!");
 			}
 		}
 
 		if (g_extSendWindowBytesOverflow > 0)
 		{
 			uint32 bundleBytes = bundlesLength();
-			if(bundleBytes >= g_extSendWindowBytesOverflow)
+			if (bundleBytes >= g_extSendWindowBytesOverflow)
 			{
-				ERROR_MSG(fmt::format("Channel::send[{:p}]: external channel({}), bufferedBytes has overflowed({} > {}), Try adjusting the kbengine[_defs].xml->windowOverflow->send->bytes.\n",
+				ERROR_MSG(fmt::format("Channel::sendCheck[{:p}]: external channel({}), bufferedBytes has overflowed({} > {}), Try adjusting the kbengine[_defs].xml->windowOverflow->send->bytes.\n",
 					(void*)this, this->c_str(), bundleBytes, g_extSendWindowBytesOverflow));
 
-				this->condemn("Channel::send: send-window bufferedBytes has overflowed!");
+				this->condemn("Channel::sendCheck: send-window bufferedBytes has overflowed!");
 			}
 		}
 	}
@@ -675,14 +870,14 @@ void Channel::send(Bundle * pBundle)
 			if (Network::g_intSendWindowMessagesOverflow > 0 &&
 				bundleSize > Network::g_intSendWindowMessagesOverflow)
 			{
-				ERROR_MSG(fmt::format("Channel::send[{:p}]: internal channel({}), send-window bufferedMessages has overflowed({} > {}).\n",
+				ERROR_MSG(fmt::format("Channel::sendCheck[{:p}]: internal channel({}), send-window bufferedMessages has overflowed({} > {}).\n",
 					(void*)this, this->c_str(), bundleSize, Network::g_intSendWindowMessagesOverflow));
 
-				this->condemn("Channel::send: send-window bufferedMessages has overflowed!");
+				this->condemn("Channel::sendCheck: send-window bufferedMessages has overflowed!");
 			}
 			else
 			{
-				WARNING_MSG(fmt::format("Channel::send[{:p}]: internal channel({}), send-window bufferedMessages has overflowed({} > {}).\n",
+				WARNING_MSG(fmt::format("Channel::sendCheck[{:p}]: internal channel({}), send-window bufferedMessages has overflowed({} > {}).\n",
 					(void*)this, this->c_str(), bundleSize, Network::g_sendWindowMessagesOverflowCritical));
 			}
 		}
@@ -692,52 +887,10 @@ void Channel::send(Bundle * pBundle)
 			uint32 bundleBytes = bundlesLength();
 			if (bundleBytes >= g_intSendWindowBytesOverflow)
 			{
-				WARNING_MSG(fmt::format("Channel::send[{:p}]: internal channel({}), bufferedBytes has overflowed({} > {}).\n",
+				WARNING_MSG(fmt::format("Channel::sendCheck[{:p}]: internal channel({}), bufferedBytes has overflowed({} > {}).\n",
 					(void*)this, this->c_str(), bundleBytes, g_intSendWindowBytesOverflow));
 			}
 		}
-	}
-}
-
-void Channel::sendto(bool reliable, Bundle *pBundle) 
-{
-	KBE_ASSERT(protocoltype_ == PROTOCOL_UDP);
-
-	if (isDestroyed()) 
-	{
-		ERROR_MSG(fmt::format("channel::sendto({}): channel has destroyed.\n",
-			this->c_str()));
-
-		this->clearBundle();
-
-		if (pBundle)
-			Network::Bundle::reclaimPoolObject(pBundle);
-
-		return;
-	}
-
-	if (condemn() > 0)
-	{
-		if (pBundle)
-			Network::Bundle::reclaimPoolObject(pBundle);
-
-		return;
-	}
-
-	if (pBundle)
-	{
-		pBundle->pChannel(this);
-		pBundle->finiMessage(true);
-		bundles_.push_back(pBundle);
-	}
-
-	uint32 bundleSize = (uint32)bundles_.size();
-	if (bundleSize == 0)
-		return;
-
-	if (pPacketReader() == NULL)
-	{
-
 	}
 }
 
@@ -750,6 +903,17 @@ void Channel::stopSend()
 	flags_ &= ~FLAG_SENDING;
 
 	pNetworkInterface_->dispatcher().deregisterWriteFileDescriptor(*pEndPoint_);
+}
+
+//-------------------------------------------------------------------------------------
+bool Channel::sending() const
+{
+	if (pKCP())
+	{
+		return ikcp_waitsnd(pKCP()) > 0;
+	}
+
+	return (flags_ & FLAG_SENDING) > 0;
 }
 
 //-------------------------------------------------------------------------------------
@@ -890,49 +1054,87 @@ bool Channel::handshake(Packet* pPacket)
 	if(hasHandshake())
 		return false;
 
-	// https/wss
-	if (!pEndPoint_->isSSL())
+	if (protocoltype_ == PROTOCOL_TCP)
 	{
-		int sslVersion = KB_SSL::isSSLProtocal(pPacket);
-		if (sslVersion != -1)
+		// https/wss
+		if (!pEndPoint_->isSSL())
 		{
-			// 无论成功和失败都返回true，让外部回收数据包并继续等待握手
-			pEndPoint_->setupSSL(sslVersion, pPacket);
+			int sslVersion = KB_SSL::isSSLProtocal(pPacket);
+			if (sslVersion != -1)
+			{
+				// 无论成功和失败都返回true，让外部回收数据包并继续等待握手
+				pEndPoint_->setupSSL(sslVersion, pPacket);
 
-			if (pPacket->length() == 0)
+				if (pPacket->length() == 0)
+					return true;
+			}
+		}
+		else
+		{
+			// 如果开启了ssl通讯，因目前只支持wss，所以必须等待websocket握手成功才算通过
+			if (!websocket::WebSocketProtocol::isWebSocketProtocol(pPacket))
 				return true;
+		}
+
+		flags_ |= FLAG_HANDSHAKE;
+
+		// 此处判定是否为websocket或者其他协议的握手
+		if (websocket::WebSocketProtocol::isWebSocketProtocol(pPacket))
+		{
+			channelType_ = CHANNEL_WEB;
+			if (websocket::WebSocketProtocol::handshake(this, pPacket))
+			{
+				if (!pPacketReader_ || pPacketReader_->type() != PacketReader::PACKET_READER_TYPE_WEBSOCKET)
+				{
+					SAFE_RELEASE(pPacketReader_);
+					pPacketReader_ = new WebSocketPacketReader(this);
+				}
+
+				pFilter_ = new WebSocketPacketFilter(this);
+				DEBUG_MSG(fmt::format("Channel::handshake: websocket({}) successfully!\n", this->c_str()));
+
+				// 无论如何都返回true，直到握手成功
+				return true;
+			}
+			else
+			{
+				DEBUG_MSG(fmt::format("Channel::handshake: websocket({}) error!\n", this->c_str()));
+			}
 		}
 	}
 	else
 	{
-		// 如果开启了ssl通讯，因目前只支持wss，所以必须等待websocket握手成功才算通过
-		if (!websocket::WebSocketProtocol::isWebSocketProtocol(pPacket))
-			return true;
-	}
-
-	flags_ |= FLAG_HANDSHAKE;
-
-	// 此处判定是否为websocket或者其他协议的握手
-	if(websocket::WebSocketProtocol::isWebSocketProtocol(pPacket))
-	{
-		channelType_ = CHANNEL_WEB;
-		if(websocket::WebSocketProtocol::handshake(this, pPacket))
+		if (protocolSubtype_ == SUB_PROTOCOL_KCP)
 		{
-			if(!pPacketReader_ || pPacketReader_->type() != PacketReader::PACKET_READER_TYPE_WEBSOCKET)
-			{
-				SAFE_RELEASE(pPacketReader_);
-				pPacketReader_ = new WebSocketPacketReader(this);
-			}
+			std::string hello;
+			(*pPacket) >> hello;
+			pPacket->clear(false);
 
-			pFilter_ = new WebSocketPacketFilter(this);
-			DEBUG_MSG(fmt::format("Channel::handshake: websocket({}) successfully!\n", this->c_str()));
+			if (hello != UDP_HELLO)
+			{
+				// 这里不做处理，防止客户端在断线感应期间可能会发送一些包， 导致新的连接被握手失败从而再也无法通讯
+				//DEBUG_MSG(fmt::format("Channel::handshake: kcp({}) error!\n", this->c_str()));
+				//this->condemn();
+			}
+			else
+			{
+				UDPPacket* pHelloAckUDPPacket = UDPPacket::createPoolObject(OBJECTPOOL_POINT);
+				(*pHelloAckUDPPacket) << Network::UDP_HELLO_ACK << KBEVersion::versionString() << (uint32)id();
+				pEndPoint()->sendto(pHelloAckUDPPacket->data(), pHelloAckUDPPacket->length());
+				UDPPacket::reclaimPoolObject(pHelloAckUDPPacket);
+
+				if (!pPacketReader_ || pPacketReader_->type() != PacketReader::PACKET_READER_TYPE_KCP)
+				{
+					SAFE_RELEASE(pPacketReader_);
+					pPacketReader_ = new KCPPacketReader(this);
+				}
+
+				DEBUG_MSG(fmt::format("Channel::handshake: kcp({}) successfully!\n", this->c_str()));
+				flags_ |= FLAG_HANDSHAKE;
+			}
 
 			// 无论如何都返回true，直到握手成功
 			return true;
-		}
-		else
-		{
-			DEBUG_MSG(fmt::format("Channel::handshake: websocket({}) error!\n", this->c_str()));
 		}
 	}
 

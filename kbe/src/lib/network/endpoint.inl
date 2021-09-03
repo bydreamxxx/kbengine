@@ -54,6 +54,8 @@ socket_(-1)
 		address_ = address;
 	}
 
+	isRefSocket_ = false;
+
 	sslHandle_ = NULL;
 	sslContext_ = NULL;
 }
