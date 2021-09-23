@@ -3806,6 +3806,7 @@ void Baseapp::registerPendingLogin(Network::Channel* pChannel, KBEngine::MemoryS
 	}
 
 	(*pBundle) << this->networkInterface().extTcpAddr().port;
+	(*pBundle) << this->networkInterface().extUdpAddr().port;
 	pChannel->send(pBundle);
 
 	PendingLoginMgr::PLInfos* ptinfos = new PendingLoginMgr::PLInfos;
