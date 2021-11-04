@@ -38,8 +38,7 @@ namespace Network
 //-------------------------------------------------------------------------------------
 PacketReceiver::PacketReceiver() :
 	pEndpoint_(NULL),
-	pChannel_(NULL),
-	pNetworkInterface_(NULL)
+	pChannel_(NULL)
 {
 }
 
@@ -49,11 +48,6 @@ PacketReceiver::PacketReceiver(EndPoint & endpoint,
 	pEndpoint_(&endpoint),
 	pChannel_(NULL),
 	pNetworkInterface_(&networkInterface)
-{
-}
-
-//-------------------------------------------------------------------------------------
-PacketReceiver::~PacketReceiver()
 {
 }
 

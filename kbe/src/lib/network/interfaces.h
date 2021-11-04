@@ -32,7 +32,14 @@ class MessageHandler;
 class InputNotificationHandler
 {
 public:
-	virtual ~InputNotificationHandler() {};
+	virtual ~InputNotificationHandler() = default;
+	InputNotificationHandler() = default;
+	InputNotificationHandler(const InputNotificationHandler&) = default;
+	InputNotificationHandler& operator=(const InputNotificationHandler&) = default;
+
+	InputNotificationHandler(InputNotificationHandler&&) = default;
+	InputNotificationHandler& operator=(InputNotificationHandler&&) = default;
+
 	virtual int handleInputNotification(int fd) = 0;
 };
 

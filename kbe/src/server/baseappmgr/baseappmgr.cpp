@@ -717,7 +717,7 @@ void Baseappmgr::registerPendingAccountToBaseappAddr(Network::Channel* pChannel,
 	if(cinfos == NULL || cinfos->pChannel == NULL)
 	{
 		ERROR_MSG(fmt::format("Baseappmgr::registerPendingAccountToBaseappAddr: not found baseapp({}).\n", componentID));
-		sendAllocatedBaseappAddr(pChannel, loginName, accountName, "", 0);
+		sendAllocatedBaseappAddr(pChannel, loginName, accountName, "", 0, 0);
 		return;
 	}
 	
@@ -729,15 +729,16 @@ void Baseappmgr::registerPendingAccountToBaseappAddr(Network::Channel* pChannel,
 }
 
 //-------------------------------------------------------------------------------------
-void Baseappmgr::onPendingAccountGetBaseappAddr(Network::Channel* pChannel, 
-							  std::string& loginName, std::string& accountName, std::string& addr, uint16 port)
+void Baseappmgr::onPendingAccountGetBaseappAddr(Network::Channel* pChannel, std::string& loginName, 
+												std::string& accountName, std::string& addr, 
+												uint16 tcp_port, uint16 udp_port)
 {
-	sendAllocatedBaseappAddr(pChannel, loginName, accountName, addr, port);
+	sendAllocatedBaseappAddr(pChannel, loginName, accountName, addr, tcp_port, udp_port);
 }
 
 //-------------------------------------------------------------------------------------
 void Baseappmgr::sendAllocatedBaseappAddr(Network::Channel* pChannel, 
-							  std::string& loginName, std::string& accountName, const std::string& addr, uint16 port)
+							  std::string& loginName, std::string& accountName, const std::string& addr, uint16 tcp_port, uint16 udp_port)
 {
 	KBEUnordered_map< std::string, COMPONENT_ID >::iterator iter = pending_logins_.find(loginName);
 	if(iter == pending_logins_.end())
@@ -756,8 +757,8 @@ void Baseappmgr::sendAllocatedBaseappAddr(Network::Channel* pChannel,
 	Network::Bundle* pBundleToLoginapp = Network::Bundle::createPoolObject(OBJECTPOOL_POINT);
 	(*pBundleToLoginapp).newMessage(LoginappInterface::onLoginAccountQueryBaseappAddrFromBaseappmgr);
 
-	LoginappInterface::onLoginAccountQueryBaseappAddrFromBaseappmgrArgs4::staticAddToBundle((*pBundleToLoginapp), loginName, 
-		accountName, addr, port);
+	LoginappInterface::onLoginAccountQueryBaseappAddrFromBaseappmgrArgs5::staticAddToBundle((*pBundleToLoginapp), loginName, 
+		accountName, addr, tcp_port, udp_port);
 
 	cinfos->pChannel->send(pBundleToLoginapp);
 	pending_logins_.erase(iter);

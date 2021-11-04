@@ -247,8 +247,8 @@ void Interfaces::onRegisterNewApp(Network::Channel* pChannel, int32 uid, std::st
 		InterfacesInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(),
 			g_componentType, g_componentID,
 			g_componentGlobalOrder, g_componentGroupOrder,
-			networkInterface().intaddr().ip,networkInterface().intaddr().port,
-			networkInterface().extaddr().ip, networkInterface().extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+			networkInterface().intTcpAddr().ip,networkInterface().intTcpAddr().port,
+			networkInterface().extTcpAddr().ip, networkInterface().extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 
 		pChannel->send(pBundle);
 	}

@@ -17,7 +17,12 @@ class ListenerTcpReceiver : public ListenerReceiver
 public:
 	ListenerTcpReceiver(EndPoint &endpoint, Channel::Traits traits, NetworkInterface &networkInterface);
 	
-	virtual ~ListenerTcpReceiver();
+	virtual ~ListenerTcpReceiver() = default;
+	ListenerTcpReceiver(const ListenerTcpReceiver&) = default;
+	ListenerTcpReceiver& operator=(const ListenerTcpReceiver&) = default;
+
+	ListenerTcpReceiver(ListenerTcpReceiver&&) = default;
+	ListenerTcpReceiver& operator=(ListenerTcpReceiver&&) = default;
 
 	int handleInputNotification(int fd) override;
 };

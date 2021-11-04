@@ -1,5 +1,9 @@
 
 #include "network/listener_tcp_receiver.h"
+#ifndef CODE_INLINE
+#include "listener_tcp_receiver.inl"
+#endif
+
 #include "network/endpoint.h"
 #include "network/network_interface.h"
 #include "network/error_reporter.h"
@@ -10,10 +14,6 @@ namespace Network {
 ListenerTcpReceiver::ListenerTcpReceiver(EndPoint& endpoint, Channel::Traits traits, NetworkInterface& networkInterface)
 	:ListenerReceiver(endpoint, traits, networkInterface)
 {}
-
-ListenerTcpReceiver::~ListenerTcpReceiver()
-{}
-
 
 int ListenerTcpReceiver::handleInputNotification(int fd)
 {

@@ -490,8 +490,8 @@ int Components::connectComponent(COMPONENT_TYPE componentType, int32 uid, COMPON
 				BaseappmgrInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(), 
 					componentType_, componentID_, 
 					g_componentGlobalOrder, g_componentGroupOrder,
-					_pNetworkInterface->intaddr().ip, _pNetworkInterface->intaddr().port,
-					_pNetworkInterface->extaddr().ip, _pNetworkInterface->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+					_pNetworkInterface->intTcpAddr().ip, _pNetworkInterface->intTcpAddr().port,
+					_pNetworkInterface->extTcpAddr().ip, _pNetworkInterface->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			}
 			else if(componentType == CELLAPPMGR_TYPE)
 			{
@@ -500,8 +500,8 @@ int Components::connectComponent(COMPONENT_TYPE componentType, int32 uid, COMPON
 				CellappmgrInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(), 
 					componentType_, componentID_, 
 					g_componentGlobalOrder, g_componentGroupOrder,
-					_pNetworkInterface->intaddr().ip, _pNetworkInterface->intaddr().port,
-					_pNetworkInterface->extaddr().ip, _pNetworkInterface->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+					_pNetworkInterface->intTcpAddr().ip, _pNetworkInterface->intTcpAddr().port,
+					_pNetworkInterface->extTcpAddr().ip, _pNetworkInterface->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			}
 			else if(componentType == CELLAPP_TYPE)
 			{
@@ -510,8 +510,8 @@ int Components::connectComponent(COMPONENT_TYPE componentType, int32 uid, COMPON
 				CellappInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(), 
 					componentType_, componentID_, 
 					g_componentGlobalOrder, g_componentGroupOrder,
-						_pNetworkInterface->intaddr().ip, _pNetworkInterface->intaddr().port,
-					_pNetworkInterface->extaddr().ip, _pNetworkInterface->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+						_pNetworkInterface->intTcpAddr().ip, _pNetworkInterface->intTcpAddr().port,
+					_pNetworkInterface->extTcpAddr().ip, _pNetworkInterface->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			}
 			else if(componentType == BASEAPP_TYPE)
 			{
@@ -520,8 +520,8 @@ int Components::connectComponent(COMPONENT_TYPE componentType, int32 uid, COMPON
 				BaseappInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(), 
 					componentType_, componentID_, 
 					g_componentGlobalOrder, g_componentGroupOrder,
-					_pNetworkInterface->intaddr().ip, _pNetworkInterface->intaddr().port,
-					_pNetworkInterface->extaddr().ip, _pNetworkInterface->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+					_pNetworkInterface->intTcpAddr().ip, _pNetworkInterface->intTcpAddr().port,
+					_pNetworkInterface->extTcpAddr().ip, _pNetworkInterface->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			}
 			else if(componentType == DBMGR_TYPE)
 			{
@@ -530,8 +530,8 @@ int Components::connectComponent(COMPONENT_TYPE componentType, int32 uid, COMPON
 				DbmgrInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(), 
 					componentType_, componentID_, 
 					g_componentGlobalOrder, g_componentGroupOrder,
-					_pNetworkInterface->intaddr().ip, _pNetworkInterface->intaddr().port,
-					_pNetworkInterface->extaddr().ip, _pNetworkInterface->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+					_pNetworkInterface->intTcpAddr().ip, _pNetworkInterface->intTcpAddr().port,
+					_pNetworkInterface->extTcpAddr().ip, _pNetworkInterface->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			}
 			else if(componentType == LOGGER_TYPE)
 			{
@@ -540,8 +540,8 @@ int Components::connectComponent(COMPONENT_TYPE componentType, int32 uid, COMPON
 				LoggerInterface::onRegisterNewAppArgs11::staticAddToBundle((*pBundle), getUserUID(), getUsername(), 
 					componentType_, componentID_, 
 					g_componentGlobalOrder, g_componentGroupOrder,
-					_pNetworkInterface->intaddr().ip, _pNetworkInterface->intaddr().port,
-					_pNetworkInterface->extaddr().ip, _pNetworkInterface->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress);
+					_pNetworkInterface->intTcpAddr().ip, _pNetworkInterface->intTcpAddr().port,
+					_pNetworkInterface->extTcpAddr().ip, _pNetworkInterface->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress);
 			}
 			else
 			{
@@ -732,8 +732,8 @@ Components::ComponentInfos* Components::findLocalComponent(uint32 pid)
 //-------------------------------------------------------------------------------------		
 bool Components::isLocalComponent(const Components::ComponentInfos* info)
 {
-	return _pNetworkInterface->intaddr().ip == info->pIntAddr->ip ||
-			_pNetworkInterface->extaddr().ip == info->pIntAddr->ip;
+	return _pNetworkInterface->intTcpAddr().ip == info->pIntAddr->ip ||
+			_pNetworkInterface->extTcpAddr().ip == info->pIntAddr->ip;
 }
 
 //-------------------------------------------------------------------------------------		
@@ -1103,7 +1103,7 @@ bool Components::findLogger()
 		COMPONENT_TYPE findComponentType = LOGGER_TYPE;
 		bhandler.newMessage(MachineInterface::onFindInterfaceAddr);
 		MachineInterface::onFindInterfaceAddrArgs7::staticAddToBundle(bhandler, getUserUID(), getUsername(), 
-			g_componentType, g_componentID, findComponentType, pNetworkInterface()->intaddr().ip, bhandler.epListen().addr().port);
+			g_componentType, g_componentID, findComponentType, pNetworkInterface()->intTcpAddr().ip, bhandler.epListen().addr().port);
 
 		ENGINE_COMPONENT_INFO cinfos = ServerConfig::getSingleton().getKBMachine();
 		std::vector< std::string >::iterator machine_addresses_iter = cinfos.machine_addresses.begin();
@@ -1259,7 +1259,7 @@ bool Components::findComponents()
 
 			bhandler.newMessage(MachineInterface::onFindInterfaceAddr);
 			MachineInterface::onFindInterfaceAddrArgs7::staticAddToBundle(bhandler, getUserUID(), getUsername(), 
-				componentType_, componentID_, findComponentType, pNetworkInterface()->intaddr().ip, bhandler.epListen().addr().port);
+				componentType_, componentID_, findComponentType, pNetworkInterface()->intTcpAddr().ip, bhandler.epListen().addr().port);
 
 			ENGINE_COMPONENT_INFO cinfos = ServerConfig::getSingleton().getKBMachine();
 			std::vector< std::string >::iterator machine_addresses_iter = cinfos.machine_addresses.begin();
@@ -1484,10 +1484,10 @@ void Components::broadcastSelf()
 		bhandler.newMessage(MachineInterface::onBroadcastInterface);
 		MachineInterface::onBroadcastInterfaceArgs25::staticAddToBundle(bhandler, getUserUID(), getUsername(),
 			componentType_, componentID_, cidex, g_componentGlobalOrder, g_componentGroupOrder, g_genuuid_sections,
-			pNetworkInterface()->intaddr().ip, pNetworkInterface()->intaddr().port,
-			pNetworkInterface()->extaddr().ip, pNetworkInterface()->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress, getProcessPID(),
+			pNetworkInterface()->intTcpAddr().ip, pNetworkInterface()->intTcpAddr().port,
+			pNetworkInterface()->extTcpAddr().ip, pNetworkInterface()->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress, getProcessPID(),
 			SystemInfo::getSingleton().getCPUPerByPID(), 0.f, (uint32)SystemInfo::getSingleton().getMemUsedByPID(), 0, 0, extraData1_, extraData2_, extraData3_, extraData4_,
-			pNetworkInterface()->intaddr().ip, bhandler.epListen().addr().port);
+			pNetworkInterface()->intTcpAddr().ip, bhandler.epListen().addr().port);
 
 		ENGINE_COMPONENT_INFO cinfos = ServerConfig::getSingleton().getKBMachine();
 		std::vector< std::string >::iterator machine_addresses_iter = cinfos.machine_addresses.begin();
@@ -1552,10 +1552,10 @@ bool Components::process()
 			bhandler.newMessage(MachineInterface::onBroadcastInterface);
 			MachineInterface::onBroadcastInterfaceArgs25::staticAddToBundle(bhandler, getUserUID(), getUsername(), 
 				componentType_, componentID_, cidex, g_componentGlobalOrder, g_componentGroupOrder, g_genuuid_sections,
-				pNetworkInterface()->intaddr().ip, pNetworkInterface()->intaddr().port,
-				pNetworkInterface()->extaddr().ip, pNetworkInterface()->extaddr().port, g_kbeSrvConfig.getConfig().externalAddress, getProcessPID(),
+				pNetworkInterface()->intTcpAddr().ip, pNetworkInterface()->intTcpAddr().port,
+				pNetworkInterface()->extTcpAddr().ip, pNetworkInterface()->extTcpAddr().port, g_kbeSrvConfig.getConfig().externalAddress, getProcessPID(),
 				SystemInfo::getSingleton().getCPUPerByPID(), 0.f, (uint32)SystemInfo::getSingleton().getMemUsedByPID(), 0, 0, extraData1_, extraData2_, extraData3_, extraData4_, 
-				pNetworkInterface()->intaddr().ip, bhandler.epListen().addr().port);
+				pNetworkInterface()->intTcpAddr().ip, bhandler.epListen().addr().port);
 			
 			ENGINE_COMPONENT_INFO cinfos = ServerConfig::getSingleton().getKBMachine();
 			std::vector< std::string >::iterator machine_addresses_iter = cinfos.machine_addresses.begin();

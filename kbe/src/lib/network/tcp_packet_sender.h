@@ -48,7 +48,7 @@ public:
 	static ObjectPool<TCPPacketSender>& ObjPool();
 	static TCPPacketSender* createPoolObject(const std::string& logPoint);
 	static void reclaimPoolObject(TCPPacketSender* obj);
-	virtual void onReclaimObject();
+	void onReclaimObject() override;
 	static void destroyObjPool();
 	
 	TCPPacketSender():PacketSender(){}
@@ -56,10 +56,10 @@ public:
 	~TCPPacketSender();
 
 	virtual void onGetError(Channel* pChannel, const std::string& err);
-	virtual bool processSend(Channel* pChannel);
+	virtual bool processSend(Channel* pChannel, int userarg);
 
 protected:
-	virtual Reason processFilterPacket(Channel* pChannel, Packet * pPacket);
+	Reason processFilterPacket(Channel* pChannel, Packet * pPacket, int userarg) override;
 
 	uint8 sendfailCount_;
 };
