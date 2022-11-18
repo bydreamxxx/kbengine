@@ -475,14 +475,13 @@ void Channel::kcpUpdate()
 	ikcp_update(pKCP_, current);
 
 	uint32 nextUpdateKcpTime = ikcp_check(pKCP_, current) - current;
-
-	if (nextUpdateKcpTime > 0)
+	if(nextUpdateKcpTime > 0)
 	{
 		addKcpUpdate(nextUpdateKcpTime * 1000);
 	}
 	else
 	{
-		kcpUpdateTimerHandle_.cancel();
+		ikcp_flush(pKCP_);
 		hasSetNextKcpUpdate_ = false;
 	}
 }
