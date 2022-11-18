@@ -285,26 +285,31 @@ endif
 
 ifeq ($(KBE_CONFIG), Release)
 	CXXFLAGS += -O3
+	CFLAGS += -O3
 	CPPFLAGS += -DCODE_INLINE -D_RELEASE
 endif
 
 ifneq (,$(findstring Hybrid,$(KBE_CONFIG)))
 	CXXFLAGS += -O3 -g
+	CFLAGS += -O3 -g
 	CPPFLAGS += -DCODE_INLINE -DKBE_USE_ASSERTS -D_HYBRID
 endif
 
 ifeq ($(KBE_CONFIG), Evaluation)
 	CXXFLAGS += -O3 -g
+	CFLAGS += -O3 -g
 	CPPFLAGS += -DCODE_INLINE -DKBE_USE_ASSERTS -D_HYBRID -DKBE_EVALUATION
 endif
 
 ifneq (,$(findstring Debug,$(KBE_CONFIG)))
 	CXXFLAGS += -g
+	CFLAGS += -g
 	CPPFLAGS += -DKBE_USE_ASSERTS -D_DEBUG
 endif
 
 ifeq ($(KBE_CONFIG), Release_SingleThreaded)
 	CXXFLAGS += -O3
+	CFLAGS += -O3
 	CPPFLAGS += -DCODE_INLINE -D_RELEASE -DKBE_SINGLE_THREADED
 endif
 
