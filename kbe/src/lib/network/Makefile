@@ -33,13 +33,14 @@ SRCS =					\
 	udp_packet			\
 	udp_packet_receiver	\
 	udp_packet_sender	\
-	ikcp			\
 	kcp_packet_reader	\
 	kcp_packet_receiver	\
 	kcp_packet_sender	\
 	websocket_packet_reader	\
 	websocket_packet_filter	\
 	websocket_protocol	
+
+CSRCS = ikcp			
 
 USE_OPENSSL = 1
 
